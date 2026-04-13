@@ -1,0 +1,105 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Quicksand:wght@300;400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 270 60% 3%;
+  --foreground: 210 40% 98%;
+  --card: 270 40% 9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 270 40% 9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 292 84% 61%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 38 92% 50%;
+  --secondary-foreground: 0 0% 0%;
+  --accent: 187 94% 43%;
+  --accent-foreground: 0 0% 0%;
+  --muted: 270 30% 15%;
+  --muted-foreground: 215 16% 62%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 100% / 0.1;
+  --input: 0 0% 100% / 0.05;
+  --ring: 292 84% 61%;
+  --radius: 0.75rem;
+}
+
+body {
+  margin: 0;
+  font-family: 'Quicksand', 'Comfortaa', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #05020D;
+  color: #F8FAFC;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Cinzel Decorative', 'Playfair Display', serif;
+}
+
+code {
+  font-family: 'Space Mono', source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer base {
+  [data-debug-wrapper="true"] {
+    display: contents !important;
+  }
+
+  [data-debug-wrapper="true"] > * {
+    margin-left: inherit;
+    margin-right: inherit;
+    margin-top: inherit;
+    margin-bottom: inherit;
+    padding-left: inherit;
+    padding-right: inherit;
+    padding-top: inherit;
+    padding-bottom: inherit;
+    column-gap: inherit;
+    row-gap: inherit;
+    gap: inherit;
+    border-left-width: inherit;
+    border-right-width: inherit;
+    border-top-width: inherit;
+    border-bottom-width: inherit;
+    border-left-style: inherit;
+    border-right-style: inherit;
+    border-top-style: inherit;
+    border-bottom-style: inherit;
+    border-left-color: inherit;
+    border-right-color: inherit;
+    border-top-color: inherit;
+    border-bottom-color: inherit;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #05020D;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(217, 70, 239, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(217, 70, 239, 0.5);
+}
