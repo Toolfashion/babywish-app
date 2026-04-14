@@ -1564,26 +1564,31 @@ async def create_checkout(
     success_url = f"{checkout_data.origin_url}/payment-success?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = f"{checkout_data.origin_url}/subscribe"
     
-    # Initialize Stripe
-    host_url = str(request.base_url)
-    webhook_url = f"{host_url}api/webhook/stripe"
-    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
-    
-    # Create checkout session
-    checkout_request = CheckoutSessionRequest(
-        amount=package["amount"],
-        currency="eur",
-        success_url=success_url,
-        cancel_url=cancel_url,
-        metadata={
-            "user_id": user["user_id"],
-            "package_id": checkout_data.package_id,
-            "duration_months": str(package["duration_months"])
-        }
-    )
-    
-    session = await stripe_checkout.create_checkout_session(checkout_request)
-    
+    # Create checkout session using official Stripe SDK 
+    session = stripe.checkout.Session.create(payment_method_types=["card"],
+     line_items=[{
+         "price_data": {
+             "currency": "eur",
+             "product_data": {
+                 "name": f"BabyWish - 
+     {package['name']}",
+                 "description":f"subscription
+     {package['duration_months']} months"
+                 "unit_amount": int(package["amount"*
+
+100), #Stripe uses cents},
+                 "quantity":1,,}],
+            mode="payment",
+           success_url=success_url,
+                 cancel_url=cancel_url,
+                     metadata={
+                    "user_id":checkout_data.package_id,
+                          "duration_months":
+                           str(package["duration_months"])
+                                             }
+                                            )
+                                                          
+                                    
     # Create payment transaction record
     await db.payment_transactions.insert_one({
         "session_id": session.session_id,
@@ -1592,7 +1597,8 @@ async def create_checkout(
         "amount": package["amount"],
         "currency": "eur",
         "payment_status": "pending",
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": 
+        datetime.now(timezone.utc).isoformat()
     })
     
     return {"url": session.url, "session_id": session.session_id}
