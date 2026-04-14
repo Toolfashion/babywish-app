@@ -1598,8 +1598,7 @@ async def create_checkout(
         "currency": "eur",
         "payment_status": "pending",
         "created_at": 
-        datetime.now(timezone.utc).isoformat()
-    })
+        datetime.now(timezone.utc).isoformat() })
     
     return {"url": session.url, "session_id": session.session_id}
 
@@ -1610,11 +1609,11 @@ async def get_checkout_status(
     user: dict = Depends(get_current_user)
 ):
     """Check payment status and activate subscription if paid"""
-    host_url = str(request.base_url)
-    webhook_url = f"{host_url}api/webhook/stripe"
-    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
-    
-    status = await stripe_checkout.get_checkout_status(session_id)
+                 # Retrieve session from Stripe 
+                 session =
+                 stripe.checkout.Session.retrieve(session_id)
+                 payment_status = session.payment_status
+                 status = session status 
     
     # Update transaction
     await db.payment_transactions.update_one(
@@ -1622,9 +1621,8 @@ async def get_checkout_status(
         {"$set": {
             "payment_status": status.payment_status,
             "status": status.status,
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }}
-    )
+            "updated_at": 
+            datetime.now(timezone.utc).isoformat()    }} )
     
     # If paid, create subscription
     if status.payment_status == "paid":
@@ -1669,7 +1667,7 @@ async def get_checkout_status(
                 amount=package_info.get("amount", 0),
                 subscription_id=subscription_id
             )
-    
+
     return {
         "status": status.status,
         "payment_status": status.payment_status,
@@ -1682,24 +1680,35 @@ async def stripe_webhook(request: Request):
     """Handle Stripe webhooks"""
     body = await request.body()
     signature = request.headers.get("Stripe-Signature")
-    
-    host_url = str(request.base_url)
-    webhook_url = f"{host_url}api/webhook/stripe"
-    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
+
+    # Get webhook secret from env (optional, but 
+    recommended for production)
+    webhook_secret = 
+    os.environ.get('STRIPE_WEBHOOK_SECRET')
     
     try:
-        webhook_response = await stripe_checkout.handle_webhook(body, signature)
-        
-        if webhook_response.payment_status == "paid":
-            # Update transaction
+        if webhook_secret:
+        event = stripe.Webhook.construct_event (body, signature, webhook_secret)
+        else:
+        #without webhook secret,just parse the 
+        event (less secure)
+        import json event = 
+        stripe. Event.construct_from(json.loads(body),
+        stripe.api_key)
+
+    #Handle checkout.session.completed event
+    if event.type == "checkout.session.completed":
+    session=event.data.object
+    
+        if session.payment_status == "paid":
+         # Update transaction
             await db.payment_transactions.update_one(
                 {"session_id": webhook_response.session_id},
                 {"$set": {
                     "payment_status": "paid",
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }}
-            )
-        
+            )        
         return {"status": "ok"}
     except Exception as e:
         logging.error(f"Webhook error: {e}")
