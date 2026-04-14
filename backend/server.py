@@ -24,9 +24,9 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # Stripe
-from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
-
+import stripe
 stripe_api_key = os.environ.get('STRIPE_API_KEY')
+stripe.api_key = stripe_api_key
 
 # Resend Email
 resend.api_key = os.environ.get('RESEND_API_KEY')
