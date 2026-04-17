@@ -1676,26 +1676,7 @@ async def get_checkout_status(
         "amount_total": session.amount_total,
         "currency": session.currency
     }
- stripe. Event.construct_from(json.loads(body),
-        stripe.api_key)
-
-    #Handle checkout.session.completed event
-    if event.type == "checkout.session.completed":
-    session=event.data.object
-    
-        if session.payment_status == "paid":
-         # Update transaction
-            await db.payment_transactions.update_one(
-                {"session_id": webhook_response.session_id},
-                {"$set": {
-                    "payment_status": "paid",
-                    "updated_at": datetime.now(timezone.utc).isoformat()
-                }}
-            )        
-        return {"status": "ok"}
-    except Exception as e:
-        logging.error(f"Webhook error: {e}")
-        return {"status": "error", "message": str(e)}
+ 
 
 # ===================== NAME SHOWCASE =====================
 
