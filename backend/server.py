@@ -1597,8 +1597,9 @@ async def create_checkout(
         "currency": "eur",
         "payment_status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat()
+    })
     
-    
+
     return {"url": session.url, "session_id": session.id}
 
 @api_router.get("/checkout/status/{session_id}")
