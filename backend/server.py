@@ -1596,10 +1596,21 @@ async def create_checkout(
         "amount": package["amount"],
         "currency": "eur",
         "payment_status": "pending",
-        "created_at": 
-        datetime.now(timezone.utc).isoformat() })
+        @api_router.post("/checkout/create")
+async def create_checkout(
+    checkout_data: CheckoutRequest,
+    request: Request,
+    user: dict = Depends(get_current_user)
+):
+    """Create Stripe checkout session"""
+    if checkout_data.package_id not in SUBSCRIPTION_PACKAGES:
+        raise HTTPException(status_code=400, detail="Invalid package")
     
-    return {"url": session.url, "session_id": session.session_id}
+    package = SUBSCRIPTION_PACKAGES[checkout_data.package_id]
+    
+    # Build URLs from provided origin
+    success_url = f"{checkout_data.origin_url}/payment-success?session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = f"{checkout_data.origin_url}/subscribe"
 
 @api_router.get("/checkout/status/{session_id}")
 async def get_checkout_status(
