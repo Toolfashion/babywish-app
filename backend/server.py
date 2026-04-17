@@ -1676,25 +1676,7 @@ async def get_checkout_status(
         "amount_total": session.amount_total,
         "currency": session.currency
     }
-@api_router.post("/webhook/stripe")
-async def stripe_webhook(request: Request):
-    """Handle Stripe webhooks"""
-    body = await request.body()
-    signature = request.headers.get("Stripe-Signature")
-
-    # Get webhook secret from env (optional, but 
-    recommended for production)
-    webhook_secret = 
-    os.environ.get('STRIPE_WEBHOOK_SECRET')
-    
-    try:
-        if webhook_secret:
-        event = stripe.Webhook.construct_event (body, signature, webhook_secret)
-        else:
-        #without webhook secret,just parse the 
-        event (less secure)
-        import json event = 
-        stripe. Event.construct_from(json.loads(body),
+ stripe. Event.construct_from(json.loads(body),
         stripe.api_key)
 
     #Handle checkout.session.completed event
@@ -1713,6 +1695,86 @@ async def stripe_webhook(request: Request):
         return {"status": "ok"}
     except Exception as e:
         logging.error(f"Webhook error: {e}")
+        return {"status": "error", "message": str(e)}
+
+# ===================== NAME SHOWCASE =====================
+
+@api_router.get("/names/showcase")
+async def get_names_showcase(request: Request):
+    """Get names based on user's location for the showcase page"""
+    # Get user's IP and country
+    country_code = "US"
+    country_name = "United States"
+    
+    # Try to get country from headers (set by geolocation)
+    forwarded_for = request.headers.get("x-forwarded-for", "")
+    client_ip = forwarded_for.split(",")[0].strip() if forwarded_for else request.client.host
+    
+    # Get country from IP using ipapi
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"https://ipapi.co/{client_ip}/json/", timeout=5.0)
+            if response.status_code == 200:
+                data = response.json()
+                country_code = data.get("country_code", "US")
+                country_name = data.get("country_name", "United States")
+    except Exception as e:
+        logging.warning(f"Could not get geolocation: {e}")
+    
+    # Get region and names
+    region = get_region_for_country(country_code)
+    boy_names = get_names_for_region(region, "boy")
+    girl_names = get_names_for_region(region, "girl")
+    
+    # Limit to 12 names each and shuffle for variety
+    random.shuffle(boy_names)
+    random.shuffle(girl_names)
+    
+    return {
+        "boy_names": boy_names[:12],
+        "girl_names": girl_names[:12],
+        "region": region,
+        "country": country_name,
+        "country_code": country_code
+    }
+
+# ===================== PREDICTION ROUTES =====================
+
+@api_router.get("/")
+async def root():
+    return {"message": "Babywish API"}
+
+@api_router.post("/predict", response_model=PredictionResponse)
+async def create_prediction(
+    request_data: PredictionRequest,
+    user: dict = Depends(get_current_user)
+):
+    """Create prediction - requires active subscription with unused prediction"""
+    # Check subscription
+    subscription = await db.subscriptions.find_one(
+        {"user_id": user["user_id"], "status": "active"},
+        {"_id": 0}
+    )
+    
+    if not subscription:
+        raise HTTPException(
+            status_code=403,
+            detail="Απαιτείται ενεργή συνδρομή για πρόβλεψη"
+        )
+    
+    if subscription.get("prediction_used", False):
+        raise HTTPException(
+            status_code=403,
+            detail="Έχετε ήδη χρησιμοποιήσει την πρόβλεψή σας. Αγοράστε νέα συνδρομή."
+        )
+    
+    # Check expiry
+    expires_at = subscription.get("expires_at")
+    if isinstance(expires_at, str):
+        expires_at = datetime.fromisoformat(expires_at)
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at < datetime.now(timezone.utc):
         return {"status": "error", "message": str(e)}
 
 # ===================== NAME SHOWCASE =====================
