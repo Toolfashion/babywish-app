@@ -1564,31 +1564,30 @@ async def create_checkout(
     success_url = f"{checkout_data.origin_url}/payment-success?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = f"{checkout_data.origin_url}/subscribe"
     
-    # Create checkout session using official Stripe SDK 
-    session = stripe.checkout.Session.create(payment_method_types=["card"],
-     line_items=[{
-         "price_data": {
-             "currency": "eur",
-             "product_data": {
-                 "name": f"BabyWish - 
-     {package['name']}",
-                 "description":f"subscription
-     {package['duration_months']} months"
-                 "unit_amount": int(package["amount"*
-
-100), #Stripe uses cents},
-                 "quantity":1,,}],
-            mode="payment",
-           success_url=success_url,
-                 cancel_url=cancel_url,
-                     metadata={
-                    "user_id":checkout_data.package_id,
-                          "duration_months":
-                           str(package["duration_months"])
-                                             }
-                                            )
-                                                          
-                                    
+      # Create checkout session using official Stripe SDK
+    session = stripe.checkout.Session.create(
+        payment_method_types=["card"],
+        line_items=[{
+            "price_data": {
+                "currency": "eur",
+                "product_data": {
+                    "name": "BabyWish Subscription",
+                    "description": "Baby prediction subscription"
+                },
+                "unit_amount": int(package["amount"] * 100),
+            },
+            "quantity": 1,
+        }],
+        mode="payment",
+        success_url=success_url,
+        cancel_url=cancel_url,
+        metadata={
+            "user_id": user["user_id"],
+            "package_id": checkout_data.package_id,
+            "duration_months": str(package["duration_months"])
+        }
+    )
+                                                                                     
     # Create payment transaction record
     await db.payment_transactions.insert_one({
         "session_id": session.session_id,
