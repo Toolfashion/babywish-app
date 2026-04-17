@@ -1584,23 +1584,22 @@ async def create_checkout(
         metadata={
             "user_id": user["user_id"],
             "package_id": checkout_data.package_id,
-            "duration_months": str(package["duration_months"])
+           "duration_months": str(package["duration_months"])
         }
     )
-                                                                                     
+    
     # Create payment transaction record
     await db.payment_transactions.insert_one({
-        "session_id": session.session_id,
+        "session_id": session.id,
         "user_id": user["user_id"],
         "package_id": checkout_data.package_id,
         "amount": package["amount"],
         "currency": "eur",
         "payment_status": "pending",
-        @api_router.post("/checkout/create")
-async def create_checkout(
-    checkout_data: CheckoutRequest,
-    request: Request,
-    user: dict = Depends(get_current_user)
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"url": session.url, "session_id": session.id}j
 ):
     """Create Stripe checkout session"""
     if checkout_data.package_id not in SUBSCRIPTION_PACKAGES:
