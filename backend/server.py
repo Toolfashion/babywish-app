@@ -1608,41 +1608,35 @@ async def get_checkout_status(
     user: dict = Depends(get_current_user)
 ):
     """Check payment status and activate subscription if paid"""
-                 # Retrieve session from Stripe 
-                 session =
-                 stripe.checkout.Session.retrieve(session_id)
-                 payment_status = session.payment_status
-                 status = session status 
+    session = stripe.checkout.Session.retrieve(session_id)
+    payment_status = session.payment_status
+    status = session.status
     
-    # Update transaction
     await db.payment_transactions.update_one(
         {"session_id": session_id},
         {"$set": {
-            "payment_status": status.payment_status,
-            "status": status.status,
-            "updated_at": 
-            datetime.now(timezone.utc).isoformat()    }} )
+            "payment_status": payment_status,
+            "status": status,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
     
-    # If paid, create subscription
-    if status.payment_status == "paid":
-        # Check if subscription already created for this session
+    if payment_status == "paid":
         existing_sub = await db.subscriptions.find_one(
             {"payment_session_id": session_id},
             {"_id": 0}
         )
         
         if not existing_sub:
-            metadata = status.metadata
+            metadata = session.metadata
             package_id = metadata.get("package_id")
             duration_months = int(metadata.get("duration_months", 3))
             
-            # Deactivate any existing subscription
             await db.subscriptions.update_many(
                 {"user_id": user["user_id"], "status": "active"},
                 {"$set": {"status": "replaced"}}
             )
             
-            # Create new subscription
             expires_at = datetime.now(timezone.utc) + timedelta(days=duration_months * 30)
             subscription_id = f"sub_{uuid.uuid4().hex[:12]}"
             
@@ -1657,7 +1651,6 @@ async def get_checkout_status(
                 "created_at": datetime.now(timezone.utc).isoformat()
             })
             
-            # Send email notification to admin
             package_info = SUBSCRIPTION_PACKAGES.get(package_id, {})
             await send_subscription_notification(
                 user_email=user.get("email", "N/A"),
@@ -1666,14 +1659,13 @@ async def get_checkout_status(
                 amount=package_info.get("amount", 0),
                 subscription_id=subscription_id
             )
-
+    
     return {
-        "status": status.status,
-        "payment_status": status.payment_status,
-        "amount_total": status.amount_total,
-        "currency": status.currency
+        "status": status,
+        "payment_status": payment_status,
+        "amount_total": session.amount_total,
+        "currency": session.currency
     }
-
 @api_router.post("/webhook/stripe")
 async def stripe_webhook(request: Request):
     """Handle Stripe webhooks"""
