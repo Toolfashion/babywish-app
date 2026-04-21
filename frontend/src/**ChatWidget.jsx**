@@ -1,0 +1,147 @@
+jsx
+import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
+import { useLanguage } from '../context/LanguageContext';
+
+const ChatWidget = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const messagesEndRef = useRef(null);
+  const constraintsRef = useRef(null);
+  const { t } = useLanguage();
+
+  const API_URL = process.env.REACT_APP_BACKEND_URL || '';
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const sendMessage = async () => {
+    if (!input.trim() || isLoading) return;
+    
+    const userMessage = input.trim();
+    setInput('');
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${API_URL}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMessage, language: 'el' })
+      });
+      
+      const data = await response.json();
+      setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
+    } catch (error) {
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div ref={constraintsRef} className="fixed inset-0 pointer-events-none z-50">
+      <motion.div
+        drag
+        dragConstraints={constraintsRef}
+        dragElastic={0.1}
+        className="pointer-events-auto fixed bottom-6 right-6"
+        style={{ x: position.x, y: position.y }}
+        onDragEnd={(_, info) => {
+          setPosition({ x: position.x + info.offset.x, y: position.y + info.offset.y });
+        }}
+      >
+        {/* Chat Button */}
+        {!isOpen && (
+          <motion.button
+            onClick={() => setIsOpen(true)}
+            className="relative w-14 h-14 rounded-full shadow-lg flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(135deg, #ec4899, #8b5cf6)',
+            }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <span className="text-2xl">👶</span>
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-pulse" />
+          </motion.button>
+        )}
+
+        {/* Chat Window */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 20 }}
+              className="w-80 h-96 bg-gray-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-purple-500/30 flex flex-col overflow-hidden"
+            >
+              {/* Header */}
+              <div className="p-3 bg-gradient-to-r from-pink-600 to-purple-600 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">👶</span>
+                  <span className="text-white font-semibold text-sm">AI Mindjerry</span>
+                </div>
+                <button onClick={() => setIsOpen(false)} className="text-white/80 hover:text-white text-xl">×</button>
+              </div>
+
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                {messages.length === 0 && (
+                  <div className="text-center text-gray-400 text-sm mt-4">
+                    Γεια! Είμαι ο AI Mindjerry. Ρωτήστε με οτιδήποτε για την εγκυμοσύνη! 👶
+                  </div>
+                )}
+                {messages.map((msg, i) => (
+                  <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[80%] p-2 rounded-lg text-sm ${
+                      msg.role === 'user' 
+                        ? 'bg-purple-600 text-white' 
+                        : 'bg-gray-700 text-gray-100'
+                    }`}>
+                      {msg.content}
+                    </div>
+                  </div>
+                ))}
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-gray-700 text-gray-100 p-2 rounded-lg text-sm">
+                      <span className="animate-pulse">Σκέφτομαι...</span>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Input */}
+              <div className="p-2 border-t border-gray-700">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                    placeholder="Γράψτε μήνυμα..."
+                    className="flex-1 bg-gray-800 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                  <button
+                    onClick={sendMessage}
+                    disabled={isLoading}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm disabled:opacity-50"
+                  >
+                    ➤
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </div>
+  );
+};
+  export default ChatWidget;
