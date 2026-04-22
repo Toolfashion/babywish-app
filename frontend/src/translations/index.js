@@ -1549,10 +1549,10 @@ export const translations = {
     
     choosePlan: "Επιλέξτε το Πακέτο σας",
     chooseSubtitle: "Ξεκλειδώστε την κοσμική σας πρόβλεψη",
+    
     months: "Μήνες",
-    onePrediction: "1 πρόβλεψη περιλα
-      javascript
-    months: "Μήνες",
+    onePrediction: "1 πρόβλεψη περιλαμβάνεται",
+    moneyBackGu: "Μήνες",
     onePrediction: "1 πρόβλεψη περιλαμβάνεται",
     moneyBackGuarantee: "Εγγύηση επιστροφής χρημάτων",
     mostPopular: "Πιο Δημοφιλές",
