@@ -1134,40 +1134,7 @@ export const translations = {
     
     paymentSuccess: "پرداخت موفق!",
     thankYou: "از اشتراک شما متشکریم",
-    nowPredict: "اکنون می‌توانید پیش‌بینی کنید",
-    goToDashboard: "برو به داشبورد",
-    
-    errorOccurred: "خطایی رخ داد",
-    tryAgain: "لطفاً دوباره امتحان کنید",
-    
-    language: "زبان",
-    
-    // Promo Banner
-    promoFreeFirst10: "۵۰٪ تخفیف - پیشنهاد راه‌اندازی!",
-    promoVideos: "۳ ویدیو",
-    promoReview: "۱ نظر",
-    promoFreeSubscription: "۵۰٪ تخفیف!",
-    promoContactUs: "تماس با ما",
-    
-    // Slogans
-    slogan1Line1: "علم احتمال، در خدمت",
-    slogan1Highlight: "خانواده شما!",
-    slogan2Line1: "آینده خود را بر اساس ساعت",
-    slogan2Highlight: "بیولوژیکی خود برنامه‌ریزی کنید!",
-    
-    // Description Wheel
-    desc1: "تاریخ تولد والدین را وارد کنید و اجازه دهید هوش مصنوعی جنسیت فرزند آینده شما را آشکار کند.",
-    desc2: "از طریق اولین و تنها",
-    desc3: "الگوریتمی که چرخه‌های بیولوژیکی و آماری زوج را برای پیش‌بینی جنسیت تحلیل می‌کند.",
-    
-    // Reels
-    watchReel: "مشاهده ریل",
-  },
-  
-  ar: {
-    appTitle: "Babywish",
-    login: "تسجيل الدخول",
-    register: "التسجيل",
+        register: "التسجيل",
     dashboard: "لوحة التحكم",
     logout: "تسجيل الخروج",
     
@@ -1237,6 +1204,38 @@ export const translations = {
     mostPopular: "الأكثر شعبية",
     bestValue: "أفضل قيمة",
     selectPlan: "اختر هذه الخطة",
+    
+    paymentSuccess: "تم الدفع بنجاح!",
+    thankYou: "شكراً لاشتراكك",
+    nowPredict: "يمكنك الآن عمل توقعك",
+    goToDashboard: "اذهب للوحة التحكم",
+    
+    errorOccurred: "حدث خطأ",
+    tryAgain: "يرجى المحاولة مرة أخرى",
+    
+    language: "اللغة",
+    
+    // Promo Banner
+    promoFreeFirst10: "خصم 50٪ - عرض الإطلاق!",
+    promoVideos: "3 فيديوهات",
+    promoReview: "1 تقييم",
+    promoFreeSubscription: "خصم 50٪!",
+    promoContactUs: "اتصل بنا",
+    
+    // Slogans
+    slogan1Line1: "علم الاحتمالات، في خدمة",
+    slogan1Highlight: "عائلتك!",
+    slogan2Line1: "خطط لمستقبلك، بناءً على",
+    slogan2Highlight: "ساعتك البيولوجية!",
+    
+    // Description Wheel
+    desc1: "أدخل تواريخ ميلاد الوالدين ودع الذكاء الاصطناعي يكشف جنس طفلك المستقبلي.",
+    desc2: "من خلال الخوارزمية الأولى والوحيدة",
+    desc3: "التي تحلل الدورات البيولوجية والإحصائية للزوجين للتنبؤ بالجنس.",
+    
+    // Reels
+    watchReel: "مشاهدة الريل",
+  },
     
     paymentSuccess: "تم الدفع بنجاح!",
     thankYou: "شكراً لاشتراكك",
