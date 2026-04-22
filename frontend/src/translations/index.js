@@ -2089,8 +2089,60 @@ export const detectLanguage = () => {
     nb: 'sv',
     nn: 'sv',
   };
-  
-  return languageMap[langCode] || 'de';
+ javascript
+// Language names for the selector
+export const languageNames = {
+  de: "Deutsch",
+  en: "English",
+  el: "Ελληνικά",
+  it: "Italiano",
+  ru: "Русский",
+  zh: "中文",
+  hi: "हिन्दी",
+  es: "Español",
+  pt: "Português",
+  fr: "Français",
+  tr: "Türkçe",
+  fa: "فارسی",
+  ar: "العربية",
+  ja: "日本語",
+  sv: "Svenska",
+  sr: "Српски",
+  pl: "Polski",
+  cs: "Čeština",
 };
+
+// RTL languages
+export const rtlLanguages = ['ar', 'fa'];
+
+// Detect browser language and map to supported language
+export const detectLanguage = () => {
+  const browserLang = navigator.language || navigator.userLanguage;
+  const langCode = browserLang.split('-')[0].toLowerCase();
+  
+  const languageMap = {
+    de: 'de',
+    en: 'en',
+    el: 'el',
+    it: 'it',
+    ru: 'ru',
+    zh: 'zh',
+    hi: 'hi',
+    es: 'es',
+    pt: 'pt',
+    fr: 'fr',
+    tr: 'tr',
+    fa: 'fa',
+    ar: 'ar',
+    ja: 'ja',
+    sv: 'sv',
+    sr: 'sr',
+    pl: 'pl',
+    cs: 'cs',
+    no: 'sv',
+    da: 'sv',
+    nb: 'sv',
+    nn: 'sv',
+  };
   
 
