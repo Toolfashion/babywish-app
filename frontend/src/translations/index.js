@@ -2027,13 +2027,11 @@ export const translations = {
     // Description Wheel
     desc1: "Zadejte data narození rodičů a nechte AI odhalit pohlaví vašeho budoucího dítěte.",
     desc2: "Prostřednictvím prvního a jediného",
-    desc3: "algoritmu, který analyzuje biologické a statistické cykly páru pro predikci pohlaví.",
-    
-    // Reels
-    watchReel: "Sledovat Reel",
+    desc3: "algoritmu, který analyzuje biologické a statistické cykly páru pro predikci
   },
-}; 
- 
+ };
+    
+    // 
 // Language names for the selector
 export const languageNames = {
   de: "Deutsch",
