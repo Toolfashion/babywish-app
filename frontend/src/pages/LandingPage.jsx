@@ -37,34 +37,40 @@ const LandingPage = () => {
       <FloatingBabyClouds />
       
       <div className="relative z-20 min-h-screen flex flex-col">
-        {/* Promo Banner */}
+        
         <div className="relative px-4 py-1 overflow-hidden">
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(255,182,193,0.4), rgba(255,218,185,0.4), rgba(255,255,200,0.4), rgba(200,255,200,0.4), rgba(200,220,255,0.4), rgba(220,200,255,0.4), rgba(255,182,193,0.4))', backgroundSize: '200% 100%', animation: 'rainbowMove 6s linear infinite' }} />
+          <div 
+            className="absolute inset-0" 
+            style={{ 
+              background: 'linear-gradient(90deg, rgba(255,182,193,0.4), rgba(255,218,185,0.4), rgba(255,255,200,0.4), rgba(200,255,200,0.4), rgba(200,220,255,0.4), rgba(220,200,255,0.4), rgba(255,182,193,0.4))', 
+              backgroundSize: '200% 100%', 
+              animation: 'rainbowMove 6s linear infinite' 
+            }} 
+          />
           <style>{`@keyframes rainbowMove { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }`}</style>
           <div className="relative z-10 max-w-5xl mx-auto flex flex-col items-center gap-0">
             <div className="flex items-center gap-1.5">
               <span className="text-sm">🎁</span>
               <span className="font-bold text-xs text-white drop-shadow-lg">50% ΈΚΠΤΩΣΗ</span>
-              <span className="text-xs text-white/90 drop-shadow-lg">21 άτομα • 3 videos + 1 κριτική</span>
+              <span className="text-xs text-white/90 drop-shadow-lg">21 άτομα - 3 videos + 1 κριτική</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-sm">🌟</span>
               <span className="font-bold text-xs text-white drop-shadow-lg">ΔΩΡΕΑΝ €25</span>
-              <span className="text-xs text-white/90 drop-shadow-lg">3 άτομα • 21 videos + 1 κριτική</span>
+              <span className="text-xs text-white/90 drop-shadow-lg">3 άτομα - 21 videos + 1 κριτική</span>
             </div>
-            <Button onClick={() => window.location.href = 'mailto:getbabywish@hotmail.com'} size="sm" className="font-semibold text-xs px-3 py-0 h-5 bg-white/95 text-gray-800 hover:bg-white rounded-full shadow-md">
+            <a href="mailto:getbabywish@hotmail.com" className="font-semibold text-xs px-3 py-0.5 bg-white/95 text-gray-800 hover:bg-white rounded-full shadow-md mt-1">
               Επικοινωνήστε μαζί μας
-            </Button>
+            </a>
           </div>
         </div>
 
-        {/* Header */}
         <header className="py-6 px-4">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
-              <Star className="w-6 h-6 text-amber-400 animate-pulse-slow" />
+              <Star className="w-6 h-6 text-amber-400" />
               <h1 className="text-xl md:text-2xl font-bold gradient-text" data-testid="app-title">{t.appTitle}</h1>
-              <Moon className="w-6 h-6 text-purple-400 animate-pulse-slow" />
+              <Moon className="w-6 h-6 text-purple-400" />
             </motion.div>
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2 sm:gap-4">
               <LanguageSelector />
@@ -79,7 +85,6 @@ const LandingPage = () => {
           </div>
         </header>
 
-        {/* Hero Section */}
         <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
           <div className="text-center max-w-4xl">
             <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="mb-8">
@@ -92,12 +97,10 @@ const LandingPage = () => {
               <span className="text-white">{t.heroTitle2}</span>
             </motion.h2>
 
-            {/* Slogan Picker Wheel */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mb-6">
               <SloganPickerWheel />
             </motion.div>
 
-            {/* Guarantee Banner */}
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} className="glass rounded-2xl p-6 max-w-xl mx-auto mb-6 border border-amber-500/30">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <span className="text-3xl">🎯</span>
@@ -113,12 +116,10 @@ const LandingPage = () => {
               </p>
             </motion.div>
 
-            {/* Description Picker Wheel */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="max-w-2xl mx-auto mb-8">
               <DescriptionPickerWheel />
             </motion.div>
 
-            {/* Features */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="flex flex-wrap justify-center gap-4 mb-10">
               {features.map((feature) => (
                 <motion.button key={feature.name} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={feature.action} className="px-5 py-3 rounded-full bg-white/10 border border-white/20 text-sm text-white hover:bg-white/20 transition-all cursor-pointer" data-testid={`feature-btn-${feature.name}`}>
@@ -129,7 +130,6 @@ const LandingPage = () => {
               ))}
             </motion.div>
 
-            {/* CTA Button */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
               <Button data-testid="get-started-btn" onClick={handleGetStarted} className="px-10 py-6 text-lg font-bold rounded-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg shadow-purple-500/25">
                 <span className="flex items-center gap-3">{t.getStarted}<ArrowRight className="w-5 h-5" /></span>
@@ -148,4 +148,4 @@ const LandingPage = () => {
   );
 };
 
-export default LandingPag.;
+export default LandingPage;
