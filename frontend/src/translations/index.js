@@ -497,6 +497,112 @@ export const translations = {
     watchReel: "观看视频",
   },
   
+    hi: {
+    appTitle: "Babywish",
+    login: "लॉगिन",
+    register: "पंजीकरण",
+    dashboard: "डैशबोर्ड",
+    logout: "लॉगआउट",
+    
+    heroTitle1: "अपने भविष्य के",
+    heroTitle2: "बच्चे को जानें",
+    heroDescription: "माता-पिता की जन्मतिथि दर्ज करें और AI को अपने भविष्य के बच्चे का लिंग प्रकट करने दें। पहले और एकमात्र AI Gender Baby Data-Driven एल्गोरिदम के माध्यम से जो लिंग भविष्यवाणी के लिए जोड़े के जैविक और सांख्यिकीय चक्रों का विश्लेषण करता है।",
+    accuracy: "सटीकता",
+    guaranteeText: "Babywish आपको",
+    guaranteeBold: "95% निश्चितता के साथ",
+    guaranteeEnd: "आपके भविष्य के बच्चे का लिंग बताता है।",
+    moneyBack: "हमारे साथ आपका पैसा सुरक्षित है। अगर हमारी भविष्यवाणी हमारे प्रारंभिक निदान से मेल नहीं खाती, तो हम आपका पैसा वापस कर देंगे।",
+    feature1: "लिंग और नाम",
+    feature2: "राशि और व्यक्तित्व",
+    feature3: "भाग्यशाली तत्व",
+    getStarted: "शुरू करें",
+    priceFrom: "पूर्ण भविष्यवाणी के लिए €10 से",
+    footer: "केवल मनोरंजन के लिए",
+    
+    welcomeBack: "वापसी पर स्वागत है",
+    loginSubtitle: "अपनी ब्रह्मांडीय भविष्यवाणियां देखने के लिए साइन इन करें",
+    email: "ईमेल",
+    password: "पासवर्ड",
+    loginButton: "साइन इन",
+    noAccount: "खाता नहीं है?",
+    registerHere: "यहां पंजीकरण करें",
+    orContinueWith: "या इसके साथ जारी रखें",
+    
+    createAccount: "खाता बनाएं",
+    registerSubtitle: "अपनी ब्रह्मांडीय यात्रा शुरू करें",
+    confirmPassword: "पासवर्ड की पुष्टि करें",
+    registerButton: "पंजीकरण करें",
+    hasAccount: "पहले से खाता है?",
+    loginHere: "यहां लॉगिन करें",
+    
+    welcomeUser: "स्वागत है",
+    yourPrediction: "आपकी भविष्यवाणी",
+    makePrediction: "भविष्यवाणी करें",
+    subscriptionStatus: "सदस्यता स्थिति",
+    active: "सक्रिय",
+    inactive: "निष्क्रिय",
+    subscribe: "सदस्यता लें",
+    predictionUsed: "भविष्यवाणी उपयोग की गई",
+    yes: "हां",
+    no: "नहीं",
+    
+    motherBirthday: "माँ का जन्मदिन",
+    fatherBirthday: "पिता का जन्मदिन",
+    predictButton: "भविष्यवाणी करें",
+    predicting: "भविष्यवाणी बना रहे हैं...",
+    
+    yourBaby: "आपका भविष्य का बच्चा",
+    gender: "लिंग",
+    boy: "लड़का",
+    girl: "लड़की",
+    suggestedName: "सुझाया गया नाम",
+    zodiacSign: "राशि",
+    personality: "व्यक्तित्व",
+    luckyNumber: "भाग्यशाली अंक",
+    luckyColor: "भाग्यशाली रंग",
+    luckyDay: "भाग्यशाली दिन",
+    
+    choosePlan: "अपना प्लान चुनें",
+    chooseSubtitle: "अपनी ब्रह्मांडीय भविष्यवाणी अनलॉक करें",
+    months: "महीने",
+    onePrediction: "1 भविष्यवाणी शामिल",
+    moneyBackGuarantee: "पैसे वापसी की गारंटी",
+    mostPopular: "सबसे लोकप्रिय",
+    bestValue: "सर्वोत्तम मूल्य",
+    selectPlan: "यह प्लान चुनें",
+    
+    paymentSuccess: "भुगतान सफल!",
+    thankYou: "आपकी सदस्यता के लिए धन्यवाद",
+    nowPredict: "अब आप अपनी भविष्यवाणी कर सकते हैं",
+    goToDashboard: "डैशबोर्ड पर जाएं",
+    
+    errorOccurred: "एक त्रुटि हुई",
+    tryAgain: "कृपया पुनः प्रयास करें",
+    
+    language: "भाषा",
+    
+    // Promo Banner
+    promoFreeFirst10: "50% छूट - लॉन्च ऑफर!",
+    promoVideos: "3 वीडियो",
+    promoReview: "1 समीक्षा",
+    promoFreeSubscription: "50% छूट!",
+    promoContactUs: "संपर्क करें",
+    
+    // Slogans
+    slogan1Line1: "संभावना का विज्ञान, आपके परिवार की",
+    slogan1Highlight: "सेवा में!",
+    slogan2Line1: "अपनी खुद की जैविक घड़ी के आधार पर",
+    slogan2Highlight: "भविष्य की योजना बनाएं!",
+    
+    // Description Wheel
+    desc1: "माता-पिता की जन्मतिथि दर्ज करें और AI को अपने भविष्य के बच्चे का लिंग प्रकट करने दें।",
+    desc2: "पहले और एकमात्र",
+    desc3: "एल्गोरिदम के माध्यम से जो लिंग भविष्यवाणी के लिए जोड़े के जैविक और सांख्यिकीय चक्रों का विश्लेषण करता है।",
+    
+    // Reels
+    watchReel: "रील देखें",
+  },
+  
   es: {
     appTitle: "Babywish",
     login: "Iniciar sesión",
@@ -506,12 +612,12 @@ export const translations = {
     
     heroTitle1: "Descubre a Tu",
     heroTitle2: "Futuro Hijo",
-    heroDescription: "Ingresa las fechas de nacimiento de los padres y deja que el cosmos revele el destino de tu futuro hijo a través de la astrología y numerología antigua.",
+    heroDescription: "Ingresa las fechas de nacimiento de los padres y deja que la IA revele el género de tu futuro hijo. A través del primer y único algoritmo AI Gender Baby Data-Driven que analiza los ciclos biológicos y estadísticos de la pareja para la predicción del género.",
     accuracy: "Precisión",
     guaranteeText: "Babywish te dice con",
     guaranteeBold: "95% de certeza",
     guaranteeEnd: "el género de tu futuro hijo.",
-    moneyBack: "¡Si nuestra predicción es incorrecta, te devolvemos tu dinero!",
+    moneyBack: "Con nosotros no arriesgas tu dinero. Te lo devolvemos si nuestra predicción no coincide con nuestro diagnóstico inicial.",
     feature1: "Género y Nombre",
     feature2: "Zodíaco y Personalidad",
     feature3: "Elementos de Suerte",
@@ -580,6 +686,27 @@ export const translations = {
     tryAgain: "Por favor intenta de nuevo",
     
     language: "Idioma",
+    
+    // Promo Banner
+    promoFreeFirst10: "¡50% DESCUENTO - Oferta de Lanzamiento!",
+    promoVideos: "3 videos",
+    promoReview: "1 reseña",
+    promoFreeSubscription: "¡50% Descuento!",
+    promoContactUs: "Contáctenos",
+    
+    // Slogans
+    slogan1Line1: "La ciencia de la probabilidad, al servicio de",
+    slogan1Highlight: "¡tu familia!",
+    slogan2Line1: "Planifica tu futuro, basado en tu propio",
+    slogan2Highlight: "¡reloj biológico!",
+    
+    // Description Wheel
+    desc1: "Ingresa las fechas de nacimiento de los padres y deja que la IA revele el género de tu futuro hijo.",
+    desc2: "A través del primero y único",
+    desc3: "algoritmo que analiza los ciclos biológicos y estadísticos de la pareja para la predicción del género.",
+    
+    // Reels
+    watchReel: "Ver Reel",
   },
   
   pt: {
@@ -591,12 +718,12 @@ export const translations = {
     
     heroTitle1: "Descubra o Seu",
     heroTitle2: "Futuro Filho",
-    heroDescription: "Insira as datas de nascimento dos pais e deixe o cosmos revelar o destino do seu futuro filho através da astrologia e numerologia antiga.",
+    heroDescription: "Insira as datas de nascimento dos pais e deixe a IA revelar o género do seu futuro filho. Através do primeiro e único algoritmo AI Gender Baby Data-Driven que analisa os ciclos biológicos e estatísticos do casal para a previsão do género.",
     accuracy: "Precisão",
     guaranteeText: "Babywish diz-lhe com",
     guaranteeBold: "95% de certeza",
     guaranteeEnd: "o género do seu futuro filho.",
-    moneyBack: "Se a nossa previsão estiver errada, devolvemos o seu dinheiro!",
+    moneyBack: "Connosco, não arrisca o seu dinheiro. Devolvemos-lho se a nossa previsão não corresponder ao nosso diagnóstico inicial.",
     feature1: "Género e Nome",
     feature2: "Zodíaco e Personalidade",
     feature3: "Elementos de Sorte",
@@ -665,6 +792,27 @@ export const translations = {
     tryAgain: "Por favor tente novamente",
     
     language: "Idioma",
+    
+    // Promo Banner
+    promoFreeFirst10: "50% DESCONTO - Oferta de Lançamento!",
+    promoVideos: "3 vídeos",
+    promoReview: "1 avaliação",
+    promoFreeSubscription: "50% Desconto!",
+    promoContactUs: "Contacte-nos",
+    
+    // Slogans
+    slogan1Line1: "A ciência da probabilidade, ao serviço da",
+    slogan1Highlight: "sua família!",
+    slogan2Line1: "Planeie o seu futuro, baseado no seu próprio",
+    slogan2Highlight: "relógio biológico!",
+    
+    // Description Wheel
+    desc1: "Insira as datas de nascimento dos pais e deixe a IA revelar o género do seu futuro filho.",
+    desc2: "Através do primeiro e único",
+    desc3: "algoritmo que analisa os ciclos biológicos e estatísticos do casal para a previsão do género.",
+    
+    // Reels
+    watchReel: "Ver Reel",
   },
   
   fr: {
@@ -676,12 +824,12 @@ export const translations = {
     
     heroTitle1: "Découvrez Votre",
     heroTitle2: "Futur Enfant",
-    heroDescription: "Entrez les dates de naissance des parents et laissez le cosmos révéler le destin de votre futur enfant à travers l'astrologie et la numérologie anciennes.",
+    heroDescription: "Entrez les dates de naissance des parents et laissez l'IA révéler le sexe de votre futur enfant. À travers le premier et unique algorithme AI Gender Baby Data-Driven qui analyse les cycles biologiques et statistiques du couple pour la prédiction du sexe.",
     accuracy: "Précision",
     guaranteeText: "Babywish vous dit avec",
     guaranteeBold: "95% de certitude",
     guaranteeEnd: "le sexe de votre futur enfant.",
-    moneyBack: "Si notre prédiction est fausse, nous vous remboursons!",
+    moneyBack: "Avec nous, votre argent ne risque rien. Nous vous le remboursons si notre prédiction ne correspond pas à notre diagnostic initial.",
     feature1: "Sexe et Prénom",
     feature2: "Zodiaque et Personnalité",
     feature3: "Éléments Chanceux",
@@ -750,6 +898,27 @@ export const translations = {
     tryAgain: "Veuillez réessayer",
     
     language: "Langue",
+    
+    // Promo Banner
+    promoFreeFirst10: "50% DE RÉDUCTION - Offre de Lancement!",
+    promoVideos: "3 vidéos",
+    promoReview: "1 avis",
+    promoFreeSubscription: "50% de Réduction!",
+    promoContactUs: "Contactez-nous",
+    
+    // Slogans
+    slogan1Line1: "La science des probabilités, au service de",
+    slogan1Highlight: "votre famille!",
+    slogan2Line1: "Planifiez votre avenir, basé sur votre propre",
+    slogan2Highlight: "horloge biologique!",
+    
+    // Description Wheel
+    desc1: "Entrez les dates de naissance des parents et laissez l'IA révéler le sexe de votre futur enfant.",
+    desc2: "À travers le premier et unique",
+    desc3: "algorithme qui analyse les cycles biologiques et statistiques du couple pour la prédiction du sexe.",
+    
+    // Reels
+    watchReel: "Voir le Reel",
   },
   
   tr: {
@@ -761,12 +930,12 @@ export const translations = {
     
     heroTitle1: "Gelecekteki",
     heroTitle2: "Çocuğunuzu Keşfedin",
-    heroDescription: "Ebeveynlerin doğum tarihlerini girin ve kozmos'un kadim astroloji ve numeroloji aracılığıyla gelecekteki çocuğunuzun kaderini açıklamasına izin verin.",
+    heroDescription: "Ebeveynlerin doğum tarihlerini girin ve yapay zekanın gelecekteki çocuğunuzun cinsiyetini açıklamasına izin verin. İlk ve tek AI Gender Baby Data-Driven algoritması aracılığıyla cinsiyet tahmini için çiftin biyolojik ve istatistiksel döngülerini analiz eder.",
     accuracy: "Doğruluk",
     guaranteeText: "Babywish size",
     guaranteeBold: "%95 kesinlikle",
     guaranteeEnd: "gelecekteki çocuğunuzun cinsiyetini söyler.",
-    moneyBack: "Tahminimiz yanlışsa, paranızı iade ederiz!",
+    moneyBack: "Bizimle paranızı riske atmazsınız. Tahminimiz ilk teşhisimizle uyuşmazsa paranızı iade ederiz.",
     feature1: "Cinsiyet ve İsim",
     feature2: "Burç ve Kişilik",
     feature3: "Şanslı Elementler",
@@ -828,6 +997,7 @@ export const translations = {
     
     paymentSuccess: "Ödeme Başarılı!",
     thankYou: "Aboneliğiniz için teşekkürler",
+
     nowPredict: "Artık tahmininizi yapabilirsiniz",
     goToDashboard: "Panele Git",
     
@@ -835,6 +1005,57 @@ export const translations = {
     tryAgain: "Lütfen tekrar deneyin",
     
     language: "Dil",
+    
+    // Promo Banner
+    promoFreeFirst10: "%50 İNDİRİM - Lansman Fırsatı!",
+    promoVideos: "3 video",
+    promoReview: "1 yorum",
+    promoFreeSubscription: "%50 İndirim!",
+    promoContactUs: "Bize Ulaşın",
+    
+    // Slogans
+    slogan1Line1: "Olasılık bilimi, ailenizin",
+    slogan1Highlight: "hizmetinde!",
+    slogan2Line1: "Kendi biyolojik saatinize göre",
+    slogan2Highlight: "geleceğinizi planlayın!",
+    
+    // Description Wheel
+    desc1: "Ebeveynlerin doğum tarihlerini girin ve yapay zekanın gelecekteki çocuğunuzun cinsiyetini açıklamasına izin verin.",
+    desc2: "İlk ve tek",
+    desc3: "cinsiyet tahmini için çiftin biyolojik ve istatistiksel döngülerini analiz eden algoritma aracılığıyla.",
+    
+    // Reels
+    watchReel: "Reeli İzle",
+  },
+  
+      nowPredict: "Artık tahmininizi yapabilirsiniz",
+    goToDashboard: "Panele Git",
+    
+    errorOccurred: "Bir hata oluştu",
+    tryAgain: "Lütfen tekrar deneyin",
+    
+    language: "Dil",
+    
+    // Promo Banner
+    promoFreeFirst10: "%50 İNDİRİM - Lansman Fırsatı!",
+    promoVideos: "3 video",
+    promoReview: "1 yorum",
+    promoFreeSubscription: "%50 İndirim!",
+    promoContactUs: "Bize Ulaşın",
+    
+    // Slogans
+    slogan1Line1: "Olasılık bilimi, ailenizin",
+    slogan1Highlight: "hizmetinde!",
+    slogan2Line1: "Kendi biyolojik saatinize göre",
+    slogan2Highlight: "geleceğinizi planlayın!",
+    
+    // Description Wheel
+    desc1: "Ebeveynlerin doğum tarihlerini girin ve yapay zekanın gelecekteki çocuğunuzun cinsiyetini açıklamasına izin verin.",
+    desc2: "İlk ve tek",
+    desc3: "cinsiyet tahmini için çiftin biyolojik ve istatistiksel döngülerini analiz eden algoritma aracılığıyla.",
+    
+    // Reels
+    watchReel: "Reeli İzle",
   },
   
   fa: {
@@ -846,12 +1067,12 @@ export const translations = {
     
     heroTitle1: "فرزند آینده",
     heroTitle2: "خود را کشف کنید",
-    heroDescription: "تاریخ تولد والدین را وارد کنید و بگذارید کیهان سرنوشت فرزند آینده شما را از طریق طالع‌بینی و علم اعداد باستانی آشکار کند.",
+    heroDescription: "تاریخ تولد والدین را وارد کنید و اجازه دهید هوش مصنوعی جنسیت فرزند آینده شما را آشکار کند. از طریق اولین و تنها الگوریتم AI Gender Baby Data-Driven که چرخه‌های بیولوژیکی و آماری زوج را برای پیش‌بینی جنسیت تحلیل می‌کند.",
     accuracy: "دقت",
     guaranteeText: "Babywish با",
     guaranteeBold: "۹۵٪ اطمینان",
     guaranteeEnd: "جنسیت فرزند آینده شما را می‌گوید.",
-    moneyBack: "اگر پیش‌بینی ما اشتباه باشد، پول شما را برمی‌گردانیم!",
+    moneyBack: "با ما پول شما در خطر نیست. اگر پیش‌بینی ما با تشخیص اولیه مطابقت نداشته باشد، پول شما را برمی‌گردانیم.",
     feature1: "جنسیت و نام",
     feature2: "برج و شخصیت",
     feature3: "عناصر خوش‌یمن",
@@ -920,6 +1141,27 @@ export const translations = {
     tryAgain: "لطفاً دوباره امتحان کنید",
     
     language: "زبان",
+    
+    // Promo Banner
+    promoFreeFirst10: "۵۰٪ تخفیف - پیشنهاد راه‌اندازی!",
+    promoVideos: "۳ ویدیو",
+    promoReview: "۱ نظر",
+    promoFreeSubscription: "۵۰٪ تخفیف!",
+    promoContactUs: "تماس با ما",
+    
+    // Slogans
+    slogan1Line1: "علم احتمال، در خدمت",
+    slogan1Highlight: "خانواده شما!",
+    slogan2Line1: "آینده خود را بر اساس ساعت",
+    slogan2Highlight: "بیولوژیکی خود برنامه‌ریزی کنید!",
+    
+    // Description Wheel
+    desc1: "تاریخ تولد والدین را وارد کنید و اجازه دهید هوش مصنوعی جنسیت فرزند آینده شما را آشکار کند.",
+    desc2: "از طریق اولین و تنها",
+    desc3: "الگوریتمی که چرخه‌های بیولوژیکی و آماری زوج را برای پیش‌بینی جنسیت تحلیل می‌کند.",
+    
+    // Reels
+    watchReel: "مشاهده ریل",
   },
   
   ar: {
@@ -931,12 +1173,12 @@ export const translations = {
     
     heroTitle1: "اكتشف",
     heroTitle2: "طفلك المستقبلي",
-    heroDescription: "أدخل تواريخ ميلاد الوالدين ودع الكون يكشف مصير طفلك المستقبلي من خلال علم التنجيم والأرقام القديم.",
+    heroDescription: "أدخل تواريخ ميلاد الوالدين ودع الذكاء الاصطناعي يكشف جنس طفلك المستقبلي. من خلال خوارزمية AI Gender Baby Data-Driven الأولى والوحيدة التي تحلل الدورات البيولوجية والإحصائية للزوجين للتنبؤ بالجنس.",
     accuracy: "الدقة",
     guaranteeText: "Babywish يخبرك بـ",
     guaranteeBold: "95٪ يقين",
     guaranteeEnd: "جنس طفلك المستقبلي.",
-    moneyBack: "إذا كان توقعنا خاطئاً، سنعيد لك أموالك!",
+    moneyBack: "معنا لا تخاطر بأموالك. سنعيدها لك إذا لم يتطابق توقعنا مع تشخيصنا الأولي.",
     feature1: "الجنس والاسم",
     feature2: "البرج والشخصية",
     feature3: "عناصر الحظ",
@@ -1005,6 +1247,27 @@ export const translations = {
     tryAgain: "يرجى المحاولة مرة أخرى",
     
     language: "اللغة",
+    
+    // Promo Banner
+    promoFreeFirst10: "خصم 50٪ - عرض الإطلاق!",
+    promoVideos: "3 فيديوهات",
+    promoReview: "1 تقييم",
+    promoFreeSubscription: "خصم 50٪!",
+    promoContactUs: "اتصل بنا",
+    
+    // Slogans
+    slogan1Line1: "علم الاحتمالات، في خدمة",
+    slogan1Highlight: "عائلتك!",
+    slogan2Line1: "خطط لمستقبلك، بناءً على",
+    slogan2Highlight: "ساعتك البيولوجية!",
+    
+    // Description Wheel
+    desc1: "أدخل تواريخ ميلاد الوالدين ودع الذكاء الاصطناعي يكشف جنس طفلك المستقبلي.",
+    desc2: "من خلال الخوارزمية الأولى والوحيدة",
+    desc3: "التي تحلل الدورات البيولوجية والإحصائية للزوجين للتنبؤ بالجنس.",
+    
+    // Reels
+    watchReel: "مشاهدة الريل",
   },
   
   ja: {
@@ -1016,12 +1279,12 @@ export const translations = {
     
     heroTitle1: "あなたの未来の",
     heroTitle2: "お子様を発見",
-    heroDescription: "両親の誕生日を入力して、古代の占星術と数秘術を通じて宇宙があなたの未来の子供の運命を明らかにします。",
+    heroDescription: "両親の誕生日を入力して、AIがあなたの将来の子供の性別を明らかにします。最初で唯一のAI Gender Baby Data-Drivenアルゴリズムを通じて、カップルの生物学的および統計的サイクルを分析して性別を予測します。",
     accuracy: "精度",
     guaranteeText: "Babywishは",
     guaranteeBold: "95%の確実性で",
     guaranteeEnd: "あなたの未来の子供の性別をお伝えします。",
-    moneyBack: "予測が間違っていた場合、返金いたします！",
+    moneyBack: "私たちと一緒なら、お金のリスクはありません。予測が初期診断と一致しない場合、返金いたします。",
     feature1: "性別と名前",
     feature2: "星座と性格",
     feature3: "ラッキー要素",
@@ -1090,6 +1353,27 @@ export const translations = {
     tryAgain: "もう一度お試しください",
     
     language: "言語",
+    
+    // Promo Banner
+    promoFreeFirst10: "50%オフ - ローンチオファー！",
+    promoVideos: "3本の動画",
+    promoReview: "1件のレビュー",
+    promoFreeSubscription: "50%割引！",
+    promoContactUs: "お問い合わせ",
+    
+    // Slogans
+    slogan1Line1: "確率の科学が、あなたの家族の",
+    slogan1Highlight: "ために！",
+    slogan2Line1: "あなた自身の体内時計に基づいて",
+    slogan2Highlight: "未来を計画しましょう！",
+    
+    // Description Wheel
+    desc1: "両親の誕生日を入力して、AIがあなたの将来の子供の性別を明らかにします。",
+    desc2: "最初で唯一の",
+    desc3: "カップルの生物学的および統計的サイクルを分析して性別を予測するアルゴリズムを通じて。",
+    
+    // Reels
+    watchReel: "リールを見る",
   },
   
   sv: {
@@ -1101,12 +1385,12 @@ export const translations = {
     
     heroTitle1: "Upptäck Ditt",
     heroTitle2: "Framtida Barn",
-    heroDescription: "Ange föräldrarnas födelsedagar och låt kosmos avslöja ditt framtida barns öde genom urgammal astrologi och numerologi.",
+    heroDescription: "Ange föräldrarnas födelsedagar och låt AI avslöja ditt framtida barns kön. Genom den första och enda AI Gender Baby Data-Driven algoritmen som analyserar parets biologiska och statistiska cykler för könsprediktion.",
     accuracy: "Noggrannhet",
     guaranteeText: "Babywish berättar med",
     guaranteeBold: "95% säkerhet",
     guaranteeEnd: "könet på ditt framtida barn.",
-    moneyBack: "Om vår förutsägelse är fel, återbetalar vi dina pengar!",
+    moneyBack: "Med oss riskerar du inte dina pengar. Vi återbetalar dem om vår förutsägelse inte stämmer överens med vår ursprungliga diagnos.",
     feature1: "Kön & Namn",
     feature2: "Stjärntecken & Personlighet",
     feature3: "Lyckoelement",
@@ -1175,6 +1459,27 @@ export const translations = {
     tryAgain: "Vänligen försök igen",
     
     language: "Språk",
+    
+    // Promo Banner
+    promoFreeFirst10: "50% RABATT - Lanseringserbjudande!",
+    promoVideos: "3 videor",
+    promoReview: "1 recension",
+    promoFreeSubscription: "50% Rabatt!",
+    promoContactUs: "Kontakta oss",
+    
+    // Slogans
+    slogan1Line1: "Sannolikhetens vetenskap, i din familjs",
+    slogan1Highlight: "tjänst!",
+    slogan2Line1: "Planera din framtid, baserat på din egen",
+    slogan2Highlight: "biologiska klocka!",
+    
+    // Description Wheel
+    desc1: "Ange föräldrarnas födelsedagar och låt AI avslöja ditt framtida barns kön.",
+    desc2: "Genom den första och enda",
+    desc3: "algoritmen som analyserar parets biologiska och statistiska cykler för könsprediktion.",
+    
+    // Reels
+    watchReel: "Se Reel",
   },
   
   el: {
@@ -1186,12 +1491,14 @@ export const translations = {
     
     heroTitle1: "Ανακαλύψτε το",
     heroTitle2: "Μελλοντικό σας Παιδί",
-    heroDescription: "Εισάγετε τις ημερομηνίες γέννησης των γονέων και αφήστε το σύμπαν να αποκαλύψει τη μοίρα του μελλοντικού σας παιδιού μέσω της αρχαίας αστρολογίας και αριθμολογίας.",
+    heroDescription: "Εισάγετε τις ημερομηνίες γέννησης των γονέων και αφήστε την τεχνητή νοημοσύνη να αποκαλύψει τη μοίρα του μελλοντικού σας παιδιού. Μέσω του πρώτου και μοναδικού μέχρι σήμερα AI Gender Baby Data-Driven αλγόριθμου που αναλύει τους βιολογικούς και στατιστικούς κύκλους του ζευγαριού για την πρόγνωση φύλου.",
+    heroDescriptionPart1: "Εισάγετε τις ημερομηνίες γέννησης των γονέων και αφήστε την τεχνητή νοημοσύνη να αποκαλύψει τη μοίρα του μελλοντικού σας παιδιού. Μέσω του πρώτου και μοναδικού μέχρι σήμερα",
+    heroDescriptionPart2: "αλγόριθμου που αναλύει τους βιολογικούς και στατιστικούς κύκλους του ζευγαριού για την πρόγνωση φύλου.",
     accuracy: "Ακρίβεια",
     guaranteeText: "Το Babywish σας λέει με",
     guaranteeBold: "95% βεβαιότητα",
     guaranteeEnd: "το φύλο του μελλοντικού σας παιδιού.",
-    moneyBack: "Αν η πρόβλεψή μας είναι λάθος, σας επιστρέφουμε τα χρήματα!",
+    moneyBack: "Με μας δε ρισκάρετε τα χρήματά σας. Σας τα επιστρέφουμε πίσω αν η πρόβλεψή μας δεν είναι η αρχική μας διάγνωση.",
     feature1: "Φύλο & Όνομα",
     feature2: "Ζώδιο & Προσωπικότητα",
     feature3: "Τυχερά Στοιχεία",
@@ -1217,11 +1524,6 @@ export const translations = {
     
     welcomeUser: "Καλώς ήρθατε",
     yourPrediction: "Η Πρόβλεψή σας",
-    makePrediction: "Κάντε Πρόβλεψη",
-    subscriptionStatus: "Κατάσταση Συνδρομής",
-    active: "Ενεργή",
-    inactive: "Ανενεργή",
-    subscribe: "Εγγραφή",
     predictionUsed: "Πρόβλεψη Χρησιμοποιήθηκε",
     yes: "Ναι",
     no: "Όχι",
@@ -1250,437 +1552,7 @@ export const translations = {
     choosePlan: "Επιλέξτε το Πακέτο σας",
     chooseSubtitle: "Ξεκλειδώστε την κοσμική σας πρόβλεψη",
     months: "Μήνες",
-    onePrediction: "1 πρόβλεψη περιλαμβάνεται",
-    moneyBackGuarantee: "Εγγύηση επιστροφής χρημάτων",
-    mostPopular: "Πιο Δημοφιλές",
-    bestValue: "Καλύτερη Αξία",
-    selectPlan: "Επιλέξτε αυτό το Πακέτο",
-    
-    paymentSuccess: "Επιτυχής Πληρωμή!",
-    thankYou: "Ευχαριστούμε για τη συνδρομή σας",
-    nowPredict: "Μπορείτε τώρα να κάνετε την πρόβλεψή σας",
-    goToDashboard: "Πήγαινε στον Πίνακα",
-    
-    errorOccurred: "Παρουσιάστηκε σφάλμα",
-    tryAgain: "Παρακαλώ δοκιμάστε ξανά",
-    
-    language: "Γλώσσα",
-    
-    // Name Showcase
-    back: "Πίσω",
-    namesFromYourRegion: "Ονόματα από την Περιοχή σας",
-    basedOnLocation: "Βάσει της τοποθεσίας σας",
-    boyNames: "Ονόματα Αγοριών",
-    girlNames: "Ονόματα Κοριτσιών",
-    wantPersonalizedName: "Θέλετε Εξατομικευμένο Όνομα;",
-    getPredictionDesc: "Αποκτήστε μια πλήρη πρόβλεψη με το τέλειο όνομα για το μελλοντικό σας μωρό βάσει κοσμικής ευθυγράμμισης!",
-    getPrediction: "Αποκτήστε την Πρόβλεψή σας",
-    namesCulture: "Ονόματα από",
-    culture: "παράδοση",
-    
-    // Lucky Elements
-    luckyElements: "Τυχερά Στοιχεία",
-    luckyElementsDesc: "Ανακαλύψτε ισχυρούς πολύτιμους λίθους για να ενισχύσετε τη μοίρα του μωρού σας",
-    wantPersonalizedElements: "Θέλετε Εξατομικευμένα Τυχερά Στοιχεία;",
-    getElementsDesc: "Αποκτήστε μια πλήρη πρόβλεψη με τυχερά στοιχεία ειδικά επιλεγμένα για το μελλοντικό σας μωρό!",
-  },
-  
-  it: {
-    appTitle: "Babywish",
-    login: "Accedi",
-    register: "Registrati",
-    dashboard: "Dashboard",
-    logout: "Esci",
-    
-    heroTitle1: "Scopri il Tuo",
-    heroTitle2: "Futuro Bambino",
-    heroDescription: "Inserisci le date di nascita dei genitori e lascia che il cosmo riveli il destino del tuo futuro bambino attraverso l'antica astrologia e numerologia.",
-    accuracy: "Precisione",
-    guaranteeText: "Babywish ti dice con",
-    guaranteeBold: "95% di certezza",
-    guaranteeEnd: "il sesso del tuo futuro bambino.",
-    moneyBack: "Se la nostra previsione è sbagliata, ti rimborsiamo!",
-    feature1: "Sesso & Nome",
-    feature2: "Zodiaco & Personalità",
-    feature3: "Elementi Fortunati",
-    getStarted: "Inizia",
-    priceFrom: "Da €10 per una previsione completa",
-    footer: "Solo a scopo di intrattenimento",
-    
-    welcomeBack: "Bentornato",
-    loginSubtitle: "Accedi per vedere le tue previsioni cosmiche",
-    email: "Email",
-    password: "Password",
-    loginButton: "Accedi",
-    noAccount: "Non hai un account?",
-    registerHere: "Registrati qui",
-    orContinueWith: "Oppure continua con",
-    
-    createAccount: "Crea Account",
-    registerSubtitle: "Inizia il tuo viaggio cosmico",
-    confirmPassword: "Conferma Password",
-    registerButton: "Registrati",
-    hasAccount: "Hai già un account?",
-    loginHere: "Accedi qui",
-    
-    welcomeUser: "Benvenuto",
-    yourPrediction: "La Tua Previsione",
-    makePrediction: "Fai Previsione",
-    subscriptionStatus: "Stato Abbonamento",
-    active: "Attivo",
-    inactive: "Inattivo",
-    subscribe: "Abbonati",
-    predictionUsed: "Previsione Usata",
-    yes: "Sì",
-    no: "No",
-    
-    motherBirthday: "Compleanno della Madre",
-    fatherBirthday: "Compleanno del Padre",
-    predictButton: "Prevedi",
-    predicting: "Creazione previsione...",
-    
-    yourBaby: "Il Tuo Futuro Bambino",
-    gender: "Sesso",
-    boy: "Maschio",
-    girl: "Femmina",
-    suggestedName: "Nome Suggerito",
-    zodiacSign: "Segno Zodiacale",
-    personality: "Personalità",
-    luckyNumber: "Numero Fortunato",
-    luckyColor: "Colore Fortunato",
-    luckyDay: "Giorno Fortunato",
-    
-    choosePlan: "Scegli il Tuo Piano",
-    chooseSubtitle: "Sblocca la tua previsione cosmica",
-    months: "Mesi",
-    onePrediction: "1 previsione inclusa",
-    moneyBackGuarantee: "Garanzia soddisfatti o rimborsati",
-    mostPopular: "Più Popolare",
-    bestValue: "Miglior Valore",
-    selectPlan: "Seleziona Questo Piano",
-    
-    paymentSuccess: "Pagamento Riuscito!",
-    thankYou: "Grazie per il tuo abbonamento",
-    nowPredict: "Ora puoi fare la tua previsione",
-    goToDashboard: "Vai alla Dashboard",
-    
-    errorOccurred: "Si è verificato un errore",
-    tryAgain: "Per favore riprova",
-    
-    language: "Lingua",
-  },
-  
-  sr: {
-    appTitle: "Babywish",
-    login: "Пријава",
-    register: "Регистрација",
-    dashboard: "Контролна табла",
-    logout: "Одјава",
-    
-    heroTitle1: "Откријте Своје",
-    heroTitle2: "Будуће Дете",
-    heroDescription: "Унесите датуме рођења родитеља и дозволите космосу да открије судбину вашег будућег детета кроз древну астрологију и нумерологију.",
-    accuracy: "Тачност",
-    guaranteeText: "Babywish вам говори са",
-    guaranteeBold: "95% сигурношћу",
-    guaranteeEnd: "пол вашег будућег детета.",
-    moneyBack: "Ако је наше предвиђање погрешно, враћамо вам новац!",
-    feature1: "Пол и Име",
-    feature2: "Хороскопски знак и Личност",
-    feature3: "Срећни елементи",
-    getStarted: "Почни",
-    priceFrom: "Од €10 за комплетно предвиђање",
-    footer: "Само у сврху забаве",
-    
-    welcomeBack: "Добродошли назад",
-    loginSubtitle: "Пријавите се да видите своја космичка предвиђања",
-    email: "Имејл",
-    password: "Лозинка",
-    loginButton: "Пријави се",
-    noAccount: "Немате налог?",
-    registerHere: "Региструјте се овде",
-    orContinueWith: "Или наставите са",
-    
-    createAccount: "Креирај налог",
-    registerSubtitle: "Започните своје космичко путовање",
-    confirmPassword: "Потврди лозинку",
-    registerButton: "Регистрација",
-    hasAccount: "Већ имате налог?",
-    loginHere: "Пријавите се овде",
-    
-    welcomeUser: "Добродошли",
-    yourPrediction: "Ваше предвиђање",
-    makePrediction: "Направи предвиђање",
-    subscriptionStatus: "Статус претплате",
-    active: "Активна",
-    inactive: "Неактивна",
-    subscribe: "Претплати се",
-    predictionUsed: "Предвиђање искоришћено",
-    yes: "Да",
-    no: "Не",
-    
-    motherBirthday: "Рођендан мајке",
-    fatherBirthday: "Рођендан оца",
-    predictButton: "Предвиди",
-    predicting: "Креирање предвиђања...",
-    
-    yourBaby: "Ваша будућа беба",
-    gender: "Пол",
-    boy: "Дечак",
-    girl: "Девојчица",
-    suggestedName: "Предложено име",
-    zodiacSign: "Хороскопски знак",
-    personality: "Личност",
-    luckyNumber: "Срећан број",
-    luckyColor: "Срећна боја",
-    luckyDay: "Срећан дан",
-    
-    choosePlan: "Изаберите свој план",
-    chooseSubtitle: "Откључајте своје космичко предвиђање",
-    months: "Месеци",
-    onePrediction: "1 предвиђање укључено",
-    moneyBackGuarantee: "Гаранција поврата новца",
-    mostPopular: "Најпопуларније",
-    bestValue: "Најбоља вредност",
-    selectPlan: "Изабери овај план",
-    
-    paymentSuccess: "Плаћање успешно!",
-    thankYou: "Хвала на претплати",
-    nowPredict: "Сада можете направити своје предвиђање",
-    goToDashboard: "Иди на контролну таблу",
-    
-    errorOccurred: "Дошло је до грешке",
-    tryAgain: "Молимо покушајте поново",
-    
-    language: "Језик",
-  },
-  
-  pl: {
-    appTitle: "Babywish",
-    login: "Zaloguj się",
-    register: "Zarejestruj się",
-    dashboard: "Panel",
-    logout: "Wyloguj się",
-    
-    heroTitle1: "Odkryj Swoje",
-    heroTitle2: "Przyszłe Dziecko",
-    heroDescription: "Wprowadź daty urodzin rodziców i pozwól kosmosowi ujawnić przeznaczenie twojego przyszłego dziecka poprzez starożytną astrologię i numerologię.",
-    accuracy: "Dokładność",
-    guaranteeText: "Babywish mówi ci z",
-    guaranteeBold: "95% pewnością",
-    guaranteeEnd: "płeć twojego przyszłego dziecka.",
-    moneyBack: "Jeśli nasza prognoza jest błędna, zwrócimy ci pieniądze!",
-    feature1: "Płeć i Imię",
-    feature2: "Znak Zodiaku i Osobowość",
-    feature3: "Szczęśliwe Elementy",
-    getStarted: "Rozpocznij",
-    priceFrom: "Od €10 za pełną prognozę",
-    footer: "Tylko dla celów rozrywkowych",
-    
-    welcomeBack: "Witaj ponownie",
-    loginSubtitle: "Zaloguj się, aby zobaczyć swoje kosmiczne prognozy",
-    email: "Email",
-    password: "Hasło",
-    loginButton: "Zaloguj się",
-    noAccount: "Nie masz konta?",
-    registerHere: "Zarejestruj się tutaj",
-    orContinueWith: "Lub kontynuuj z",
-    
-    createAccount: "Utwórz konto",
-    registerSubtitle: "Rozpocznij swoją kosmiczną podróż",
-    confirmPassword: "Potwierdź hasło",
-    registerButton: "Zarejestruj się",
-    hasAccount: "Masz już konto?",
-    loginHere: "Zaloguj się tutaj",
-    
-    welcomeUser: "Witaj",
-    yourPrediction: "Twoja Prognoza",
-    makePrediction: "Zrób Prognozę",
-    subscriptionStatus: "Status Subskrypcji",
-    active: "Aktywna",
-    inactive: "Nieaktywna",
-    subscribe: "Subskrybuj",
-    predictionUsed: "Prognoza Wykorzystana",
-    yes: "Tak",
-    no: "Nie",
-    
-    motherBirthday: "Urodziny Matki",
-    fatherBirthday: "Urodziny Ojca",
-    predictButton: "Przewiduj",
-    predicting: "Tworzenie prognozy...",
-    
-    yourBaby: "Twoje Przyszłe Dziecko",
-    gender: "Płeć",
-    boy: "Chłopiec",
-    girl: "Dziewczynka",
-    suggestedName: "Sugerowane Imię",
-    zodiacSign: "Znak Zodiaku",
-    personality: "Osobowość",
-    luckyNumber: "Szczęśliwa Liczba",
-    luckyColor: "Szczęśliwy Kolor",
-    luckyDay: "Szczęśliwy Dzień",
-    
-    choosePlan: "Wybierz Swój Plan",
-    chooseSubtitle: "Odblokuj swoją kosmiczną prognozę",
-    months: "Miesiące",
-    onePrediction: "1 prognoza w zestawie",
-    moneyBackGuarantee: "Gwarancja zwrotu pieniędzy",
-    mostPopular: "Najpopularniejszy",
-    bestValue: "Najlepsza Wartość",
-    selectPlan: "Wybierz Ten Plan",
-    
-    paymentSuccess: "Płatność Zakończona!",
-    thankYou: "Dziękujemy za subskrypcję",
-    nowPredict: "Teraz możesz zrobić swoją prognozę",
-    goToDashboard: "Idź do Panelu",
-    
-    errorOccurred: "Wystąpił błąd",
-    tryAgain: "Spróbuj ponownie",
-    
-    language: "Język",
-  },
-  
-  cs: {
-    appTitle: "Babywish",
-    login: "Přihlásit se",
-    register: "Registrovat se",
-    dashboard: "Nástěnka",
-    logout: "Odhlásit se",
-    
-    heroTitle1: "Objevte Své",
-    heroTitle2: "Budoucí Dítě",
-    heroDescription: "Zadejte data narození rodičů a nechte vesmír odhalit osud vašeho budoucího dítěte prostřednictvím starověké astrologie a numerologie.",
-    accuracy: "Přesnost",
-    guaranteeText: "Babywish vám říká s",
-    guaranteeBold: "95% jistotou",
-    guaranteeEnd: "pohlaví vašeho budoucího dítěte.",
-    moneyBack: "Pokud je naše předpověď špatná, vrátíme vám peníze!",
-    feature1: "Pohlaví a Jméno",
-    feature2: "Znamení zvěrokruhu a Osobnost",
-    feature3: "Šťastné Prvky",
-    getStarted: "Začít",
-    priceFrom: "Od €10 za kompletní předpověď",
-    footer: "Pouze pro zábavu",
-    
-    welcomeBack: "Vítejte zpět",
-    loginSubtitle: "Přihlaste se pro zobrazení vašich kosmických předpovědí",
-    email: "Email",
-    password: "Heslo",
-    loginButton: "Přihlásit se",
-    noAccount: "Nemáte účet?",
-    registerHere: "Zaregistrujte se zde",
-    orContinueWith: "Nebo pokračujte s",
-    
-    createAccount: "Vytvořit účet",
-    registerSubtitle: "Začněte svou kosmickou cestu",
-    confirmPassword: "Potvrdit heslo",
-    registerButton: "Registrovat se",
-    hasAccount: "Již máte účet?",
-    loginHere: "Přihlaste se zde",
-    
-    welcomeUser: "Vítejte",
-    yourPrediction: "Vaše Předpověď",
-    makePrediction: "Vytvořit Předpověď",
-    subscriptionStatus: "Stav Předplatného",
-    active: "Aktivní",
-    inactive: "Neaktivní",
-    subscribe: "Předplatit",
-    predictionUsed: "Předpověď Použita",
-    yes: "Ano",
-    no: "Ne",
-    
-    motherBirthday: "Narozeniny Matky",
-    fatherBirthday: "Narozeniny Otce",
-    predictButton: "Předpovědět",
-    predicting: "Vytváření předpovědi...",
-    
-    yourBaby: "Vaše Budoucí Miminko",
-    gender: "Pohlaví",
-    boy: "Chlapec",
-    girl: "Dívka",
-    suggestedName: "Navrhované Jméno",
-    zodiacSign: "Znamení Zvěrokruhu",
-    personality: "Osobnost",
-    luckyNumber: "Šťastné Číslo",
-    luckyColor: "Šťastná Barva",
-    luckyDay: "Šťastný Den",
-    
-    choosePlan: "Vyberte Svůj Plán",
-    chooseSubtitle: "Odemkněte svou kosmickou předpověď",
-    months: "Měsíce",
-    onePrediction: "1 předpověď zahrnuta",
-    moneyBackGuarantee: "Záruka vrácení peněz",
-    mostPopular: "Nejoblíbenější",
-    bestValue: "Nejlepší Hodnota",
-    selectPlan: "Vybrat Tento Plán",
-    
-    paymentSuccess: "Platba Úspěšná!",
-    thankYou: "Děkujeme za předplatné",
-    nowPredict: "Nyní můžete vytvořit svou předpověď",
-    goToDashboard: "Přejít na Nástěnku",
-    
-    errorOccurred: "Došlo k chybě",
-    tryAgain: "Zkuste to prosím znovu",
-    
-    language: "Jazyk",
-  },
-};
-
-// Language names for the selector
-export const languageNames = {
-  de: "Deutsch",
-  en: "English",
-  el: "Ελληνικά",
-  it: "Italiano",
-  ru: "Русский",
-  zh: "中文",
-  hi: "हिन्दी",
-  es: "Español",
-  pt: "Português",
-  fr: "Français",
-  tr: "Türkçe",
-  fa: "فارسی",
-  ar: "العربية",
-  ja: "日本語",
-  sv: "Svenska",
-  sr: "Српски",
-  pl: "Polski",
-  cs: "Čeština",
-};
-
-// RTL languages
-export const rtlLanguages = ['ar', 'fa'];
-
-// Detect browser language and map to supported language
-export const detectLanguage = () => {
-  const browserLang = navigator.language || navigator.userLanguage;
-  const langCode = browserLang.split('-')[0].toLowerCase();
-  
-  // Map browser language codes to our supported languages
-  const languageMap = {
-    de: 'de',
-    en: 'en',
-    el: 'el',
-    it: 'it',
-    ru: 'ru',
-    zh: 'zh',
-    hi: 'hi',
-    es: 'es',
-    pt: 'pt',
-    fr: 'fr',
-    tr: 'tr',
-    fa: 'fa',
-    ar: 'ar',
-    ja: 'ja',
-    sv: 'sv',
-    sr: 'sr',
-    pl: 'pl',
-    cs: 'cs',
-    no: 'sv', // Norwegian -> Swedish (Scandinavian)
-    da: 'sv', // Danish -> Swedish (Scandinavian)
-    nb: 'sv', // Norwegian Bokmål -> Swedish
-    nn: 'sv', // Norwegian Nynorsk -> Swedish
-  };
+    onePrediction: "1 πρόβλεψη περιλα
   
   return languageMap[langCode] || 'de'; // Default to German
 };
