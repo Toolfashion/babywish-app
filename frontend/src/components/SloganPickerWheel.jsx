@@ -1,11 +1,10 @@
-jsx
 import { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { EffectCoverflow, Pagination, Autoplay } from 'swiper/modules';
+import { EffectCreative, Pagination, Autoplay } from 'swiper/modules';
 
 import 'swiper/css';
-import 'swiper/css/effect-coverflow';
+import 'swiper/css/effect-creative';
 import 'swiper/css/pagination';
 
 const SloganPickerWheel = () => {
@@ -35,8 +34,8 @@ const SloganPickerWheel = () => {
     <div 
       className="relative mx-auto rounded-2xl overflow-hidden"
       style={{
-        width: '100%',
-        maxWidth: '600px',
+        width: '95%',
+        maxWidth: '520px',
         background: 'rgba(0, 0, 0, 0.2)',
         backdropFilter: 'blur(4px)',
         border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -47,14 +46,20 @@ const SloganPickerWheel = () => {
           0%, 100% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
         }
+        .slogan-swiper,
+        .slogan-swiper .swiper-wrapper,
         .slogan-swiper .swiper-slide {
-          opacity: 0.4;
-          transform: scale(0.85);
-          transition: all 0.3s ease;
+          width: 100% !important;
         }
-        .slogan-swiper .swiper-slide-active {
-          opacity: 1;
-          transform: scale(1);
+        .slogan-swiper .swiper-slide {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          text-align: center !important;
+        }
+        .slogan-swiper .swiper-slide > div {
+          width: 100% !important;
+          text-align: center !important;
         }
         .slogan-swiper .swiper-pagination-bullet {
           background: rgba(255, 255, 255, 0.3);
@@ -71,37 +76,44 @@ const SloganPickerWheel = () => {
       <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/40 to-transparent z-20 pointer-events-none" />
 
       <Swiper
-        modules={[EffectCoverflow, Pagination, Autoplay]}
-        effect="coverflow"
+        modules={[EffectCreative, Pagination, Autoplay]}
+        effect="creative"
         grabCursor={true}
         centeredSlides={true}
-        slidesPerView={1.4}
+        slidesPerView={1}
         loop={true}
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
           pauseOnMouseEnter: true,
         }}
-        coverflowEffect={{
-          rotate: 25,
-          stretch: 0,
-          depth: 150,
-          modifier: 1,
-          slideShadows: false,
+        creativeEffect={{
+          prev: {
+            translate: [0, '-100%', 0],
+            opacity: 0,
+          },
+          next: {
+            translate: [0, '100%', 0],
+            opacity: 0,
+          },
         }}
+        speed={800}
         pagination={{ 
           clickable: true,
           dynamicBullets: true,
         }}
         onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
-        className="slogan-swiper py-6"
-        style={{ paddingBottom: '40px' }}
+        className="slogan-swiper"
+        style={{ paddingBottom: '40px', height: '100px' }}
       >
         {slogans.map((slogan, index) => (
           <SwiperSlide key={index}>
-            <div className="flex flex-col items-center justify-center px-4 py-6 min-h-[100px]">
+            <div 
+              className="flex flex-col items-center justify-center w-full"
+              style={{ textAlign: 'center', width: '100%', padding: '0 10px' }}
+            >
               <p 
-                className="text-base md:text-lg lg:text-xl text-center leading-tight tracking-wide"
+                className="text-base md:text-lg lg:text-xl leading-tight tracking-wide"
                 style={{ 
                   fontFamily: "'Cinzel', serif", 
                   fontWeight: 700,
@@ -110,7 +122,9 @@ const SloganPickerWheel = () => {
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
-                  animation: 'gradientMove 4s ease-in-out infinite'
+                  animation: 'gradientMove 4s ease-in-out infinite',
+                  textAlign: 'center',
+                  width: '100%'
                 }}
               >
                 {slogan.line1}
@@ -141,3 +155,5 @@ const SloganPickerWheel = () => {
     </div>
   );
 };
+
+export default SloganPickerWheel;
