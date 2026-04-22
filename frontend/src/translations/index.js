@@ -2022,7 +2022,7 @@ export const translations = {
     slogan1Line1: "Věda pravděpodobnosti, ve službách",slogan1Line1: "Věda pravděpodobnosti, ve službách",
     slogan1Highlight: "vaší rodiny!",
     slogan2Line1: "Plánujte svou budoucnost, na základě vlastních",
-    slogan2Highlight: "biologických hodin!",
+    slogan2Highlight: "
     
     // Description Wheel
     desc1: "Zadejte data narození rodičů a nechte AI odhalit pohlaví vašeho budoucího dítěte.",
