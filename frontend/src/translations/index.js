@@ -1235,7 +1235,7 @@ export const translations = {
     
     // Reels
     watchReel: "مشاهدة الريل",
-  },
+
     
     paymentSuccess: "تم الدفع بنجاح!",
     thankYou: "شكراً لاشتراكك",
