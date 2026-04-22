@@ -2034,7 +2034,6 @@ export const translations = {
 
 // Language names for the selector
 export const languageNames = {
-  javascript
   de: "Deutsch",
   en: "English",
   el: "Ελληνικά",
