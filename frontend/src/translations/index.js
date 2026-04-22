@@ -2024,7 +2024,7 @@ export const translations = {
     slogan2Line1: "Plánujte svou budoucnost, na základě vlastních",
     slogan2Highlight: "biologických hodin!",
     
-  // Description Wheel
+    // Description Wheel
     desc1: "Zadejte data narození rodičů a nechte AI odhalit pohlaví vašeho budoucího dítěte.",
     desc2: "Prostřednictvím prvního a jediného",
     desc3: "algoritmu, který analyzuje biologické a statistické cykly páru pro predikci pohlaví.",
