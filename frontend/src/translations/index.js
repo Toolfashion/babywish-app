@@ -2054,41 +2054,18 @@ export const languageNames = {
   sr: "Српски",
   pl: "Polski",
   cs: "Čeština",
+ },
+  };
+
+// Language names for the selector
+export c
+```
+
+**Με αυτό:**
+```javascript
+  },
 };
 
-// RTL languages
-export const rtlLanguages = ['ar', 'fa'];
-
-// Detect browser language and map to supported language
-export const detectLanguage = () => {
-  const browserLang = navigator.language || navigator.userLanguage;
-  const langCode = browserLang.split('-')[0].toLowerCase();
-  
-  const languageMap = {
-    de: 'de',
-    en: 'en',
-    el: 'el',
-    it: 'it',
-    ru: 'ru',
-    zh: 'zh',
-    hi: 'hi',
-    es: 'es',
-    pt: 'pt',
-    fr: 'fr',
-    tr: 'tr',
-    fa: 'fa',
-    ar: 'ar',
-    ja: 'ja',
-    sv: 'sv',
-    sr: 'sr',
-    pl: 'pl',
-    cs: 'cs',
-    no: 'sv',
-    da: 'sv',
-    nb: 'sv',
-    nn: 'sv',
-  };
- javascript
 // Language names for the selector
 export const languageNames = {
   de: "Deutsch",
@@ -2144,4 +2121,5 @@ export const detectLanguage = () => {
     nn: 'sv',
   };
   
-
+  return languageMap[langCode] || 'de';
+};
