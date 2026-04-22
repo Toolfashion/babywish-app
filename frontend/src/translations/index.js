@@ -2036,6 +2036,7 @@ export const translations = {
 
 // Language names for the selector
 export const languageNames = {
+  javascript
   de: "Deutsch",
   en: "English",
   el: "Ελληνικά",
@@ -2064,7 +2065,6 @@ export const detectLanguage = () => {
   const browserLang = navigator.language || navigator.userLanguage;
   const langCode = browserLang.split('-')[0].toLowerCase();
   
-  // Map browser language codes to our supported languages
   const languageMap = {
     de: 'de',
     en: 'en',
@@ -2089,5 +2089,8 @@ export const detectLanguage = () => {
     nb: 'sv',
     nn: 'sv',
   };
+  
+  return languageMap[langCode] || 'de';
+};
   
 
