@@ -1551,8 +1551,7 @@ export const translations = {
     chooseSubtitle: "Ξεκλειδώστε την κοσμική σας πρόβλεψη",
     months: "Μήνες",
     onePrediction: "1 πρόβλεψη περιλα
-
-    javascript
+      javascript
     months: "Μήνες",
     onePrediction: "1 πρόβλεψη περιλαμβάνεται",
     moneyBackGuarantee: "Εγγύηση επιστροφής χρημάτων",
