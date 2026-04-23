@@ -2066,4 +2066,3 @@ export const detectLanguage = () => {
   
   return languageMap[langCode] || 'de'; // Default to German
 };
-};
