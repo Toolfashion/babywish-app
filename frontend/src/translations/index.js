@@ -921,6 +921,7 @@ export const translations = {
     watchReel: "Voir le Reel",
   },
   
+  javascript
   tr: {
     appTitle: "Babywish",
     login: "Giriş Yap",
@@ -997,7 +998,6 @@ export const translations = {
     
     paymentSuccess: "Ödeme Başarılı!",
     thankYou: "Aboneliğiniz için teşekkürler",
-
     nowPredict: "Artık tahmininizi yapabilirsiniz",
     goToDashboard: "Panele Git",
     
@@ -1027,37 +1027,7 @@ export const translations = {
     // Reels
     watchReel: "Reeli İzle",
   },
-  
-      nowPredict: "Artık tahmininizi yapabilirsiniz",
-    goToDashboard: "Panele Git",
-    
-    errorOccurred: "Bir hata oluştu",
-    tryAgain: "Lütfen tekrar deneyin",
-    
-    language: "Dil",
-    
-    // Promo Banner
-    promoFreeFirst10: "%50 İNDİRİM - Lansman Fırsatı!",
-    promoVideos: "3 video",
-    promoReview: "1 yorum",
-    promoFreeSubscription: "%50 İndirim!",
-    promoContactUs: "Bize Ulaşın",
-    
-    // Slogans
-    slogan1Line1: "Olasılık bilimi, ailenizin",
-    slogan1Highlight: "hizmetinde!",
-    slogan2Line1: "Kendi biyolojik saatinize göre",
-    slogan2Highlight: "geleceğinizi planlayın!",
-    
-    // Description Wheel
-    desc1: "Ebeveynlerin doğum tarihlerini girin ve yapay zekanın gelecekteki çocuğunuzun cinsiyetini açıklamasına izin verin.",
-    desc2: "İlk ve tek",
-    desc3: "cinsiyet tahmini için çiftin biyolojik ve istatistiksel döngülerini analiz eden algoritma aracılığıyla.",
-    
-    // Reels
-    watchReel: "Reeli İzle",
-  },
-  
+
   fa: {
     appTitle: "Babywish",
     login: "ورود",
