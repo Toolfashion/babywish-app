@@ -2021,7 +2021,7 @@ export const translations = {
     // Slogans
     slogan1Line1: "Věda pravděpodobnosti, ve službách",
     slogan1Highlight: "vaší rodiny!",
-    slogan2Line1:
+    slogan2Line1: "Plánujte svou budoucnost, na základě vlastních",
     slogan2Highlight: "biologických hodin!",
     
     // Description Wheel
@@ -2031,38 +2031,6 @@ export const translations = {
     
     // Reels
     watchReel: "Sledovat Reel",
-  },
-};
-
-// Language names for the selector
-export const languageNames = {
-  de: "Deutsch",
-  en: "English",
-  el: "Ελληνικά",
-  it: "Italiano",
-  ru: "Русский",
-  zh: "中文",
-  hi: "हिन्दी",
-  es: "Español",
-  pt: "Português",
-  fr: "Français",
-  tr: "Türkçe",
-  fa: "فارسی",
-  ar: "العربية",
-  ja: "日本語",
-  sv: "Svenska",
-  sr: "Српски",
-  pl: "Polski",
-  cs: "Čeština",
- },
-  };
-
-// Language names for the selector
-export c
-```
-
-**Με αυτό:**
-```javascript
   },
 };
 
