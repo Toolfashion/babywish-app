@@ -2019,7 +2019,7 @@ export const translations = {
     promoContactUs: "Kontaktujte nás",
     
     // Slogans
-    slogan1Line1: "Věda pravděpodobnosti, ve službách",slogan1Line1: "Věda pravděpodobnosti, ve službách",
+    slogan1Line1: "Věda pravděpodobnosti, ve službách",
     slogan1Highlight: "vaší rodiny!",
     slogan2Line1:
     slogan2Highlight: "biologických hodin!",
