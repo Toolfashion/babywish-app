@@ -1028,7 +1028,7 @@ export const translations = {
     watchReel: "Reeli İzle",
   },
   
-  fa: {
+  ra: {
     appTitle: "Babywish",
     login: "ورود",
     register: "ثبت نام",
