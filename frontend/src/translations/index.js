@@ -497,7 +497,7 @@ export const translations = {
     watchReel: "观看视频",
   },
   
-    hi: {
+  hi: {
     appTitle: "Babywish",
     login: "लॉगिन",
     register: "पंजीकरण",
