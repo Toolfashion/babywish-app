@@ -2092,5 +2092,3 @@ export const detectLanguage = () => {
   return languageMap[langCode] || 'de';
 };
   
-  return languageMap[langCode] || 'de';
-};
