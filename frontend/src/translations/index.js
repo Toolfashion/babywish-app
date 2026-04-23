@@ -921,7 +921,6 @@ export const translations = {
     watchReel: "Voir le Reel",
   },
   
-  javascript
   tr: {
     appTitle: "Babywish",
     login: "Giriş Yap",
