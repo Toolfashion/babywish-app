@@ -2062,7 +2062,7 @@ export const rtlLanguages = ['ar', 'fa'];
 
 // Detect browser language and map to supported language
 export const detectLanguage = () => {
-  const browserLang = navigator.language || navigator.userLanguage;
+  const browserLang = navigator.language || navigator.userLanguage || 'en';
   const langCode = browserLang.split('-')[0].toLowerCase();
   
   const languageMap = {
@@ -2083,12 +2083,8 @@ export const detectLanguage = () => {
     sv: 'sv',
     sr: 'sr',
     pl: 'pl',
-    cs: 'cs',
-    no: 'sv',
-    da: 'sv',
-    nb: 'sv',
-    nn: 'sv',
+    cs: 'cs'
   };
   
-  return languageMap[langCode] || 'de';
+  return languageMap[langCode] || 'en';
 };
