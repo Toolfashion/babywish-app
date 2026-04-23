@@ -1268,8 +1268,8 @@ export const translations = {
     // Reels
     watchReel: "مشاهدة الريل",
   },
-  
-  ja: { 
+
+  ja: {
     appTitle: "Babywish",
     login: "ログイン",
     register: "登録",
