@@ -1267,6 +1267,7 @@ export const translations = {
     
     // Reels
     watchReel: "مشاهدة الريل",
+  },
   
     ja: {
     appTitle: "Babywish",
