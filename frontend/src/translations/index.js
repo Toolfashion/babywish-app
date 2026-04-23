@@ -72,6 +72,7 @@ export const translations = {
     inactive: "Inaktiv",
     subscribe: "Abonnieren",
     predictionUsed: "Vorhersage verwendet",
+    yes: "Ja",
     no: "Nein",
     
     // Prediction Form
@@ -1026,8 +1027,8 @@ export const translations = {
     // Reels
     watchReel: "Reeli İzle",
   },
-
-  ra: {
+  
+  fa: {
     appTitle: "Babywish",
     login: "ورود",
     register: "ثبت نام",
@@ -1103,7 +1104,40 @@ export const translations = {
     
     paymentSuccess: "پرداخت موفق!",
     thankYou: "از اشتراک شما متشکریم",
-        register: "التسجيل",
+    nowPredict: "اکنون می‌توانید پیش‌بینی کنید",
+    goToDashboard: "برو به داشبورد",
+    
+    errorOccurred: "خطایی رخ داد",
+    tryAgain: "لطفاً دوباره امتحان کنید",
+    
+    language: "زبان",
+    
+    // Promo Banner
+    promoFreeFirst10: "۵۰٪ تخفیف - پیشنهاد راه‌اندازی!",
+    promoVideos: "۳ ویدیو",
+    promoReview: "۱ نظر",
+    promoFreeSubscription: "۵۰٪ تخفیف!",
+    promoContactUs: "تماس با ما",
+    
+    // Slogans
+    slogan1Line1: "علم احتمال، در خدمت",
+    slogan1Highlight: "خانواده شما!",
+    slogan2Line1: "آینده خود را بر اساس ساعت",
+    slogan2Highlight: "بیولوژیکی خود برنامه‌ریزی کنید!",
+    
+    // Description Wheel
+    desc1: "تاریخ تولد والدین را وارد کنید و اجازه دهید هوش مصنوعی جنسیت فرزند آینده شما را آشکار کند.",
+    desc2: "از طریق اولین و تنها",
+    desc3: "الگوریتمی که چرخه‌های بیولوژیکی و آماری زوج را برای پیش‌بینی جنسیت تحلیل می‌کند.",
+    
+    // Reels
+    watchReel: "مشاهده ریل",
+  },
+  
+  ar: {
+    appTitle: "Babywish",
+    login: "تسجيل الدخول",
+    register: "التسجيل",
     dashboard: "لوحة التحكم",
     logout: "تسجيل الخروج",
     
@@ -1114,7 +1148,7 @@ export const translations = {
     guaranteeText: "Babywish يخبرك بـ",
     guaranteeBold: "95٪ يقين",
     guaranteeEnd: "جنس طفلك المستقبلي.",
-    moneyBack: "معنا لا تخاطر بأموالك. سنعيدها لك إذا لم يتطابق توقعنا مع تشخيصنا الأولي.",
+    moneyBack: "إذا كان توقعنا خاطئاً، سنعيد لك أموالك!",
     feature1: "الجنس والاسم",
     feature2: "البرج والشخصية",
     feature3: "عناصر الحظ",
@@ -1204,40 +1238,8 @@ export const translations = {
     
     // Reels
     watchReel: "مشاهدة الريل",
-
-    
-    paymentSuccess: "تم الدفع بنجاح!",
-    thankYou: "شكراً لاشتراكك",
-    nowPredict: "يمكنك الآن عمل توقعك",
-    goToDashboard: "اذهب للوحة التحكم",
-    
-    errorOccurred: "حدث خطأ",
-    tryAgain: "يرجى المحاولة مرة أخرى",
-    
-    language: "اللغة",
-    
-    // Promo Banner
-    promoFreeFirst10: "خصم 50٪ - عرض الإطلاق!",
-    promoVideos: "3 فيديوهات",
-    promoReview: "1 تقييم",
-    promoFreeSubscription: "خصم 50٪!",
-    promoContactUs: "اتصل بنا",
-    
-    // Slogans
-    slogan1Line1: "علم الاحتمالات، في خدمة",
-    slogan1Highlight: "عائلتك!",
-    slogan2Line1: "خطط لمستقبلك، بناءً على",
-    slogan2Highlight: "ساعتك البيولوجية!",
-    
-    // Description Wheel
-    desc1: "أدخل تواريخ ميلاد الوالدين ودع الذكاء الاصطناعي يكشف جنس طفلك المستقبلي.",
-    desc2: "من خلال الخوارزمية الأولى والوحيدة",
-    desc3: "التي تحلل الدورات البيولوجية والإحصائية للزوجين للتنبؤ بالجنس.",
-    
-    // Reels
-    watchReel: "مشاهدة الريل",
   },
-
+  
   ja: {
     appTitle: "Babywish",
     login: "ログイン",
@@ -1252,7 +1254,7 @@ export const translations = {
     guaranteeText: "Babywishは",
     guaranteeBold: "95%の確実性で",
     guaranteeEnd: "あなたの未来の子供の性別をお伝えします。",
-    moneyBack: "私たちと一緒なら、お金のリスクはありません。予測が初期診断と一致しない場合、返金いたします。",
+    moneyBack: "予測が間違っていた場合、返金いたします！",
     feature1: "性別と名前",
     feature2: "星座と性格",
     feature3: "ラッキー要素",
@@ -1492,6 +1494,11 @@ export const translations = {
     
     welcomeUser: "Καλώς ήρθατε",
     yourPrediction: "Η Πρόβλεψή σας",
+    makePrediction: "Κάντε Πρόβλεψη",
+    subscriptionStatus: "Κατάσταση Συνδρομής",
+    active: "Ενεργή",
+    inactive: "Ανενεργή",
+    subscribe: "Εγγραφή",
     predictionUsed: "Πρόβλεψη Χρησιμοποιήθηκε",
     yes: "Ναι",
     no: "Όχι",
@@ -1519,10 +1526,7 @@ export const translations = {
     
     choosePlan: "Επιλέξτε το Πακέτο σας",
     chooseSubtitle: "Ξεκλειδώστε την κοσμική σας πρόβλεψη",
-    
     months: "Μήνες",
-    onePrediction: "1 πρόβλεψη περιλαμβάνεται",
-    moneyBackGu: "Μήνες",
     onePrediction: "1 πρόβλεψη περιλαμβάνεται",
     moneyBackGuarantee: "Εγγύηση επιστροφής χρημάτων",
     mostPopular: "Πιο Δημοφιλές",
@@ -2001,7 +2005,7 @@ export const translations = {
     
     // Reels
     watchReel: "Sledovat Reel",
-  }
+  },
 };
 
 // Language names for the selector
@@ -2031,9 +2035,10 @@ export const rtlLanguages = ['ar', 'fa'];
 
 // Detect browser language and map to supported language
 export const detectLanguage = () => {
-  const browserLang = navigator.language || navigator.userLanguage || 'en';
+  const browserLang = navigator.language || navigator.userLanguage;
   const langCode = browserLang.split('-')[0].toLowerCase();
   
+  // Map browser language codes to our supported languages
   const languageMap = {
     de: 'de',
     en: 'en',
@@ -2052,8 +2057,13 @@ export const detectLanguage = () => {
     sv: 'sv',
     sr: 'sr',
     pl: 'pl',
-    cs: 'cs'
+    cs: 'cs',
+    no: 'sv', // Norwegian -> Swedish (Scandinavian)
+    da: 'sv', // Danish -> Swedish (Scandinavian)
+    nb: 'sv', // Norwegian Bokmål -> Swedish
+    nn: 'sv', // Norwegian Nynorsk -> Swedish
   };
   
-  return languageMap[langCode] || 'en';
+  return languageMap[langCode] || 'de'; // Default to German
+};
 };
