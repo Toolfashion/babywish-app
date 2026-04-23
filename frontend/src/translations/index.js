@@ -2032,8 +2032,7 @@ export const translations = {
     // Reels
     watchReel: "Sledovat Reel",
   },
-};
-
+  };
 // Language names for the selector
 export const languageNames = {
   de: "Deutsch",
