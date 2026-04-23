@@ -1,5 +1,4 @@
 
-jsx
 import { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { Swiper, SwiperSlide } from 'swiper/react';
