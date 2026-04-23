@@ -2035,7 +2035,7 @@ export const translations = {
 };
 
 // Language names for the selector
-export const languageNames = {
+export const languageNames = { 
   de: "Deutsch",
   en: "English",
   el: "Ελληνικά",
