@@ -3,6 +3,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { EffectCreative, Pagination, Autoplay } from 'swiper/modules';
 
+// Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/effect-creative';
 import 'swiper/css/pagination';
@@ -11,6 +12,7 @@ const SloganPickerWheel = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const { t } = useLanguage();
 
+  // Slogans array with translations
   const slogans = [
     {
       line1: t.slogan1Line1 || 'The science of probability, at the service of',
@@ -34,13 +36,14 @@ const SloganPickerWheel = () => {
     <div 
       className="relative mx-auto rounded-2xl overflow-hidden"
       style={{
-        width: '95%',
+        width: '90%',
         maxWidth: '520px',
         background: 'rgba(0, 0, 0, 0.2)',
         backdropFilter: 'blur(4px)',
         border: '1px solid rgba(255, 255, 255, 0.1)',
       }}
     >
+      {/* CSS Animation for gradient */}
       <style>{`
         @keyframes gradientMove {
           0%, 100% { background-position: 0% 50%; }
@@ -72,6 +75,7 @@ const SloganPickerWheel = () => {
         }
       `}</style>
 
+      {/* Gradient overlays for depth */}
       <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-black/40 to-transparent z-20 pointer-events-none" />
       <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/40 to-transparent z-20 pointer-events-none" />
 
@@ -110,10 +114,10 @@ const SloganPickerWheel = () => {
           <SwiperSlide key={index}>
             <div 
               className="flex flex-col items-center justify-center w-full"
-              style={{ textAlign: 'center', width: '100%', padding: '0 10px' }}
+              style={{ textAlign: 'center', width: '100%', padding: '0 15px', boxSizing: 'border-box' }}
             >
               <p 
-                className="text-base md:text-lg lg:text-xl leading-tight tracking-wide"
+                className="text-sm md:text-lg lg:text-xl leading-tight tracking-wide"
                 style={{ 
                   fontFamily: "'Cinzel', serif", 
                   fontWeight: 700,
@@ -124,7 +128,9 @@ const SloganPickerWheel = () => {
                   backgroundClip: 'text',
                   animation: 'gradientMove 4s ease-in-out infinite',
                   textAlign: 'center',
-                  width: '100%'
+                  width: '100%',
+                  wordWrap: 'break-word',
+                  overflowWrap: 'break-word'
                 }}
               >
                 {slogan.line1}
