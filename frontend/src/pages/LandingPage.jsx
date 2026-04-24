@@ -10,6 +10,8 @@ import LanguageSelector from '../components/LanguageSelector';
 import FloatingBabyClouds from '../components/FloatingBabyClouds';
 import SloganPickerWheel from '../components/SloganPickerWheel';
 import DescriptionPickerWheel from '../components/DescriptionPickerWheel';
+import FloatingVideoCarousel from '../components/FloatingVideoCarousel';
+import ChatWidget from '../components/ChatWidget';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -35,6 +37,8 @@ const LandingPage = () => {
     <div className="min-h-screen relative overflow-hidden" data-testid="landing-page">
       <StarField />
       <FloatingBabyClouds />
+      <FloatingVideoCarousel />
+      <ChatWidget />
       
       <div className="relative z-20 min-h-screen flex flex-col">
         {/* Promo Banner - Special Offers */}
