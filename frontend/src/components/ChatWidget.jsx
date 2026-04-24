@@ -92,13 +92,13 @@ const ChatWidget = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const messagesEndRef = useRef(null);
   
-  // Draggable position state - positioned near 95% accuracy section
+  // Draggable position state - positioned for visibility on all devices
   const getInitialPosition = () => {
     if (typeof window === 'undefined') return { x: 300, y: 500 };
     const isMobile = window.innerWidth < 768;
     return {
-      x: isMobile ? window.innerWidth - 60 : window.innerWidth - 80,
-      y: isMobile ? 500 : 480 // Closer to the 95% accuracy section
+      x: isMobile ? window.innerWidth - 70 : window.innerWidth - 80,
+      y: isMobile ? window.innerHeight - 150 : 480 // More visible on mobile - bottom area
     };
   };
   
@@ -109,8 +109,8 @@ const ChatWidget = () => {
     const handleResize = () => {
       const isMobile = window.innerWidth < 768;
       setPosition({
-        x: isMobile ? window.innerWidth - 60 : window.innerWidth - 80,
-        y: isMobile ? 500 : 480
+        x: isMobile ? window.innerWidth - 70 : window.innerWidth - 80,
+        y: isMobile ? window.innerHeight - 150 : 480
       });
     };
     
