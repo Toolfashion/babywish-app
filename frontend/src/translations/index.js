@@ -139,6 +139,7 @@ export const translations = {
     promoReview: "1 Bewertung",
     promoFreeSubscription: "50% Rabatt!",
     promoContactUs: "Kontaktieren Sie uns",
+    promoPeople: "Personen",
     
     // Slogans
     slogan1Line1: "Die Wissenschaft der Wahrscheinlichkeit, im Dienste",
@@ -270,6 +271,7 @@ export const translations = {
     promoReview: "1 review",
     promoFreeSubscription: "50% Discount!",
     promoContactUs: "Contact us",
+    promoPeople: "people",
     
     // Slogans
     slogan1Line1: "The science of probability, at the service of",
@@ -376,6 +378,7 @@ export const translations = {
     promoReview: "1 отзыв",
     promoFreeSubscription: "Скидка 50%!",
     promoContactUs: "Свяжитесь с нами",
+    promoPeople: "человек",
     
     // Slogans
     slogan1Line1: "Наука вероятности на службе",
@@ -482,6 +485,7 @@ export const translations = {
     promoReview: "1条评价",
     promoFreeSubscription: "五折优惠！",
     promoContactUs: "联系我们",
+    promoPeople: "人",
     
     // Slogans
     slogan1Line1: "概率科学，服务于",
@@ -588,6 +592,7 @@ export const translations = {
     promoReview: "1 समीक्षा",
     promoFreeSubscription: "50% छूट!",
     promoContactUs: "संपर्क करें",
+    promoPeople: "लोग",
     
     // Slogans
     slogan1Line1: "संभावना का विज्ञान, आपके परिवार की",
@@ -694,6 +699,7 @@ export const translations = {
     promoReview: "1 reseña",
     promoFreeSubscription: "¡50% Descuento!",
     promoContactUs: "Contáctenos",
+    promoPeople: "personas",
     
     // Slogans
     slogan1Line1: "La ciencia de la probabilidad, al servicio de",
@@ -800,6 +806,7 @@ export const translations = {
     promoReview: "1 avaliação",
     promoFreeSubscription: "50% Desconto!",
     promoContactUs: "Contacte-nos",
+    promoPeople: "pessoas",
     
     // Slogans
     slogan1Line1: "A ciência da probabilidade, ao serviço da",
@@ -906,6 +913,7 @@ export const translations = {
     promoReview: "1 avis",
     promoFreeSubscription: "50% de Réduction!",
     promoContactUs: "Contactez-nous",
+    promoPeople: "personnes",
     
     // Slogans
     slogan1Line1: "La science des probabilités, au service de",
@@ -1012,6 +1020,7 @@ export const translations = {
     promoReview: "1 yorum",
     promoFreeSubscription: "%50 İndirim!",
     promoContactUs: "Bize Ulaşın",
+    promoPeople: "kişi",
     
     // Slogans
     slogan1Line1: "Olasılık bilimi, ailenizin",
@@ -1028,7 +1037,7 @@ export const translations = {
     watchReel: "Reeli İzle",
   },
   
-  ra: {
+  fa: {
     appTitle: "Babywish",
     login: "ورود",
     register: "ثبت نام",
@@ -1118,6 +1127,7 @@ export const translations = {
     promoReview: "۱ نظر",
     promoFreeSubscription: "۵۰٪ تخفیف!",
     promoContactUs: "تماس با ما",
+    promoPeople: "نفر",
     
     // Slogans
     slogan1Line1: "علم احتمال، در خدمت",
@@ -1224,6 +1234,7 @@ export const translations = {
     promoReview: "1 تقييم",
     promoFreeSubscription: "خصم 50٪!",
     promoContactUs: "اتصل بنا",
+    promoPeople: "أشخاص",
     
     // Slogans
     slogan1Line1: "علم الاحتمالات، في خدمة",
@@ -1330,6 +1341,7 @@ export const translations = {
     promoReview: "1件のレビュー",
     promoFreeSubscription: "50%割引！",
     promoContactUs: "お問い合わせ",
+    promoPeople: "人",
     
     // Slogans
     slogan1Line1: "確率の科学が、あなたの家族の",
@@ -1436,6 +1448,7 @@ export const translations = {
     promoReview: "1 recension",
     promoFreeSubscription: "50% Rabatt!",
     promoContactUs: "Kontakta oss",
+    promoPeople: "personer",
     
     // Slogans
     slogan1Line1: "Sannolikhetens vetenskap, i din familjs",
@@ -1567,6 +1580,7 @@ export const translations = {
     promoReview: "1 κριτική",
     promoFreeSubscription: "50% Έκπτωση!",
     promoContactUs: "Επικοινωνήστε μαζί μας",
+    promoPeople: "άτομα",
     
     // Slogans
     slogan1Line1: "Η επιστήμη των πιθανοτήτων, στην υπηρεσία της",
@@ -1673,6 +1687,7 @@ export const translations = {
     promoReview: "1 recensione",
     promoFreeSubscription: "50% di Sconto!",
     promoContactUs: "Contattaci",
+    promoPeople: "persone",
     
     // Slogans
     slogan1Line1: "La scienza della probabilità, al servizio della",
