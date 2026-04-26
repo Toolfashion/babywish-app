@@ -16,4 +16,4 @@ function AnalyticsDashboard() {
   );
 }
 
-export default AnalyticsDashboard';
+export default AnalyticsDashboard;
