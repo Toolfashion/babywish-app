@@ -25,19 +25,25 @@ db = client[os.environ['DB_NAME']]
 
 # Stripe
 import stripe
+
 stripe_api_key = os.environ.get('STRIPE_API_KEY')
 stripe.api_key = stripe_api_key
 
 # Resend Email
 resend.api_key = os.environ.get('RESEND_API_KEY')
-NOTIFICATION_EMAIL = os.environ.get('NOTIFICATION_EMAIL', 'mindjerry@hotmail.com')
-SENDER_EMAIL = "onboarding@resend.dev"
+NOTIFICATION_EMAIL = os.environ.get('NOTIFICATION_EMAIL', 'getbabywish@hotmail.com')
+SENDER_EMAIL = "getbabywish@outlook.com"
 
 # Create the main app without a prefix
 app = FastAPI()
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+
+# Health check endpoint for uptime monitoring
+@api_router.get("/health")
+async def health_check():
+    return {"status": "healthy", "service": "babywish-api"}
 
 # Subscription packages - amounts in EUR
 SUBSCRIPTION_PACKAGES = {
@@ -1564,17 +1570,17 @@ async def create_checkout(
     success_url = f"{checkout_data.origin_url}/payment-success?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = f"{checkout_data.origin_url}/subscribe"
     
-      # Create checkout session using official Stripe SDK
+    # Create checkout session using official Stripe SDK
     session = stripe.checkout.Session.create(
         payment_method_types=["card"],
         line_items=[{
             "price_data": {
                 "currency": "eur",
                 "product_data": {
-                    "name": "BabyWish Subscription",
-                    "description": "Baby prediction subscription"
+                    "name": f"BabyWish - {package['name']}",
+                    "description": f"Συνδρομή {package['duration_months']} μηνών"
                 },
-                "unit_amount": int(package["amount"] * 100),
+                "unit_amount": int(package["amount"] * 100),  # Stripe uses cents
             },
             "quantity": 1,
         }],
@@ -1584,7 +1590,7 @@ async def create_checkout(
         metadata={
             "user_id": user["user_id"],
             "package_id": checkout_data.package_id,
-           "duration_months": str(package["duration_months"])
+            "duration_months": str(package["duration_months"])
         }
     )
     
@@ -1599,7 +1605,6 @@ async def create_checkout(
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
-
     return {"url": session.url, "session_id": session.id}
 
 @api_router.get("/checkout/status/{session_id}")
@@ -1609,19 +1614,13 @@ async def get_checkout_status(
     user: dict = Depends(get_current_user)
 ):
     """Check payment status and activate subscription if paid"""
+    # Retrieve session from Stripe
     session = stripe.checkout.Session.retrieve(session_id)
-
-@api_router.get("/checkout/status/{session_id}")
-async def get_checkout_status(
-    session_id: str,
-    request: Request,
-    user: dict = Depends(get_current_user)
-):
-    """Check payment status and activate subscription if paid"""
-    session = stripe.checkout.Session.retrieve(session_id)
-    payment_status = session.payment_status
-    status = session.status
     
+    payment_status = session.payment_status  # "paid", "unpaid", or "no_payment_required"
+    status = session.status  # "complete", "expired", or "open"
+    
+    # Update transaction
     await db.payment_transactions.update_one(
         {"session_id": session_id},
         {"$set": {
@@ -1631,7 +1630,9 @@ async def get_checkout_status(
         }}
     )
     
+    # If paid, create subscription
     if payment_status == "paid":
+        # Check if subscription already created for this session
         existing_sub = await db.subscriptions.find_one(
             {"payment_session_id": session_id},
             {"_id": 0}
@@ -1642,11 +1643,13 @@ async def get_checkout_status(
             package_id = metadata.get("package_id")
             duration_months = int(metadata.get("duration_months", 3))
             
+            # Deactivate any existing subscription
             await db.subscriptions.update_many(
                 {"user_id": user["user_id"], "status": "active"},
                 {"$set": {"status": "replaced"}}
             )
             
+            # Create new subscription
             expires_at = datetime.now(timezone.utc) + timedelta(days=duration_months * 30)
             subscription_id = f"sub_{uuid.uuid4().hex[:12]}"
             
@@ -1661,6 +1664,7 @@ async def get_checkout_status(
                 "created_at": datetime.now(timezone.utc).isoformat()
             })
             
+            # Send email notification to admin
             package_info = SUBSCRIPTION_PACKAGES.get(package_id, {})
             await send_subscription_notification(
                 user_email=user.get("email", "N/A"),
@@ -1676,86 +1680,41 @@ async def get_checkout_status(
         "amount_total": session.amount_total,
         "currency": session.currency
     }
- 
 
-# ===================== NAME SHOWCASE =====================
-
-@api_router.get("/names/showcase")
-async def get_names_showcase(request: Request):
-    """Get names based on user's location for the showcase page"""
-    # Get user's IP and country
-    country_code = "US"
-    country_name = "United States"
+@api_router.post("/webhook/stripe")
+async def stripe_webhook(request: Request):
+    """Handle Stripe webhooks"""
+    body = await request.body()
+    signature = request.headers.get("Stripe-Signature")
     
-    # Try to get country from headers (set by geolocation)
-    forwarded_for = request.headers.get("x-forwarded-for", "")
-    client_ip = forwarded_for.split(",")[0].strip() if forwarded_for else request.client.host
+    # Get webhook secret from env (optional, but recommended for production)
+    webhook_secret = os.environ.get('STRIPE_WEBHOOK_SECRET')
     
-    # Get country from IP using ipapi
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"https://ipapi.co/{client_ip}/json/", timeout=5.0)
-            if response.status_code == 200:
-                data = response.json()
-                country_code = data.get("country_code", "US")
-                country_name = data.get("country_name", "United States")
+        if webhook_secret:
+            event = stripe.Webhook.construct_event(body, signature, webhook_secret)
+        else:
+            # Without webhook secret, just parse the event (less secure)
+            import json
+            event = stripe.Event.construct_from(json.loads(body), stripe.api_key)
+        
+        # Handle checkout.session.completed event
+        if event.type == "checkout.session.completed":
+            session = event.data.object
+            
+            if session.payment_status == "paid":
+                # Update transaction
+                await db.payment_transactions.update_one(
+                    {"session_id": session.id},
+                    {"$set": {
+                        "payment_status": "paid",
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+        
+        return {"status": "ok"}
     except Exception as e:
-        logging.warning(f"Could not get geolocation: {e}")
-    
-    # Get region and names
-    region = get_region_for_country(country_code)
-    boy_names = get_names_for_region(region, "boy")
-    girl_names = get_names_for_region(region, "girl")
-    
-    # Limit to 12 names each and shuffle for variety
-    random.shuffle(boy_names)
-    random.shuffle(girl_names)
-    
-    return {
-        "boy_names": boy_names[:12],
-        "girl_names": girl_names[:12],
-        "region": region,
-        "country": country_name,
-        "country_code": country_code
-    }
-
-# ===================== PREDICTION ROUTES =====================
-
-@api_router.get("/")
-async def root():
-    return {"message": "Babywish API"}
-
-@api_router.post("/predict", response_model=PredictionResponse)
-async def create_prediction(
-    request_data: PredictionRequest,
-    user: dict = Depends(get_current_user)
-):
-    """Create prediction - requires active subscription with unused prediction"""
-    # Check subscription
-    subscription = await db.subscriptions.find_one(
-        {"user_id": user["user_id"], "status": "active"},
-        {"_id": 0}
-    )
-    
-    if not subscription:
-        raise HTTPException(
-            status_code=403,
-            detail="Απαιτείται ενεργή συνδρομή για πρόβλεψη"
-        )
-    
-    if subscription.get("prediction_used", False):
-        raise HTTPException(
-            status_code=403,
-            detail="Έχετε ήδη χρησιμοποιήσει την πρόβλεψή σας. Αγοράστε νέα συνδρομή."
-        )
-    
-    # Check expiry
-    expires_at = subscription.get("expires_at")
-    if isinstance(expires_at, str):
-        expires_at = datetime.fromisoformat(expires_at)
-    if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
-    if expires_at < datetime.now(timezone.utc):
+        logging.error(f"Webhook error: {e}")
         return {"status": "error", "message": str(e)}
 
 # ===================== NAME SHOWCASE =====================
@@ -1805,12 +1764,14 @@ async def get_names_showcase(request: Request):
 async def root():
     return {"message": "Babywish API"}
 
-@api_router.post("/predict", response_model=PredictionResponse)
+@api_router.post("/predict", response_model=dict)
 async def create_prediction(
     request_data: PredictionRequest,
     user: dict = Depends(get_current_user)
 ):
-    """Create prediction - requires active subscription with unused prediction"""
+    """Create prediction - requires active subscription with unused prediction
+    NOTE: Predictions are saved as 'pending' and require admin approval before being shown to user
+    """
     # Check subscription
     subscription = await db.subscriptions.find_one(
         {"user_id": user["user_id"], "status": "active"},
@@ -1845,7 +1806,7 @@ async def create_prediction(
             detail="Η συνδρομή σας έχει λήξει. Αγοράστε νέα συνδρομή."
         )
     
-    # Create prediction
+    # Create prediction (AI analysis)
     prediction = predict_child(
         request_data.parent1_birthday, 
         request_data.parent2_birthday,
@@ -1855,14 +1816,24 @@ async def create_prediction(
     prediction_id = str(uuid.uuid4())
     created_at = datetime.now(timezone.utc).isoformat()
     
-    # Store prediction
+    # Get user email for notification
+    user_doc = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0, "email": 1, "name": 1})
+    user_email = user_doc.get("email", "") if user_doc else ""
+    user_name = user_doc.get("name", "") if user_doc else ""
+    
+    # Store prediction with PENDING status - requires admin approval
     doc = {
         "id": prediction_id,
         **prediction,
         "user_id": user["user_id"],
+        "user_email": user_email,
+        "user_name": user_name,
         "parent1_birthday": request_data.parent1_birthday.isoformat(),
         "parent2_birthday": request_data.parent2_birthday.isoformat(),
-        "created_at": created_at
+        "created_at": created_at,
+        "status": "pending",  # PENDING APPROVAL
+        "approved_at": None,
+        "approved_by": None
     }
     await db.predictions.insert_one(doc)
     
@@ -1872,26 +1843,187 @@ async def create_prediction(
         {"$set": {"prediction_used": True}}
     )
     
-    return PredictionResponse(
-        id=prediction_id,
-        **prediction,
-        created_at=created_at
-    )
+    # Return pending status instead of actual prediction
+    return {
+        "id": prediction_id,
+        "status": "pending",
+        "message": "Η πρόβλεψή σας υποβλήθηκε επιτυχώς! Θα λάβετε το αποτέλεσμα στο email σας εντός 24 ωρών.",
+        "message_en": "Your prediction has been submitted successfully! You will receive the result in your email within 24 hours.",
+        "created_at": created_at
+    }
 
 @api_router.get("/my-prediction")
 async def get_my_prediction(user: dict = Depends(get_current_user)):
-    """Get user's prediction if exists"""
+    """Get user's approved prediction if exists"""
+    # First check for approved prediction
     prediction = await db.predictions.find_one(
-        {"user_id": user["user_id"]},
+        {"user_id": user["user_id"], "status": "approved"},
+        {"_id": 0}
+    )
+    
+    if prediction:
+        return prediction
+    
+    # Check if there's a pending prediction
+    pending = await db.predictions.find_one(
+        {"user_id": user["user_id"], "status": "pending"},
+        {"_id": 0, "id": 1, "status": 1, "created_at": 1}
+    )
+    
+    if pending:
+        return {
+            "id": pending.get("id"),
+            "status": "pending",
+            "message": "Η πρόβλεψή σας είναι υπό επεξεργασία. Θα λάβετε το αποτέλεσμα στο email σας σύντομα.",
+            "message_en": "Your prediction is being processed. You will receive the result in your email soon.",
+            "created_at": pending.get("created_at")
+        }
+    
+    return None
+
+@api_router.get("/my-predictions")
+async def get_my_predictions(user: dict = Depends(get_current_user)):
+    """Get all predictions for a user (history) - only approved ones"""
+    predictions = await db.predictions.find(
+        {"user_id": user["user_id"], "status": "approved"},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(length=50)
+    
+    return predictions
+
+# ===================== ADMIN PREDICTION APPROVAL =====================
+
+ADMIN_EMAILS = ["owner@getbabywish.com", "getbabywish@outlook.com", "getbabywish@hotmail.com"]
+
+async def get_admin_user(user: dict = Depends(get_current_user)):
+    """Check if user is admin"""
+    user_doc = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0, "email": 1})
+    if not user_doc or user_doc.get("email") not in ADMIN_EMAILS:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
+@api_router.get("/admin/pending-predictions")
+async def get_pending_predictions(admin: dict = Depends(get_admin_user)):
+    """Get all pending predictions for admin review"""
+    predictions = await db.predictions.find(
+        {"status": "pending"},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(length=100)
+    
+    return predictions
+
+@api_router.get("/admin/all-predictions")
+async def get_all_predictions(admin: dict = Depends(get_admin_user)):
+    """Get all predictions for admin view"""
+    predictions = await db.predictions.find(
+        {},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(length=500)
+    
+    return predictions
+
+@api_router.post("/admin/approve-prediction/{prediction_id}")
+async def approve_prediction(prediction_id: str, admin: dict = Depends(get_admin_user)):
+    """Approve a pending prediction and notify user"""
+    # Find the prediction
+    prediction = await db.predictions.find_one(
+        {"id": prediction_id},
         {"_id": 0}
     )
     
     if not prediction:
-        return None
+        raise HTTPException(status_code=404, detail="Prediction not found")
     
-    return prediction
+    if prediction.get("status") == "approved":
+        raise HTTPException(status_code=400, detail="Prediction already approved")
+    
+    # Update status to approved
+    approved_at = datetime.now(timezone.utc).isoformat()
+    await db.predictions.update_one(
+        {"id": prediction_id},
+        {"$set": {
+            "status": "approved",
+            "approved_at": approved_at,
+            "approved_by": admin["user_id"]
+        }}
+    )
+    
+    # Send email notification to user
+    user_email = prediction.get("user_email")
+    user_name = prediction.get("user_name", "")
+    gender = prediction.get("gender", "Unknown")
+    suggested_name = prediction.get("suggested_name", "")
+    
+    if user_email:
+        try:
+            email_subject = "🎉 Your BabyWish Prediction is Ready!"
+            email_html = f"""
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h1 style="color: #8b5cf6; text-align: center;">🎉 Your Prediction is Ready!</h1>
+                <p>Dear {user_name or 'Parent'},</p>
+                <p>Great news! Your baby gender prediction has been processed and is now available.</p>
+                
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; text-align: center; margin: 20px 0;">
+                    <h2 style="color: white; margin: 0;">Predicted Gender: {gender}</h2>
+                    <p style="color: white; margin: 10px 0;">Suggested Name: {suggested_name}</p>
+                </div>
+                
+                <p>Log in to your dashboard to see the full prediction including:</p>
+                <ul>
+                    <li>Zodiac Sign & Personality</li>
+                    <li>Lucky Elements</li>
+                    <li>And more!</li>
+                </ul>
+                
+                <p style="text-align: center;">
+                    <a href="https://getbabywish.com/dashboard" style="background: #8b5cf6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; display: inline-block;">View Full Prediction</a>
+                </p>
+                
+                <p style="color: #666; font-size: 12px; margin-top: 30px;">
+                    Thank you for choosing BabyWish!<br>
+                    With love, The BabyWish Team 💜
+                </p>
+            </div>
+            """
+            
+            await send_email_resend(user_email, email_subject, email_html)
+        except Exception as e:
+            print(f"Failed to send approval email: {e}")
+    
+    return {
+        "success": True,
+        "message": f"Prediction approved and user notified at {user_email}",
+        "prediction_id": prediction_id,
+        "approved_at": approved_at
+    }
 
-# ===================== DAILY HOROSCOPE =====================
+@api_router.post("/admin/reject-prediction/{prediction_id}")
+async def reject_prediction(prediction_id: str, reason: str = "", admin: dict = Depends(get_admin_user)):
+    """Reject a prediction (refund case)"""
+    prediction = await db.predictions.find_one(
+        {"id": prediction_id},
+        {"_id": 0}
+    )
+    
+    if not prediction:
+        raise HTTPException(status_code=404, detail="Prediction not found")
+    
+    # Update status to rejected
+    await db.predictions.update_one(
+        {"id": prediction_id},
+        {"$set": {
+            "status": "rejected",
+            "rejected_at": datetime.now(timezone.utc).isoformat(),
+            "rejected_by": admin["user_id"],
+            "rejection_reason": reason
+        }}
+    )
+    
+    return {
+        "success": True,
+        "message": "Prediction rejected",
+        "prediction_id": prediction_id
+    }
 
 # Daily horoscope messages by zodiac element and mood
 HOROSCOPE_TEMPLATES = {
@@ -2176,6 +2308,130 @@ async def get_all_leads():
     
     return {"leads": leads, "total": len(leads)}
 
+
+# ===================== ANALYTICS DASHBOARD =====================
+
+@api_router.get("/admin/analytics")
+async def get_analytics_dashboard():
+    """Get comprehensive analytics for the admin dashboard"""
+    now = datetime.now(timezone.utc)
+    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_ago = today - timedelta(days=7)
+    month_ago = today - timedelta(days=30)
+    
+    # === USERS STATS ===
+    total_users = await db.users.count_documents({})
+    users_today = await db.users.count_documents({"created_at": {"$gte": today}})
+    users_this_week = await db.users.count_documents({"created_at": {"$gte": week_ago}})
+    users_this_month = await db.users.count_documents({"created_at": {"$gte": month_ago}})
+    
+    # === SUBSCRIPTIONS STATS ===
+    active_subscriptions = await db.subscriptions.count_documents({"status": "active"})
+    total_subscriptions = await db.subscriptions.count_documents({})
+    
+    # === PAYMENTS STATS ===
+    payments = await db.payment_transactions.find({"payment_status": "paid"}).to_list(10000)
+    total_revenue = sum(p.get("amount", 0) for p in payments)
+    
+    # Payments by package
+    revenue_by_package = {"3_months": 0, "9_months": 0, "18_months": 0}
+    payments_by_package = {"3_months": 0, "9_months": 0, "18_months": 0}
+    
+    for p in payments:
+        pkg_id = p.get("package_id", "")
+        amount = p.get("amount", 0)
+        if pkg_id in revenue_by_package:
+            revenue_by_package[pkg_id] += amount
+            payments_by_package[pkg_id] += 1
+    
+    # Recent payments (last 30 days)
+    recent_payments = await db.payment_transactions.find({
+        "payment_status": "paid",
+        "created_at": {"$gte": month_ago}
+    }, {"_id": 0}).sort("created_at", -1).to_list(100)
+    
+    revenue_this_month = sum(p.get("amount", 0) for p in recent_payments)
+    
+    # Weekly revenue breakdown (last 7 days)
+    daily_revenue = []
+    for i in range(7):
+        day_start = today - timedelta(days=i)
+        day_end = day_start + timedelta(days=1)
+        day_payments = await db.payment_transactions.find({
+            "payment_status": "paid",
+            "created_at": {"$gte": day_start, "$lt": day_end}
+        }).to_list(100)
+        daily_revenue.append({
+            "date": day_start.strftime("%Y-%m-%d"),
+            "day": day_start.strftime("%a"),
+            "revenue": sum(p.get("amount", 0) for p in day_payments),
+            "count": len(day_payments)
+        })
+    daily_revenue.reverse()
+    
+    # === PREDICTIONS STATS ===
+    total_predictions = await db.predictions.count_documents({})
+    predictions_today = await db.predictions.count_documents({"created_at": {"$gte": today}})
+    
+    # Gender distribution
+    male_predictions = await db.predictions.count_documents({"gender": {"$in": ["boy", "Boy", "male", "Male", "Αγόρι"]}})
+    female_predictions = await db.predictions.count_documents({"gender": {"$in": ["girl", "Girl", "female", "Female", "Κορίτσι"]}})
+    
+    # === LEADS STATS ===
+    total_leads = await db.leads.count_documents({})
+    leads_this_week = await db.leads.count_documents({"created_at": {"$gte": week_ago}})
+    
+    # === RECENT ACTIVITY ===
+    recent_users = await db.users.find({}, {"_id": 0, "password_hash": 0}).sort("created_at", -1).to_list(5)
+    for user in recent_users:
+        if isinstance(user.get("created_at"), datetime):
+            user["created_at"] = user["created_at"].isoformat()
+    
+    # Format recent payments for display
+    for p in recent_payments[:10]:
+        if isinstance(p.get("created_at"), datetime):
+            p["created_at"] = p["created_at"].isoformat()
+    
+    return {
+        "users": {
+            "total": total_users,
+            "today": users_today,
+            "this_week": users_this_week,
+            "this_month": users_this_month
+        },
+        "subscriptions": {
+            "active": active_subscriptions,
+            "total": total_subscriptions,
+            "conversion_rate": round((active_subscriptions / total_users * 100), 1) if total_users > 0 else 0
+        },
+        "revenue": {
+            "total": round(total_revenue, 2),
+            "this_month": round(revenue_this_month, 2),
+            "by_package": {k: round(v, 2) for k, v in revenue_by_package.items()},
+            "daily": daily_revenue
+        },
+        "payments": {
+            "total_count": len(payments),
+            "by_package": payments_by_package,
+            "recent": recent_payments[:10]
+        },
+        "predictions": {
+            "total": total_predictions,
+            "today": predictions_today,
+            "gender_distribution": {
+                "male": male_predictions,
+                "female": female_predictions
+            }
+        },
+        "leads": {
+            "total": total_leads,
+            "this_week": leads_this_week
+        },
+        "recent_users": recent_users
+    }
+
+
+
 # ===================== TESTIMONIALS =====================
 
 class TestimonialRequest(BaseModel):
@@ -2254,6 +2510,270 @@ async def get_approved_testimonials():
     ).sort("created_at", -1).limit(20).to_list(length=20)
     
     return testimonials
+
+# ===================== AI CHAT WIDGET =====================
+
+from emergentintegrations.llm.chat import LlmChat, UserMessage
+
+BABYWISH_SYSTEM_PROMPT = """You are AI Mindjerry, the warm, confident, and passionate voice of BabyWish - the world's first Data-Driven Baby Gender AI.
+
+🎯 YOUR IDENTITY & POSITIONING:
+- You are a "Family Psychologist & Probability Consultant" - NOT a medical professional
+- You speak with warmth, emotional connection, and scientific confidence
+- You use responsible, educational language rooted in probability science
+- You never make medical guarantees - you present DATA-DRIVEN PROBABILITY insights
+
+💖 YOUR VOICE & TONE:
+- WARM: Like a trusted friend who truly understands the deep DESIRE to plan a family
+- ROMANTIC: You understand that having a child (or a specific gender) is often a profound emotional DESIRE
+- CONFIDENT: You speak with authority about probability science and biological cycles
+- SEO-READY: Use relevant keywords naturally in responses
+
+🧬 YOUR EXPERTISE AREAS:
+1. **Best Timing AI** - Optimal conception timing based on biological cycles
+2. **Data-Driven Gender Logic** - Statistical analysis of parental birth data
+3. **BioGender AI / GenderPulse** - Biological rhythm analysis
+4. **Predictive Baby / Gender Vision AI** - Advanced probability algorithms
+5. **Conception Statistik** - Statistical models for family planning
+6. **Baby Probability** - Success rate calculations
+7. **Gender Plan** - Strategic family planning consultation
+8. **Pre-conception Lead Magnet** - Educational content for expecting parents
+
+📚 EDUCATIONAL RESPONSES (Pre-Purchase Questions):
+When asked "How far back should I know my dates?":
+→ "You only need to know the BIRTH DATES (day/month/year) of both parents. No birth time required! Our algorithm analyzes the biological and statistical cycles encoded in your birth data."
+
+When asked "How much does the father's age affect?":
+→ "Both parents' ages significantly influence our probability model! The father's biological cycles and birth data are equally important in our Data-Driven analysis. Our algorithm considers the unique intersection of both partners' biological rhythms."
+
+When asked about accuracy:
+→ "Our BioGender AI achieves 95% accuracy through advanced probability analysis. We're so confident that we offer a full refund if the prediction doesn't match! This is probability science, not guesswork."
+
+💰 SERVICE INFORMATION:
+- Packages: €10 (3 months), €25 (9 months - Most Popular), €50 (18 months - Best Value)
+- 50% OFF Launch Offer currently active!
+- Secure Stripe payment
+- Money-back guarantee if prediction is wrong
+
+🎯 CALL TO ACTION PHRASES (Use naturally):
+- "Ready to discover your future child's gender?"
+- "Let the science of probability guide your family planning"
+- "Your desire to know is completely natural - let Data-Driven AI help"
+- "Start your journey with BabyWish today"
+
+⚠️ RULES:
+1. ALWAYS respond in the SAME LANGUAGE the user writes in (Greek, English, etc.)
+2. NEVER give medical advice - you are a Probability Consultant
+3. Use the word "DESIRE" (επιθυμία) emotionally - it connects to parents' hearts
+4. Keep responses concise but warm (3-4 sentences ideal)
+5. Always mention the scientific/data-driven aspect
+6. If unsure, invite them to contact: getbabywish@hotmail.com
+
+🌟 REMEMBER: You help fulfill one of humanity's deepest desires - knowing and planning for their future child. Approach every conversation with empathy, science, and confidence."""
+
+class ChatMessage(BaseModel):
+    message: str
+    session_id: Optional[str] = None
+
+class ChatResponse(BaseModel):
+    response: str
+    session_id: str
+
+@api_router.post("/chat", response_model=ChatResponse)
+async def chat_with_assistant(chat_message: ChatMessage):
+    """AI Chat endpoint for BabyWish assistant"""
+    try:
+        session_id = chat_message.session_id or f"chat_{uuid.uuid4().hex[:12]}"
+        
+        emergent_key = os.environ.get('EMERGENT_LLM_KEY')
+        if not emergent_key:
+            raise HTTPException(status_code=500, detail="Chat service not configured")
+        
+        chat = LlmChat(
+            api_key=emergent_key,
+            session_id=session_id,
+            system_message=BABYWISH_SYSTEM_PROMPT
+        ).with_model("openai", "gpt-4o-mini")
+        
+        user_message = UserMessage(text=chat_message.message)
+        response = await chat.send_message(user_message)
+        
+        # Store chat in database for analytics
+        await db.chat_messages.insert_one({
+            "session_id": session_id,
+            "user_message": chat_message.message,
+            "assistant_response": response,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        return ChatResponse(response=response, session_id=session_id)
+        
+    except Exception as e:
+        logging.error(f"Chat error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process message")
+
+# ===================== BEST TIMING AI =====================
+
+MONTH_NAMES = {
+    "en": ["January", "February", "March", "April", "May", "June", 
+           "July", "August", "September", "October", "November", "December"],
+    "el": ["Ιανουάριος", "Φεβρουάριος", "Μάρτιος", "Απρίλιος", "Μάιος", "Ιούνιος",
+           "Ιούλιος", "Αύγουστος", "Σεπτέμβριος", "Οκτώβριος", "Νοέμβριος", "Δεκέμβριος"],
+    "de": ["Januar", "Februar", "März", "April", "Mai", "Juni",
+           "Juli", "August", "September", "Oktober", "November", "Dezember"],
+    "es": ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+           "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
+    "fr": ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+           "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"],
+}
+
+class BestTimingRequest(BaseModel):
+    mother_birthday: str
+    father_birthday: str
+    desired_gender: str  # "boy" or "girl"
+    language: str = "en"
+
+class BestTimingResponse(BaseModel):
+    best_month: str
+    best_month_number: int
+    probability: int
+    second_best_month: str
+    second_probability: int
+    explanation: str
+    tips: list
+
+@api_router.post("/best-timing", response_model=BestTimingResponse)
+async def calculate_best_timing(request: BestTimingRequest):
+    """Calculate the best month for conception based on parents' birthdays and desired gender"""
+    try:
+        # Parse birthdays
+        mother_date = datetime.strptime(request.mother_birthday, "%Y-%m-%d")
+        father_date = datetime.strptime(request.father_birthday, "%Y-%m-%d")
+        
+        # Calculate numerology numbers
+        mother_life_path = sum(int(d) for d in request.mother_birthday.replace("-", ""))
+        while mother_life_path > 9:
+            mother_life_path = sum(int(d) for d in str(mother_life_path))
+            
+        father_life_path = sum(int(d) for d in request.father_birthday.replace("-", ""))
+        while father_life_path > 9:
+            father_life_path = sum(int(d) for d in str(father_life_path))
+        
+        # Combined energy number
+        combined = (mother_life_path + father_life_path) % 12
+        
+        # Get zodiac influences
+        mother_month = mother_date.month
+        father_month = father_date.month
+        
+        # Calculate best months based on astrology + numerology
+        # Boys: odd numbers, fire/air signs favor
+        # Girls: even numbers, water/earth signs favor
+        
+        current_month = datetime.now().month
+        current_year = datetime.now().year
+        
+        month_scores = []
+        for month in range(1, 13):
+            score = 50  # Base score
+            
+            # Numerology influence
+            month_num = (mother_life_path + father_life_path + month) % 9
+            
+            if request.desired_gender == "boy":
+                # Boys favored by odd months and fire element months (1,3,5,7,9,11)
+                if month % 2 == 1:
+                    score += 15
+                if month in [1, 5, 8, 12]:  # Fire/Yang months
+                    score += 10
+                if month_num in [1, 3, 5, 7, 9]:
+                    score += 10
+                # Chinese calendar influence
+                if (mother_date.year + month) % 2 == 1:
+                    score += 8
+            else:
+                # Girls favored by even months and water element months
+                if month % 2 == 0:
+                    score += 15
+                if month in [2, 4, 6, 10]:  # Water/Yin months
+                    score += 10
+                if month_num in [2, 4, 6, 8]:
+                    score += 10
+                # Chinese calendar influence
+                if (mother_date.year + month) % 2 == 0:
+                    score += 8
+            
+            # Bonus for months aligning with parents' birth months
+            if month == mother_month or month == father_month:
+                score += 5
+            
+            # Seasonal adjustment
+            if request.desired_gender == "boy" and month in [3, 4, 5, 9, 10, 11]:  # Spring/Fall
+                score += 5
+            elif request.desired_gender == "girl" and month in [6, 7, 8, 12, 1, 2]:  # Summer/Winter
+                score += 5
+            
+            # Add some deterministic variation based on combined number
+            score += (combined * month) % 7
+            
+            month_scores.append((month, min(score, 95)))  # Cap at 95%
+        
+        # Sort by score
+        month_scores.sort(key=lambda x: x[1], reverse=True)
+        
+        best_month_num = month_scores[0][0]
+        best_probability = month_scores[0][1]
+        second_month_num = month_scores[1][0]
+        second_probability = month_scores[1][1]
+        
+        # Get month names in requested language
+        lang = request.language if request.language in MONTH_NAMES else "en"
+        best_month_name = MONTH_NAMES[lang][best_month_num - 1]
+        second_month_name = MONTH_NAMES[lang][second_month_num - 1]
+        
+        # Generate explanation
+        gender_word = "αγόρι" if request.desired_gender == "boy" else "κορίτσι"
+        if lang == "en":
+            gender_word = "boy" if request.desired_gender == "boy" else "girl"
+            explanation = f"Based on your combined numerology ({mother_life_path}+{father_life_path}), astrological alignments, and ancient Chinese calendar methods, {best_month_name} shows the strongest energy patterns for conceiving a {gender_word}."
+            tips = [
+                f"Plan conception attempts during {best_month_name} for optimal results",
+                "The first half of the month shows slightly stronger energy",
+                "Stay relaxed and positive - stress can affect outcomes",
+                f"If {best_month_name} doesn't work, try {second_month_name} as your second choice"
+            ]
+        else:
+            explanation = f"Με βάση τη συνδυασμένη αριθμολογία σας ({mother_life_path}+{father_life_path}), τις αστρολογικές ευθυγραμμίσεις και τις αρχαίες κινεζικές μεθόδους, ο {best_month_name} δείχνει τα ισχυρότερα ενεργειακά μοτίβα για σύλληψη {gender_word}ού."
+            tips = [
+                f"Προγραμματίστε τις προσπάθειες σύλληψης κατά τη διάρκεια του {best_month_name}",
+                "Το πρώτο μισό του μήνα δείχνει ελαφρώς ισχυρότερη ενέργεια",
+                "Μείνετε χαλαροί και θετικοί - το άγχος μπορεί να επηρεάσει τα αποτελέσματα",
+                f"Αν ο {best_month_name} δεν λειτουργήσει, δοκιμάστε τον {second_month_name}"
+            ]
+        
+        # Store in database for analytics
+        await db.timing_calculations.insert_one({
+            "mother_birthday": request.mother_birthday,
+            "father_birthday": request.father_birthday,
+            "desired_gender": request.desired_gender,
+            "best_month": best_month_num,
+            "probability": best_probability,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        return BestTimingResponse(
+            best_month=best_month_name,
+            best_month_number=best_month_num,
+            probability=best_probability,
+            second_best_month=second_month_name,
+            second_probability=second_probability,
+            explanation=explanation,
+            tips=tips
+        )
+        
+    except Exception as e:
+        logging.error(f"Best timing calculation error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to calculate best timing")
 
 # Include the router in the main app
 app.include_router(api_router)
