@@ -1,0 +1,29 @@
+{
+  "short_name": "BabyWish",
+  "name": "BabyWish - Predict Your Future Child",
+  "description": "Discover your future baby's gender, name, zodiac sign, and personality traits based on parents' birthdays. 95% accuracy guarantee!",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#1a1a2e",
+  "background_color": "#0f0a1e",
+  "categories": ["lifestyle", "entertainment", "health"],
+  "lang": "en",
+  "dir": "ltr",
+  "prefer_related_applications": false
+}
