@@ -15,90 +15,129 @@ const DATA_SPHERE_URL = "https://customer-assets.emergentagent.com/job_parent-to
 const ANGEL_BOY_URL = "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/nva1ylbn_IMG_5956.jpeg";
 const ANGEL_GIRL_URL = "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/udsslgan_IMG_5955.jpeg";
 
-// Multilingual welcome messages (18 languages)
-const welcomeMessages = {
-  en: "Hello! 👋 I'm AI Mindjerry, your personal Family Psychologist & Probability Consultant. I understand your desire to know your future child's gender. How can I help you today?",
-  de: "Hallo! 👋 Ich bin AI Mindjerry, Ihr persönlicher Familienpsychologe & Wahrscheinlichkeitsberater. Ich verstehe Ihren Wunsch, das Geschlecht Ihres zukünftigen Kindes zu erfahren. Wie kann ich Ihnen heute helfen?",
-  el: "Γεια σας! 👋 Είμαι ο AI Mindjerry, ο προσωπικός σας Family Psychologist & Probability Consultant. Καταλαβαίνω την επιθυμία σας να γνωρίζετε το φύλο του μελλοντικού σας παιδιού. Πώς μπορώ να σας βοηθήσω σήμερα;",
-  es: "¡Hola! 👋 Soy AI Mindjerry, tu Psicólogo Familiar y Consultor de Probabilidad personal. Entiendo tu deseo de conocer el género de tu futuro hijo. ¿Cómo puedo ayudarte hoy?",
-  fr: "Bonjour! 👋 Je suis AI Mindjerry, votre Psychologue Familial et Consultant en Probabilité personnel. Je comprends votre désir de connaître le sexe de votre futur enfant. Comment puis-je vous aider aujourd'hui?",
-  it: "Ciao! 👋 Sono AI Mindjerry, il tuo Psicologo Familiare e Consulente di Probabilità personale. Capisco il tuo desiderio di conoscere il sesso del tuo futuro bambino. Come posso aiutarti oggi?",
-  pt: "Olá! 👋 Sou o AI Mindjerry, seu Psicólogo Familiar e Consultor de Probabilidade pessoal. Entendo seu desejo de saber o gênero do seu futuro filho. Como posso ajudá-lo hoje?",
-  ru: "Привет! 👋 Я AI Mindjerry, ваш личный Семейный Психолог и Консультант по Вероятностям. Я понимаю ваше желание узнать пол вашего будущего ребенка. Чем я могу помочь вам сегодня?",
-  zh: "你好！👋 我是AI Mindjerry，您的私人家庭心理学家和概率顾问。我理解您想知道未来孩子性别的愿望。今天我能帮您什么？",
-  hi: "नमस्ते! 👋 मैं AI Mindjerry हूं, आपका व्यक्तिगत पारिवारिक मनोवैज्ञानिक और संभावना सलाहकार। मैं आपके भविष्य के बच्चे का लिंग जानने की आपकी इच्छा को समझता हूं। आज मैं आपकी कैसे मदद कर सकता हूं?",
-  ar: "مرحباً! 👋 أنا AI Mindjerry، مستشارك الشخصي في علم نفس الأسرة والاحتمالات. أفهم رغبتك في معرفة جنس طفلك المستقبلي. كيف يمكنني مساعدتك اليوم؟",
-  tr: "Merhaba! 👋 Ben AI Mindjerry, kişisel Aile Psikoloğunuz ve Olasılık Danışmanınız. Gelecekteki çocuğunuzun cinsiyetini bilme arzunuzu anlıyorum. Bugün size nasıl yardımcı olabilirim?",
-  fa: "سلام! 👋 من AI Mindjerry هستم، روانشناس خانواده و مشاور احتمالات شخصی شما. من میل شما به دانستن جنسیت فرزند آینده‌تان را درک می‌کنم. امروز چطور می‌توانم به شما کمک کنم؟",
-  ja: "こんにちは！👋 私はAI Mindjerry、あなたの専属ファミリーサイコロジスト＆確率コンサルタントです。将来のお子様の性別を知りたいというあなたの願望を理解しています。今日はどのようにお手伝いできますか？",
-  sv: "Hej! 👋 Jag är AI Mindjerry, din personliga familjepsykolog och sannolikhetskonsult. Jag förstår din önskan att veta ditt framtida barns kön. Hur kan jag hjälpa dig idag?",
-  sr: "Здраво! 👋 Ја сам AI Mindjerry, ваш лични породични психолог и консултант за вероватноћу. Разумем вашу жељу да сазнате пол вашег будућег детета. Како вам могу помоћи данас?",
-  pl: "Cześć! 👋 Jestem AI Mindjerry, Twoim osobistym Psychologiem Rodzinnym i Konsultantem ds. Prawdopodobieństwa. Rozumiem Twoje pragnienie poznania płci Twojego przyszłego dziecka. Jak mogę Ci dziś pomóc?",
-  cs: "Ahoj! 👋 Jsem AI Mindjerry, váš osobní rodinný psycholog a konzultant pravděpodobnosti. Chápu vaši touhu znát pohlaví vašeho budoucího dítěte. Jak vám dnes mohu pomoci?"
+// ============================================
+// GENDER-SPECIFIC WELCOME MESSAGES
+// ============================================
+
+// Female-focused welcome messages (mindjerry's)
+const welcomeMessagesFemale = {
+  en: "Hello! 🌸 I'm mindjerry's, your nurturing companion for the beautiful journey to motherhood. I'm here to support you with understanding about your body, emotions, and preparation. How are you feeling today?",
+  el: "Γεια σας! 🌸 Είμαι η mindjerry's, η υποστηρικτική σύντροφός σας στο όμορφο ταξίδι προς τη μητρότητα. Είμαι εδώ για να σας βοηθήσω με το σώμα, τα συναισθήματα και την προετοιμασία σας. Πώς νιώθετε σήμερα;",
+  de: "Hallo! 🌸 Ich bin mindjerry's, Ihre fürsorgliche Begleiterin auf der wunderschönen Reise zur Mutterschaft. Ich bin hier, um Sie zu unterstützen. Wie fühlen Sie sich heute?",
+  es: "¡Hola! 🌸 Soy mindjerry's, tu compañera cariñosa en el hermoso viaje hacia la maternidad. Estoy aquí para apoyarte. ¿Cómo te sientes hoy?",
+  fr: "Bonjour! 🌸 Je suis mindjerry's, votre compagne bienveillante pour le beau voyage vers la maternité. Comment vous sentez-vous aujourd'hui?",
+  it: "Ciao! 🌸 Sono mindjerry's, la tua compagna premurosa nel bellissimo viaggio verso la maternità. Come ti senti oggi?",
+  pt: "Olá! 🌸 Sou mindjerry's, sua companheira carinhosa na bela jornada para a maternidade. Como você está se sentindo hoje?",
+  ru: "Привет! 🌸 Я mindjerry's, ваша заботливая спутница на прекрасном пути к материнству. Как вы себя чувствуете сегодня?",
+  zh: "你好！🌸 我是mindjerry's，在您美丽的母亲之旅中的贴心伙伴。您今天感觉如何？",
+  ja: "こんにちは！🌸 私はmindjerry's、母親への美しい旅路でのあなたの心強い仲間です。今日の気分はいかがですか？"
 };
 
-// Multilingual suggested questions
-const suggestedQuestionsMap = {
-  en: ['How far back should I know dates?', 'How much does father\'s age affect?', 'How accurate is the prediction?', 'How does Data-Driven AI work?'],
-  de: ['Wie weit zurück sollte ich Daten kennen?', 'Wie viel beeinflusst das Alter des Vaters?', 'Wie genau ist die Vorhersage?', 'Wie funktioniert Data-Driven AI?'],
-  el: ['Πόσο πίσω πρέπει να ξέρω τις ημερομηνίες;', 'Πόσο επηρεάζει η ηλικία του πατέρα;', 'Πόσο ακριβής είναι η πρόβλεψη;', 'Πώς λειτουργεί το Data-Driven AI;'],
-  es: ['¿Hasta cuándo debo conocer las fechas?', '¿Cuánto afecta la edad del padre?', '¿Qué tan precisa es la predicción?', '¿Cómo funciona Data-Driven AI?'],
-  fr: ['Jusqu\'où dois-je connaître les dates?', 'L\'âge du père affecte-t-il beaucoup?', 'Quelle est la précision de la prédiction?', 'Comment fonctionne Data-Driven AI?'],
-  it: ['Quanto indietro devo conoscere le date?', 'Quanto influisce l\'età del padre?', 'Quanto è accurata la previsione?', 'Come funziona Data-Driven AI?'],
-  pt: ['Até onde preciso saber as datas?', 'Quanto a idade do pai afeta?', 'Quão precisa é a previsão?', 'Como funciona o Data-Driven AI?'],
-  ru: ['Как далеко назад нужно знать даты?', 'Как влияет возраст отца?', 'Насколько точен прогноз?', 'Как работает Data-Driven AI?'],
-  zh: ['我需要知道多久以前的日期？', '父亲的年龄影响多大？', '预测有多准确？', 'Data-Driven AI如何工作？'],
-  hi: ['मुझे कितने पीछे तक तारीखें पता होनी चाहिए?', 'पिता की उम्र कितना प्रभावित करती है?', 'भविष्यवाणी कितनी सटीक है?', 'Data-Driven AI कैसे काम करता है?'],
-  ar: ['إلى أي مدى يجب أن أعرف التواريخ؟', 'كم يؤثر عمر الأب؟', 'ما مدى دقة التنبؤ؟', 'كيف يعمل Data-Driven AI؟'],
-  tr: ['Tarihleri ne kadar geriye bilmeliyim?', 'Babanın yaşı ne kadar etkiler?', 'Tahmin ne kadar doğru?', 'Data-Driven AI nasıl çalışır?'],
-  fa: ['تا چه زمانی باید تاریخ‌ها را بدانم؟', 'سن پدر چقدر تأثیر دارد؟', 'پیش‌بینی چقدر دقیق است؟', 'Data-Driven AI چگونه کار می‌کند؟'],
-  ja: ['どこまで遡って日付を知る必要がありますか？', '父親の年齢はどれくらい影響しますか？', '予測はどれくらい正確ですか？', 'Data-Driven AIはどのように機能しますか？'],
-  sv: ['Hur långt tillbaka ska jag känna till datum?', 'Hur mycket påverkar faderns ålder?', 'Hur exakt är förutsägelsen?', 'Hur fungerar Data-Driven AI?'],
-  sr: ['Колико уназад треба да знам датуме?', 'Колико утиче очева старост?', 'Колико је тачно предвиђање?', 'Како ради Data-Driven AI?'],
-  pl: ['Jak daleko wstecz powinienem znać daty?', 'Jak bardzo wpływa wiek ojca?', 'Jak dokładna jest prognoza?', 'Jak działa Data-Driven AI?'],
-  cs: ['Jak daleko zpět bych měl znát data?', 'Jak moc ovlivňuje věk otce?', 'Jak přesná je predikce?', 'Jak funguje Data-Driven AI?']
+// Male-focused welcome messages (mindjerry)
+const welcomeMessagesMale = {
+  en: "Hey! 💪 I'm mindjerry, your practical guide to fatherhood. I help men understand how to support their partners and prepare for the amazing journey ahead. What's on your mind?",
+  el: "Γεια! 💪 Είμαι ο mindjerry, ο πρακτικός οδηγός σου για την πατρότητα. Βοηθάω τους άντρες να καταλάβουν πώς να στηρίξουν τις συντρόφους τους. Τι σε απασχολεί;",
+  de: "Hey! 💪 Ich bin mindjerry, Ihr praktischer Guide zur Vaterschaft. Ich helfe Männern zu verstehen, wie sie ihre Partner unterstützen können. Was beschäftigt Sie?",
+  es: "¡Hey! 💪 Soy mindjerry, tu guía práctico hacia la paternidad. Ayudo a los hombres a entender cómo apoyar a sus parejas. ¿Qué tienes en mente?",
+  fr: "Salut! 💪 Je suis mindjerry, votre guide pratique vers la paternité. J'aide les hommes à comprendre comment soutenir leurs partenaires. Qu'est-ce qui vous préoccupe?",
+  it: "Ciao! 💪 Sono mindjerry, la tua guida pratica verso la paternità. Aiuto gli uomini a capire come supportare le loro partner. Cosa hai in mente?",
+  pt: "Ei! 💪 Sou mindjerry, seu guia prático para a paternidade. Ajudo os homens a entender como apoiar suas parceiras. O que está em sua mente?",
+  ru: "Привет! 💪 Я mindjerry, ваш практический гид к отцовству. Я помогаю мужчинам понять, как поддержать своих партнеров. Что у вас на у|ме?",
+  zh: "嘿！💪 我是mindjerry，您通往父亲之路的实用指南。我帮助男性了解如何支持他们的伴侣。你在想什么？",
+  ja: "やあ！💪 私はmindjerry、父親への道のりの実践的なガイドです。パートナーをサポートする方法を理解するお手伝いをします。何か気になることは？"
 };
 
-// Multilingual placeholders
-const placeholderMap = {
-  en: "Ask AI Mindjerry...",
-  de: "Fragen Sie AI Mindjerry...",
-  el: "Ρωτήστε τον AI Mindjerry...",
-  es: "Pregunta a AI Mindjerry...",
-  fr: "Demandez à AI Mindjerry...",
-  it: "Chiedi a AI Mindjerry...",
-  pt: "Pergunte ao AI Mindjerry...",
-  ru: "Спросите AI Mindjerry...",
-  zh: "询问AI Mindjerry...",
-  hi: "AI Mindjerry से पूछें...",
-  ar: "اسأل AI Mindjerry...",
-  tr: "AI Mindjerry'ye sorun...",
-  fa: "از AI Mindjerry بپرسید...",
-  ja: "AI Mindjerryに聞く...",
-  sv: "Fråga AI Mindjerry...",
-  sr: "Питајте AI Mindjerry...",
-  pl: "Zapytaj AI Mindjerry...",
-  cs: "Zeptejte se AI Mindjerry..."
+// Female-focused suggested questions
+const suggestedQuestionsFemale = {
+  en: ['How do I track my fertile window?', 'What foods help with fertility?', 'Managing pregnancy anxiety', 'Self-care tips for conception'],
+  el: ['Πώς παρακολουθώ το γόνιμο παράθυρο;', 'Ποιες τροφές βοηθούν τη γονιμότητα;', 'Διαχείριση άγχους εγκυμοσύνης', 'Συμβουλές αυτοφροντίδας'],
+  de: ['Wie verfolge ich mein fruchtbares Fenster?', 'Welche Lebensmittel fördern die Fruchtbarkeit?', 'Umgang mit Schwangerschaftsangst', 'Selbstpflege-Tipps'],
+  es: ['¿Cómo rastreo mi ventana fértil?', '¿Qué alimentos ayudan a la fertilidad?', 'Manejar la ansiedad del embarazo', 'Consejos de autocuidado'],
+  fr: ['Comment suivre ma fenêtre fertile?', 'Quels aliments aident la fertilité?', 'Gérer l\'anxiété de grossesse', 'Conseils d\'autosoins'],
+  it: ['Come monitorare la finestra fertile?', 'Quali cibi aiutano la fertilità?', 'Gestire l\'ansia da gravidanza', 'Consigli per la cura di sé'],
+  pt: ['Como rastrear minha janela fértil?', 'Quais alimentos ajudam na fertilidade?', 'Gerenciando ansiedade da gravidez', 'Dicas de autocuidado'],
+  ru: ['Как отслеживать фертильное окно?', 'Какие продукты помогают фертильности?', 'Управление тревогой беременности', 'Советы по уходу за собой'],
+  zh: ['如何追踪我的受孕窗口？', '哪些食物有助于生育？', '管理怀孕焦虑', '备孕自我护理建议'],
+  ja: ['妊娠可能な時期の追跡方法は？', '妊活に良い食べ物は？', '妊娠中の不安の対処法', 'セルフケアのヒント']
 };
 
-const ChatWidget = () => {
+// Male-focused suggested questions
+const suggestedQuestionsMale = {
+  en: ['How can I support my partner?', 'Preparing the home for baby', 'Understanding her mood changes', 'Practical fatherhood tips'],
+  el: ['Πώς μπορώ να στηρίξω τη σύντροφό μου;', 'Προετοιμασία σπιτιού για το μωρό', 'Κατανόηση αλλαγών διάθεσης', 'Πρακτικές συμβουλές πατρότητας'],
+  de: ['Wie kann ich meine Partnerin unterstützen?', 'Das Zuhause für Baby vorbereiten', 'Ihre Stimmungsschwankungen verstehen', 'Praktische Vatertipps'],
+  es: ['¿Cómo puedo apoyar a mi pareja?', 'Preparar el hogar para el bebé', 'Entender sus cambios de humor', 'Consejos prácticos de paternidad'],
+  fr: ['Comment soutenir ma partenaire?', 'Préparer la maison pour bébé', 'Comprendre ses changements d\'humeur', 'Conseils pratiques de paternité'],
+  it: ['Come posso supportare la mia partner?', 'Preparare casa per il bambino', 'Capire i suoi cambiamenti d\'umore', 'Consigli pratici per papà'],
+  pt: ['Como posso apoiar minha parceira?', 'Preparando a casa para o bebê', 'Entendendo as mudanças de humor', 'Dicas práticas de paternidade'],
+  ru: ['Как поддержать партнершу?', 'Подготовка дома для малыша', 'Понимание перепадов настроения', 'Практические советы отцам'],
+  zh: ['如何支持我的伴侣？', '为宝宝准备家', '理解她的情绪变化', '实用的父亲建议'],
+  ja: ['パートナーをどうサポートする？', '赤ちゃんのための家の準備', '彼女の気分の変化を理解する', '実践的な父親のヒント']
+};
+
+// Multilingual placeholders by gender
+const placeholderFemale = {
+  en: "Ask mindjerry's...",
+  el: "Ρωτήστε την mindjerry's...",
+  de: "Fragen Sie mindjerry's...",
+  es: "Pregunta a mindjerry's...",
+  fr: "Demandez à mindjerry's...",
+  it: "Chiedi a mindjerry's...",
+  pt: "Pergunte à mindjerry's...",
+  ru: "Спросите mindjerry's...",
+  zh: "询问mindjerry's...",
+  ja: "mindjerry'sに聞く..."
+};
+
+const placeholderMale = {
+  en: "Ask mindjerry...",
+  el: "Ρωτήστε τον mindjerry...",
+  de: "Fragen Sie mindjerry...",
+  es: "Pregunta a mindjerry...",
+  fr: "Demandez à mindjerry...",
+  it: "Chiedi a mindjerry...",
+  pt: "Pergunte ao mindjerry...",
+  ru: "Спросите mindjerry...",
+  zh: "询问mindjerry...",
+  ja: "mindjerryに聞く..."
+};
+
+// Legacy fallbacks
+const welcomeMessages = welcomeMessagesMale;
+const suggestedQuestionsMap = suggestedQuestionsMale;
+const placeholderMap = placeholderMale;
+
+const ChatWidget = ({ gender = 'male', side = 'right' }) => {
   const { language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
-  const [currentBaby, setCurrentBaby] = useState('boy'); // 'boy' or 'girl'
+  const [currentBaby, setCurrentBaby] = useState(gender === 'male' ? 'boy' : 'girl');
   const [loadingProgress, setLoadingProgress] = useState(0);
   const messagesEndRef = useRef(null);
   
-  // Draggable position state - positioned for visibility on all devices
+  // Color based on gender
+  const accentColor = gender === 'male' ? '#00D4FF' : '#FF69B4'; // Blue for male, Pink for female
+  const widgetName = gender === 'male' ? 'mindjerry' : "mindjerry's";
+  const indicatorColor = gender === 'male' ? 'bg-green-500' : 'bg-yellow-400'; // Green for male, Yellow for female
+  
+  // Draggable position state - positioned at bottom of screen (~2cm from bottom)
   const getInitialPosition = () => {
-    if (typeof window === 'undefined') return { x: 300, y: 500 };
+    if (typeof window === 'undefined') return { x: 20, y: 500 };
     const isMobile = window.innerWidth < 768;
+    // Position ~75px from bottom (approximately 2cm)
+    const bottomOffset = 75;
+    if (side === 'left') {
+      return {
+        x: isMobile ? 20 : 20,
+        y: window.innerHeight - bottomOffset
+      };
+    }
     return {
       x: isMobile ? window.innerWidth - 70 : window.innerWidth - 80,
-      y: isMobile ? window.innerHeight - 150 : 480 // More visible on mobile - bottom area
+      y: window.innerHeight - bottomOffset
     };
   };
   
@@ -108,10 +147,18 @@ const ChatWidget = () => {
   useEffect(() => {
     const handleResize = () => {
       const isMobile = window.innerWidth < 768;
-      setPosition({
-        x: isMobile ? window.innerWidth - 70 : window.innerWidth - 80,
-        y: isMobile ? window.innerHeight - 150 : 480
-      });
+      const bottomOffset = 75; // ~2cm from bottom
+      if (side === 'left') {
+        setPosition({
+          x: isMobile ? 20 : 20,
+          y: window.innerHeight - bottomOffset
+        });
+      } else {
+        setPosition({
+          x: isMobile ? window.innerWidth - 70 : window.innerWidth - 80,
+          y: window.innerHeight - bottomOffset
+        });
+      }
     };
     
     // Set initial position
@@ -119,16 +166,18 @@ const ChatWidget = () => {
     
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [side]);
   const [isDragging, setIsDragging] = useState(false);
   const dragStartPos = useRef({ x: 0, y: 0 });
   const dragStartMousePos = useRef({ x: 0, y: 0 });
 
-  // Set welcome message based on language
+  // Set welcome message based on language and gender
   useEffect(() => {
-    const welcomeText = welcomeMessages[language] || welcomeMessages.en;
+    const welcomeText = gender === 'female'
+      ? (welcomeMessagesFemale[language] || welcomeMessagesFemale.en)
+      : (welcomeMessagesMale[language] || welcomeMessagesMale.en);
     setMessages([{ type: 'assistant', text: welcomeText }]);
-  }, [language]);
+  }, [language, gender]);
 
   // Alternate angel every 9 seconds
   useEffect(() => {
@@ -197,9 +246,18 @@ const ChatWidget = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Get language-specific content
-  const suggestedQuestions = suggestedQuestionsMap[language] || suggestedQuestionsMap.en;
-  const placeholder = placeholderMap[language] || placeholderMap.en;
+  // Get language-specific content based on gender
+  const suggestedQuestions = gender === 'female' 
+    ? (suggestedQuestionsFemale[language] || suggestedQuestionsFemale.en)
+    : (suggestedQuestionsMale[language] || suggestedQuestionsMale.en);
+  
+  const placeholder = gender === 'female'
+    ? (placeholderFemale[language] || placeholderFemale.en)
+    : (placeholderMale[language] || placeholderMale.en);
+  
+  const welcomeMessage = gender === 'female'
+    ? (welcomeMessagesFemale[language] || welcomeMessagesFemale.en)
+    : (welcomeMessagesMale[language] || welcomeMessagesMale.en);
 
   const handleSendMessage = async (text) => {
     if (!text.trim() || isLoading) return;
@@ -215,7 +273,8 @@ const ChatWidget = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: text.trim(),
-          session_id: sessionId
+          session_id: sessionId,
+          gender: gender  // Send gender for personality selection
         })
       });
 
@@ -369,7 +428,7 @@ const ChatWidget = () => {
                 </AnimatePresence>
               </div>
 
-              {/* Small Inner Loading Circle - Pink/Blue only - CENTERED */}
+              {/* Small Inner Loading Circle - Color based on gender */}
               <svg 
                 className="absolute w-5 h-5"
                 viewBox="0 0 100 100"
@@ -388,22 +447,24 @@ const ChatWidget = () => {
                   cy="50"
                   r="40"
                   fill="none"
-                  stroke={currentBaby === 'boy' ? '#00D4FF' : '#FF69B4'}
+                  stroke={accentColor}
                   strokeWidth="5"
                   strokeLinecap="round"
                   strokeDasharray={2 * Math.PI * 40}
                   strokeDashoffset={(2 * Math.PI * 40) - (loadingProgress / 100) * (2 * Math.PI * 40)}
-                  style={{ transition: 'stroke-dashoffset 0.1s ease, stroke 2.5s ease' }}
+                  style={{ transition: 'stroke-dashoffset 0.1s ease' }}
                 />
               </svg>
               
               {/* Online indicator */}
-              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border border-black animate-pulse" />
+              <span className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 ${indicatorColor} rounded-full border border-black animate-pulse`} />
             </div>
             
             {/* Tooltip on hover */}
-            <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-2 rounded-xl shadow-lg text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity font-bold">
-              AI Mindjerry 🧠
+            <div className={`absolute ${side === 'left' ? 'left-full ml-3' : 'right-full mr-3'} top-1/2 -translate-y-1/2 text-white px-3 py-2 rounded-xl shadow-lg text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity font-bold`}
+              style={{ background: gender === 'male' ? 'linear-gradient(to right, #0891b2, #0ea5e9)' : 'linear-gradient(to right, #db2777, #ec4899)' }}
+            >
+              {widgetName} {gender === 'male' ? '👨' : '👩'}
             </div>
           </motion.div>
         )}
@@ -481,7 +542,7 @@ const ChatWidget = () => {
                       <motion.img
                         key={currentBaby}
                         src={currentBaby === 'boy' ? ANGEL_BOY_URL : ANGEL_GIRL_URL}
-                        alt="AI Mindjerry"
+                        alt={widgetName}
                         className="w-12 h-12 object-cover rounded-full"
                         initial={{ opacity: 0, scale: 0.6 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -498,12 +559,12 @@ const ChatWidget = () => {
                 
                 <div>
                   <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                    AI Mindjerry
+                    <span style={{ textTransform: 'none', fontVariant: 'normal' }}>{widgetName}</span>
                     <span className="text-xs bg-gradient-to-r from-cyan-400 to-purple-500 px-2 py-0.5 rounded-full">
                       LIVE
                     </span>
                   </h3>
-                  <p className="text-cyan-300/70 text-xs">Data-Driven Baby Gender AI</p>
+                  <p className="text-cyan-300/70 text-xs">{gender === 'male' ? 'Data-Driven Baby Gender AI' : 'Family Psychology AI'}</p>
                 </div>
               </div>
               
