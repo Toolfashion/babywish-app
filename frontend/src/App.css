@@ -403,3 +403,452 @@ html {
   outline: none;
   -webkit-tap-highlight-color: transparent;
 }
+
+
+/* ============================================
+   iOS Safari Floating Elements Fix
+   ============================================ */
+
+/* iOS fixed positioning fix for floating elements */
+.ios-fixed {
+  position: fixed !important;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  perspective: 1000;
+  will-change: transform;
+}
+
+/* Ensure floating elements are above everything on iOS */
+@supports (-webkit-touch-callout: none) {
+  /* ChatWidget and Social Buttons - highest z-index */
+  .z-50 {
+    z-index: 9999 !important;
+  }
+  
+  /* iOS Safari: Force GPU acceleration for fixed elements */
+  [style*="position: fixed"] {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+  
+  /* Prevent iOS from hiding elements behind notch/home indicator */
+  .fixed {
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+}
+
+/* Force visibility on all mobile Safari */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  .ios-fixed, .z-50 {
+    -webkit-overflow-scrolling: touch;
+    transform: translateZ(0);
+  }
+}
+ StarBorn Prophecy - Custom Animations */
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(217, 70, 239, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(217, 70, 239, 0.6);
+  }
+}
+
+@keyframes cosmic-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 4s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+.animate-twinkle {
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(217, 70, 239, 0) 0%,
+    rgba(217, 70, 239, 0.3) 50%,
+    rgba(217, 70, 239, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.animate-cosmic-rotate {
+  animation: cosmic-rotate 30s linear infinite;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(to right, #F59E0B, #D946EF, #06B6D4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glassmorphism */
+.glass {
+  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-heavy {
+  backdrop-filter: blur(24px);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Button glow */
+.btn-glow {
+  transition: all 0.3s ease;
+}
+
+.btn-glow:hover {
+  box-shadow: 0 0 30px rgba(217, 70, 239, 0.4);
+  transform: scale(1.02);
+}
+
+.btn-glow:active {
+  transform: scale(0.98);
+}
+
+/* Card hover lift */
+.card-lift {
+  transition: all 0.5s ease;
+}
+
+.card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+  border-color: rgba(217, 70, 239, 0.5);
+}
+
+/* Star background */
+.star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+/* Cosmic background */
+.cosmic-bg {
+  background: radial-gradient(circle at 50% 50%, #1a103c 0%, #05020D 100%);
+}
+
+/* Input focus glow */
+.input-glow:focus {
+  box-shadow: 0 0 20px rgba(217, 70, 239, 0.3);
+}
+
+
+/* ============================================
+   iOS SAFARI CRITICAL FIXES
+   ============================================ */
+
+/* Force hardware acceleration for fixed elements on iOS */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific - prevent disappearing fixed elements */
+  .fixed,
+  [class*="fixed"] {
+    position: fixed !important;
+    -webkit-transform: translate3d(0, 0, 0) !important;
+    transform: translate3d(0, 0, 0) !important;
+    -webkit-backface-visibility: hidden !important;
+    backface-visibility: hidden !important;
+    -webkit-perspective: 1000px;
+    perspective: 1000px;
+  }
+  
+  /* Prevent transform parent from breaking fixed children */
+  body, html, #root {
+    -webkit-transform: none !important;
+    transform: none !important;
+    -webkit-transform-style: flat !important;
+    transform-style: flat !important;
+  }
+}
+
+/* Universal iOS fixed element class */
+.ios-fixed {
+  position: fixed !important;
+  -webkit-backface-visibility: hidden !important;
+  backface-visibility: hidden !important;
+  -webkit-transform: translate3d(0, 0, 0) !important;
+  transform: translate3d(0, 0, 0) !important;
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
+  will-change: transform;
+}
+
+/* Safari backdrop-filter support - CRITICAL */
+.glass {
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  /* Fallback for when backdrop-filter breaks layout */
+  background: rgba(0, 0, 0, 0.7);
+}
+
+@supports (-webkit-backdrop-filter: blur(12px)) {
+  .glass {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* Safari mix-blend-mode fallback */
+@supports not (mix-blend-mode: screen) {
+  .blend-screen {
+    opacity: 0.9;
+  }
+}
+
+/* Prevent framer-motion from breaking fixed positioning */
+.framer-fixed-wrapper {
+  -webkit-transform: none !important;
+  transform: none !important;
+}
+
+/* iOS Safari scroll fix for fixed elements */
+@supports (-webkit-overflow-scrolling: touch) {
+  .fixed {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Z-index layering for iOS Safari */
+.z-50 {
+  z-index: 50 !important;
+  isolation: isolate;
+}
+
+/* Prevent iOS Safari from hiding elements on scroll */
+.ios-visible {
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Fix Swiper vertical direction centering */
+.slogan-swiper.swiper-vertical .swiper-wrapper,
+.desc-swiper.swiper-vertical .swiper-wrapper {
+  width: 100% !important;
+}
+.slogan-swiper.swiper-vertical .swiper-slide,
+.desc-swiper.swiper-vertical .swiper-slide {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+
+/* ============================================
+   PWA Cross-Platform Compatibility Styles
+   ============================================ */
+
+/* Safe area insets for notched devices (iPhone X+) */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pl-safe {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+.pr-safe {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  /* Prevent rubber-banding on iOS */
+  .no-bounce {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: auto;
+  }
+  
+  /* Fix 100vh issue on iOS Safari */
+  .min-h-screen-ios {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Fix fixed positioning on iOS */
+  .fixed-ios {
+    position: fixed;
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  
+  /* Smooth scrolling for iOS */
+  .scroll-smooth-ios {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* Prevent text selection highlight */
+  .no-tap-highlight {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Android specific fixes */
+@supports not (-webkit-touch-callout: none) {
+  /* Android Chrome overscroll glow */
+  .no-overscroll-glow {
+    overscroll-behavior: contain;
+  }
+}
+
+/* PWA Standalone mode detection */
+@media (display-mode: standalone) {
+  /* Hide browser-only elements in PWA mode */
+  .hide-in-pwa {
+    display: none !important;
+  }
+  
+  /* Adjust top padding for status bar */
+  .pwa-top-padding {
+    padding-top: env(safe-area-inset-top, 20px);
+  }
+}
+
+/* Mobile touch optimizations */
+@media (pointer: coarse) {
+  /* Larger touch targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Prevent accidental double-tap zoom */
+  .no-double-tap-zoom {
+    touch-action: manipulation;
+  }
+}
+
+/* Desktop hover states (only apply on non-touch devices) */
+@media (hover: hover) and (pointer: fine) {
+  .hover-scale:hover {
+    transform: scale(1.05);
+  }
+  
+  .hover-glow:hover {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+  }
+}
+
+/* Responsive font scaling */
+html {
+  font-size: 16px;
+}
+
+@media (max-width: 375px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 1440px) {
+  html {
+    font-size: 18px;
+  }
+}
+
+/* Cross-browser smooth animations */
+.animate-smooth {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Universal button reset for consistent cross-platform appearance */
+.btn-universal {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
