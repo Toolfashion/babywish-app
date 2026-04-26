@@ -2,10 +2,33 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
+        
+        <!-- PWA Meta Tags -->
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="BabyWish" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="theme-color" content="#1a1a2e" />
+        <meta name="msapplication-TileColor" content="#1a1a2e" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <meta name="format-detection" content="telephone=no" />
+        
+        <!-- PWA Manifest -->
+        <link rel="manifest" href="/manifest.json" />
+        
+        <!-- iOS Icons -->
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icon-192.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/icon-192.png" />
+        
+        <!-- Favicon -->
+        <link rel="icon" type="image/png" sizes="32x32" href="/icon-192.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/icon-192.png" />
+        
+        <!-- iOS Splash Screens -->
+        <link rel="apple-touch-startup-image" href="/icon-512.png" />
         
         <!-- SEO Meta Tags -->
         <title>BabyWish - Predict Your Future Child's Gender | 95% Accuracy</title>
@@ -66,6 +89,69 @@
     <body>
         <noscript>You need to enable JavaScript to run this app.</noscript>
         <div id="root"></div>
+        
+        <!-- PWA Service Worker Registration - Auto Update -->
+        <script>
+            // Register Service Worker for PWA with Auto-Update
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js')
+                        .then((registration) => {
+                            console.log('PWA: Service Worker registered:', registration.scope);
+                            
+                            // Check for updates every 60 seconds
+                            setInterval(() => {
+                                registration.update();
+                            }, 60000);
+                            
+                            // Handle updates
+                            registration.addEventListener('updatefound', () => {
+                                const newWorker = registration.installing;
+                                console.log('PWA: New version found, installing...');
+                                
+                                newWorker.addEventListener('statechange', () => {
+                                    if (newWorker.state === 'installed') {
+                                        if (navigator.serviceWorker.controller) {
+                                            // New version available
+                                            console.log('PWA: New version ready!');
+                                            // Auto-refresh for seamless update
+                                            newWorker.postMessage('SKIP_WAITING');
+                                        }
+                                    }
+                                });
+                            });
+                        })
+                        .catch((error) => {
+                            console.log('PWA: Registration failed:', error);
+                        });
+                    
+                    // Listen for SW updates and refresh
+                    navigator.serviceWorker.addEventListener('controllerchange', () => {
+                        console.log('PWA: Controller changed, refreshing...');
+                        window.location.reload();
+                    });
+                    
+                    // Listen for messages from SW
+                    navigator.serviceWorker.addEventListener('message', (event) => {
+                        if (event.data.type === 'SW_UPDATED') {
+                            console.log('PWA: Updated to version:', event.data.version);
+                        }
+                    });
+                });
+            }
+            
+            // iOS PWA Detection
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+            
+            // Platform detection for responsive adjustments
+            window.BABYWISH_PLATFORM = {
+                isIOS: isIOS,
+                isAndroid: /Android/.test(navigator.userAgent),
+                isPWA: isInStandaloneMode,
+                isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+            };
+        </script>
         <!--
       This HTML file is a template.
       If you open it directly in the browser, you will see an empty page.
@@ -149,4 +235,3 @@
         </script>
     </body>
 </html>
-                            
