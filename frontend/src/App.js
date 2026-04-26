@@ -19,7 +19,6 @@ import LeadDashboard from "./pages/LeadDashboard";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import AdminApprovalDashboard from "./pages/AdminApprovalDashboard";
 import BestTimingPage from "./pages/BestTimingPage";
-import GenderRevealPage from "./pages/GenderRevealPage";
 import QuickStartPage from "./pages/QuickStartPage";
 import ChatWidget from "./components/ChatWidget";
 import FloatingVideoCarousel from "./components/FloatingVideoCarousel";
@@ -48,7 +47,6 @@ const AppRouter = () => {
       <Route path="/names" element={<NameShowcase />} />
       <Route path="/lucky-elements" element={<LuckyElementsShowcase />} />
       <Route path="/best-timing" element={<BestTimingPage />} />
-      <Route path="/gender-reveal" element={<GenderRevealPage />} />
       <Route path="/admin/leads" element={<LeadDashboard />} />
       <Route path="/admin/analytics" element={<AnalyticsDashboard />} />
       <Route path="/admin/approvals" element={<AdminApprovalDashboard />} />
