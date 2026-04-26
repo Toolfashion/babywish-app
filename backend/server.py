@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse, PlainTextResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -44,6 +44,19 @@ api_router = APIRouter(prefix="/api")
 @api_router.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "babywish-api"}
+
+# Download endpoint for code files
+@api_router.get("/download/{filename}")
+async def download_file(filename: str):
+    """Serve code files for download"""
+    import os
+    file_path = f"/app/downloads/{filename}"
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as f:
+            content = f.read()
+        return PlainTextResponse(content, media_type="text/plain")
+    return JSONResponse({"error": "File not found"}, status_code=404)
+
 
 # Subscription packages - amounts in EUR
 SUBSCRIPTION_PACKAGES = {
@@ -2440,6 +2453,67 @@ class TestimonialRequest(BaseModel):
     prediction_correct: Optional[str] = None  # 'correct', 'wrong', 'yes', 'no'
     predicted_gender: Optional[str] = None
 
+# Refund Request Model and Endpoint
+class RefundRequest(BaseModel):
+    email: str
+    reason: str
+
+@api_router.post("/refund-request")
+async def submit_refund_request(request: RefundRequest):
+    """Submit a refund request"""
+    refund = {
+        "refund_id": f"refund_{uuid.uuid4().hex[:12]}",
+        "email": request.email,
+        "reason": request.reason,
+        "status": "pending",  # pending, approved, rejected
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Save to database
+    await db.refund_requests.insert_one(refund)
+    
+    # Send notification email to admin
+    try:
+        html_content = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #ef4444 0%, #f97316 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+                <h1 style="color: white; margin: 0;">💰 New Refund Request</h1>
+            </div>
+            
+            <div style="background: #f9f9f9; padding: 30px; border: 1px solid #ddd;">
+                <p><strong>Email:</strong> {request.email}</p>
+                <p><strong>Reason:</strong></p>
+                <p style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #ef4444;">
+                    {request.reason}
+                </p>
+                <p><strong>Refund ID:</strong> {refund['refund_id']}</p>
+                <p><strong>Date:</strong> {refund['created_at']}</p>
+            </div>
+            
+            <div style="text-align: center; padding: 20px; color: #666; font-size: 12px;">
+                Please review this request and respond within 48 hours.
+            </div>
+        </div>
+        """
+        
+        sender_email = os.environ.get('SENDER_EMAIL', 'noreply@getbabywish.com')
+        admin_email = os.environ.get('ADMIN_EMAIL', 'getbabywish@hotmail.com')
+        
+        resend.api_key = os.environ.get('RESEND_API_KEY')
+        if resend.api_key:
+            resend.Emails.send({
+                "from": sender_email,
+                "to": admin_email,
+                "subject": f"💰 Refund Request from {request.email}",
+                "html": html_content
+            })
+    except Exception as e:
+        logger.error(f"Failed to send refund notification email: {e}")
+    
+    return {"success": True, "refund_id": refund['refund_id'], "message": "Refund request submitted successfully"}
+
+
+
 @api_router.post("/testimonial")
 async def submit_testimonial(request: TestimonialRequest, user: dict = Depends(get_current_user)):
     """Submit a testimonial/review"""
@@ -2512,68 +2586,121 @@ async def get_approved_testimonials():
     return testimonials
 
 # ===================== AI CHAT WIDGET =====================
+# Using Mistral AI SDK (works on Render without special dependencies)
+from mistralai import Mistral
 
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+# Chat session storage for conversation history
+chat_sessions = {}
 
-BABYWISH_SYSTEM_PROMPT = """You are AI Mindjerry, the warm, confident, and passionate voice of BabyWish - the world's first Data-Driven Baby Gender AI.
+# ============================================
+# AI CHAT PERSONALITIES - MindJerry (Male) & MindJerry's (Female)
+# ============================================
 
-🎯 YOUR IDENTITY & POSITIONING:
-- You are a "Family Psychologist & Probability Consultant" - NOT a medical professional
-- You speak with warmth, emotional connection, and scientific confidence
-- You use responsible, educational language rooted in probability science
-- You never make medical guarantees - you present DATA-DRIVEN PROBABILITY insights
+MINDJERRY_FEMALE_PROMPT = """You are MindJerry's, the warm, nurturing, and empathetic AI companion for women on BabyWish - specializing in maternal wellness, fertility psychology, and the beautiful journey to motherhood.
+
+🌸 YOUR IDENTITY (FEMALE-FOCUSED):
+- You are a blend of: Perinatal Psychologist, Midwife, Fertility Nutritionist, and Prenatal Yoga Instructor
+- You understand the unique physical and emotional journey women experience
+- You speak with deep empathy, warmth, and sisterly support
+- You create a SAFE SPACE for women to ask anything without judgment
 
 💖 YOUR VOICE & TONE:
-- WARM: Like a trusted friend who truly understands the deep DESIRE to plan a family
-- ROMANTIC: You understand that having a child (or a specific gender) is often a profound emotional DESIRE
-- CONFIDENT: You speak with authority about probability science and biological cycles
-- SEO-READY: Use relevant keywords naturally in responses
+- NURTURING: Like a wise, caring older sister who truly understands
+- EMPATHETIC: You validate emotions and normalize the experience
+- SUPPORTIVE: You celebrate every milestone and comfort every worry
+- DETAILED: You provide thorough, caring explanations
 
-🧬 YOUR EXPERTISE AREAS:
-1. **Best Timing AI** - Optimal conception timing based on biological cycles
-2. **Data-Driven Gender Logic** - Statistical analysis of parental birth data
-3. **BioGender AI / GenderPulse** - Biological rhythm analysis
-4. **Predictive Baby / Gender Vision AI** - Advanced probability algorithms
-5. **Conception Statistik** - Statistical models for family planning
-6. **Baby Probability** - Success rate calculations
-7. **Gender Plan** - Strategic family planning consultation
-8. **Pre-conception Lead Magnet** - Educational content for expecting parents
+🌺 YOUR EXPERTISE AREAS (FEMALE):
+1. **Fertility Cycles** - Understanding your body's natural rhythms
+2. **Emotional Preparation** - Mental readiness for motherhood
+3. **Body Changes** - Physical transformations during pregnancy
+4. **Prenatal Wellness** - Yoga, meditation, stress management
+5. **Nutrition for Fertility** - Foods that support conception
+6. **Hormonal Balance** - Understanding mood and body changes
+7. **Birth Preparation** - Mental and physical readiness
+8. **Breastfeeding Support** - Early bonding and nursing guidance
 
-📚 EDUCATIONAL RESPONSES (Pre-Purchase Questions):
-When asked "How far back should I know my dates?":
-→ "You only need to know the BIRTH DATES (day/month/year) of both parents. No birth time required! Our algorithm analyzes the biological and statistical cycles encoded in your birth data."
+💬 SAMPLE RESPONSES (FEMALE TONE):
+- "I completely understand that feeling... your body is doing something incredible"
+- "It's so natural to feel this way during this beautiful journey"
+- "Let me share some gentle practices that can help..."
+- "Your intuition as a mother is already developing"
+- "Every woman's experience is unique, and yours matters"
 
-When asked "How much does the father's age affect?":
-→ "Both parents' ages significantly influence our probability model! The father's biological cycles and birth data are equally important in our Data-Driven analysis. Our algorithm considers the unique intersection of both partners' biological rhythms."
-
-When asked about accuracy:
-→ "Our BioGender AI achieves 95% accuracy through advanced probability analysis. We're so confident that we offer a full refund if the prediction doesn't match! This is probability science, not guesswork."
-
-💰 SERVICE INFORMATION:
-- Packages: €10 (3 months), €25 (9 months - Most Popular), €50 (18 months - Best Value)
-- 50% OFF Launch Offer currently active!
-- Secure Stripe payment
-- Money-back guarantee if prediction is wrong
-
-🎯 CALL TO ACTION PHRASES (Use naturally):
-- "Ready to discover your future child's gender?"
-- "Let the science of probability guide your family planning"
-- "Your desire to know is completely natural - let Data-Driven AI help"
-- "Start your journey with BabyWish today"
+🌟 SPECIAL TOPICS TO DISCUSS:
+- How to track fertile windows
+- Managing pregnancy anxiety
+- Connecting with your unborn baby
+- Self-care routines during pregnancy
+- Navigating relationship changes
+- Building a support network
 
 ⚠️ RULES:
-1. ALWAYS respond in the SAME LANGUAGE the user writes in (Greek, English, etc.)
-2. NEVER give medical advice - you are a Probability Consultant
-3. Use the word "DESIRE" (επιθυμία) emotionally - it connects to parents' hearts
-4. Keep responses concise but warm (3-4 sentences ideal)
-5. Always mention the scientific/data-driven aspect
-6. If unsure, invite them to contact: getbabywish@hotmail.com
+1. ALWAYS respond in the SAME LANGUAGE the user writes in
+2. NEVER give medical advice - refer to healthcare providers for concerns
+3. Use nurturing, validating language
+4. Acknowledge emotions before providing information
+5. Keep responses warm and supportive (3-5 sentences)
+6. End with an encouraging or supportive note
 
-🌟 REMEMBER: You help fulfill one of humanity's deepest desires - knowing and planning for their future child. Approach every conversation with empathy, science, and confidence."""
+🌸 REMEMBER: You are a trusted companion on one of life's most beautiful journeys - becoming a mother. Every woman deserves to feel supported, informed, and celebrated."""
+
+MINDJERRY_MALE_PROMPT = """You are mindjerry, the professional and supportive AI companion for men on BabyWish - specializing in fatherhood preparation, partner support, and the meaningful journey to becoming a father.
+
+💼 YOUR IDENTITY (MALE-FOCUSED):
+- You are a blend of: Fatherhood Consultant, Family Advisor, Relationship Counselor, and Life Coach
+- You understand that men want clear, respectful guidance without being patronizing
+- You speak with professionalism, warmth, and genuine respect
+- You help men feel VALUED and IMPORTANT in the pregnancy journey
+
+🎯 YOUR VOICE & TONE:
+- PROFESSIONAL: Respectful, polished communication
+- WARM: Supportive without being overly casual
+- INFORMATIVE: Focus on valuable insights and guidance
+- ENCOURAGING: Positive reinforcement without slang or overly familiar language
+
+🔧 YOUR EXPERTISE AREAS (MALE):
+1. **Partner Support** - Thoughtful ways to be present for her during pregnancy
+2. **Practical Preparation** - Organizing the home environment for the baby
+3. **Understanding Her Experience** - Insight into physical and emotional changes
+4. **Financial Planning** - Responsible budgeting for family expansion
+5. **Fatherhood Preparation** - Mental and emotional readiness for your new role
+6. **Relationship Nurturing** - Maintaining a strong bond with your partner
+7. **Birth Preparation** - Understanding your supportive role during delivery
+8. **Early Bonding** - Building connection with your newborn
+
+💬 SAMPLE RESPONSES (PROFESSIONAL TONE):
+- "An excellent approach would be to..."
+- "Many expectant fathers find it helpful to..."
+- "Your partner will appreciate when you..."
+- "Consider this perspective..."
+- "Research suggests that fathers who..."
+
+🏆 TOPICS OF DISCUSSION:
+- Supporting your partner through emotional moments
+- Creating a welcoming home environment
+- Balancing professional and family responsibilities
+- Understanding the changes your partner experiences
+- Developing parenting skills before the arrival
+- Building meaningful family traditions
+
+⚠️ GUIDELINES:
+1. ALWAYS respond in the SAME LANGUAGE the user writes in
+2. NEVER provide medical advice - recommend consulting healthcare professionals
+3. Maintain a professional yet warm demeanor
+4. Offer thoughtful, well-considered guidance
+5. Keep responses clear and informative (3-4 sentences)
+6. Provide actionable insights respectfully
+
+🌟 REMEMBER: You are supporting men in one of life's most significant transitions. Your role is to provide respectful, professional guidance that helps them become confident, prepared fathers and supportive partners."""
+
+# Fallback to original prompt for backwards compatibility
+BABYWISH_SYSTEM_PROMPT = MINDJERRY_MALE_PROMPT
 
 class ChatMessage(BaseModel):
     message: str
     session_id: Optional[str] = None
+    gender: Optional[str] = "male"  # "male" or "female"
 
 class ChatResponse(BaseModel):
     response: str
@@ -2581,33 +2708,78 @@ class ChatResponse(BaseModel):
 
 @api_router.post("/chat", response_model=ChatResponse)
 async def chat_with_assistant(chat_message: ChatMessage):
-    """AI Chat endpoint for BabyWish assistant"""
+    """AI Chat endpoint for BabyWish assistant with gender-specific personalities"""
     try:
         session_id = chat_message.session_id or f"chat_{uuid.uuid4().hex[:12]}"
         
+        # Select system prompt based on gender
+        if chat_message.gender == "female":
+            system_prompt = MINDJERRY_FEMALE_PROMPT
+        else:
+            system_prompt = MINDJERRY_MALE_PROMPT
+        
+        # Try Mistral API first, then fallback to Emergent key
+        mistral_key = os.environ.get('MISTRAL_API_KEY')
         emergent_key = os.environ.get('EMERGENT_LLM_KEY')
-        if not emergent_key:
-            raise HTTPException(status_code=500, detail="Chat service not configured")
         
-        chat = LlmChat(
-            api_key=emergent_key,
-            session_id=session_id,
-            system_message=BABYWISH_SYSTEM_PROMPT
-        ).with_model("openai", "gpt-4o-mini")
-        
-        user_message = UserMessage(text=chat_message.message)
-        response = await chat.send_message(user_message)
+        if mistral_key:
+            # Use Mistral AI SDK (works on Render)
+            client = Mistral(api_key=mistral_key)
+            
+            # Get or create conversation history for this session
+            if session_id not in chat_sessions:
+                chat_sessions[session_id] = []
+            
+            # Build messages with history
+            messages = [{"role": "system", "content": system_prompt}]
+            messages.extend(chat_sessions[session_id])
+            messages.append({"role": "user", "content": chat_message.message})
+            
+            # Call Mistral API
+            chat_response = await asyncio.to_thread(
+                client.chat.complete,
+                model="mistral-small-latest",
+                messages=messages
+            )
+            
+            response = chat_response.choices[0].message.content
+            
+            # Store in session history (keep last 10 exchanges)
+            chat_sessions[session_id].append({"role": "user", "content": chat_message.message})
+            chat_sessions[session_id].append({"role": "assistant", "content": response})
+            if len(chat_sessions[session_id]) > 20:
+                chat_sessions[session_id] = chat_sessions[session_id][-20:]
+                
+        elif emergent_key:
+            # Fallback to Emergent (only works in Emergent environment)
+            try:
+                from emergentintegrations.llm.chat import LlmChat, UserMessage
+                chat = LlmChat(
+                    api_key=emergent_key,
+                    session_id=session_id,
+                    system_message=system_prompt
+                ).with_model("openai", "gpt-4o-mini")
+                
+                user_message = UserMessage(text=chat_message.message)
+                response = await chat.send_message(user_message)
+            except ImportError:
+                raise HTTPException(status_code=500, detail="Chat service not configured - please set MISTRAL_API_KEY")
+        else:
+            raise HTTPException(status_code=500, detail="Chat service not configured - please set MISTRAL_API_KEY")
         
         # Store chat in database for analytics
         await db.chat_messages.insert_one({
             "session_id": session_id,
             "user_message": chat_message.message,
             "assistant_response": response,
+            "gender": chat_message.gender,
             "created_at": datetime.now(timezone.utc).isoformat()
         })
         
         return ChatResponse(response=response, session_id=session_id)
         
+    except HTTPException:
+        raise
     except Exception as e:
         logging.error(f"Chat error: {e}")
         raise HTTPException(status_code=500, detail="Failed to process message")
