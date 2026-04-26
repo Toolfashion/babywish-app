@@ -3,25 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 const StarField = () => {
   const containerRef = useRef(null);
   const [isNight, setIsNight] = useState(true);
-  const [dayOfWeek, setDayOfWeek] = useState(0);
 
-  // 7 beautiful beach photos - one for each day of the week
-  const dayBackgrounds = [
-    // Sunday (0) - Silhouette couple on beach at golden hour
-    "https://images.unsplash.com/photo-1566942482387-e8dc927e5829?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHw0fHxjb3VwbGUlMjB3YWxraW5nJTIwYmVhY2glMjBkaXN0YW50JTIwc21hbGwlMjBzaWxob3VldHRlJTIwdHJvcGljYWwlMjBzdW5zZXQlMjB3aWRlJTIwbGFuZHNjYXBlJTIwc2t5JTIwc2VhfGVufDB8fHx8MTc3NzAxOTA3Mnww&ixlib=rb-4.1.0&q=85",
-    // Monday (1) - Couple at sunset with dramatic sky
-    "https://images.unsplash.com/photo-1771598570855-0421b0533184?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHwzfHxjb3VwbGUlMjB3YWxraW5nJTIwYmVhY2glMjBkaXN0YW50JTIwc21hbGwlMjBzaWxob3VldHRlJTIwdHJvcGljYWwlMjBzdW5zZXQlMjB3aWRlJTIwbGFuZHNjYXBlJTIwc2t5JTIwc2VhfGVufDB8fHx8MTc3NzAxOTA3Mnww&ixlib=rb-4.1.0&q=85",
-    // Tuesday (2) - Two people walking on tranquil beach with chapel
-    "https://images.pexels.com/photos/33792345/pexels-photo-33792345.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-    // Wednesday (3) - Couple walking at sunset with reflective shoreline
-    "https://images.pexels.com/photos/32645048/pexels-photo-32645048.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-    // Thursday (4) - Couple on beach wide view
-    "https://images.unsplash.com/photo-1652096540895-476d7a710e9c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHwxfHxjb3VwbGUlMjB3YWxraW5nJTIwYmVhY2glMjBkaXN0YW50JTIwc21hbGwlMjBzaWxob3VldHRlJTIwdHJvcGljYWwlMjBzdW5zZXQlMjB3aWRlJTIwbGFuZHNjYXBlJTIwc2t5JTIwc2VhfGVufDB8fHx8MTc3NzAxOTA3Mnww&ixlib=rb-4.1.0&q=85",
-    // Friday (5) - Purple/pink sky with couple silhouette
-    "https://images.unsplash.com/photo-1691683931140-97c696a257a5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHwyfHxjb3VwbGUlMjB3YWxraW5nJTIwYmVhY2glMjBkaXN0YW50JTIwc21hbGwlMjBzaWxob3VldHRlJTIwdHJvcGljYWwlMjBzdW5zZXQlMjB3aWRlJTIwbGFuZHNjYXBlJTIwc2t5JTIwc2VhfGVufDB8fHx8MTc3NzAxOTA3Mnww&ixlib=rb-4.1.0&q=85",
-    // Saturday (6) - Romantic Maldives beach sunset with couple
-    "https://images.pexels.com/photos/34260948/pexels-photo-34260948.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-  ];
+  // SINGLE BACKGROUND - Romantic couple beach sunset with palm trees
+  // (7-day rotation backup saved in: BACKUP_StarField_7DayRotation.jsx)
+  const singleDayBackground = "https://images.unsplash.com/photo-1566942482387-e8dc927e5829?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHw0fHxjb3VwbGUlMjB3YWxraW5nJTIwYmVhY2glMjBkaXN0YW50JTIwc21hbGwlMjBzaWxob3VldHRlJTIwdHJvcGljYWwlMjBzdW5zZXQlMjB3aWRlJTIwbGFuZHNjYXBlJTIwc2t5JTIwc2VhfGVufDB8fHx8MTc3NzAxOTA3Mnww&ixlib=rb-4.1.0&q=85";
 
   // Check if it's day or night based on user's local time
   useEffect(() => {
@@ -30,8 +15,6 @@ const StarField = () => {
       const hour = now.getHours();
       // Night: 18:00 - 06:00, Day: 06:00 - 18:00
       setIsNight(hour < 6 || hour >= 18);
-      // Get day of week (0 = Sunday, 6 = Saturday)
-      setDayOfWeek(now.getDay());
     };
 
     checkDayNight();
@@ -142,9 +125,9 @@ const StarField = () => {
     backgroundRepeat: 'no-repeat',
   };
 
-  // Day background - changes based on day of week
+  // Day background - single image (restored 7-day rotation in BACKUP file)
   const dayBackground = {
-    backgroundImage: `url('${dayBackgrounds[dayOfWeek]}')`,
+    backgroundImage: `url('${singleDayBackground}')`,
     backgroundSize: '100% 100%', // Zoom out - show full image
     backgroundPosition: 'center center',
     backgroundRepeat: 'no-repeat',
