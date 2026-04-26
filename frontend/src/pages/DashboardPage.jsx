@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Button } from '../components/ui/button';
-import { Star, Moon, Sparkles, LogOut, CreditCard } from 'lucide-react';
+import { Star, Moon, Sparkles, LogOut, CreditCard, History, Clock, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import StarField from '../components/StarField';
@@ -13,6 +13,7 @@ import PredictionResult from '../components/PredictionResult';
 import LanguageSelector from '../components/LanguageSelector';
 import useCountryDetection from '../hooks/useCountryDetection';
 import TestimonialBar from '../components/TestimonialBar';
+import AILoadingAnimation from '../components/AILoadingAnimation';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -26,6 +27,9 @@ const DashboardPage = () => {
   const [isLoadingPrediction, setIsLoadingPrediction] = useState(false);
   const [existingPrediction, setExistingPrediction] = useState(null);
   const [checkingPrediction, setCheckingPrediction] = useState(true);
+  const [predictionHistory, setPredictionHistory] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [isPendingApproval, setIsPendingApproval] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -40,8 +44,26 @@ const DashboardPage = () => {
           withCredentials: true
         });
         if (response.data) {
-          setExistingPrediction(response.data);
-          setPrediction(response.data);
+          // Check if prediction is pending approval
+          if (response.data.status === 'pending') {
+            setIsPendingApproval(true);
+            setExistingPrediction(response.data);
+          } else {
+            setExistingPrediction(response.data);
+            setPrediction(response.data);
+          }
+        }
+        
+        // Fetch prediction history
+        try {
+          const historyResponse = await axios.get(`${API}/my-predictions`, {
+            withCredentials: true
+          });
+          if (historyResponse.data) {
+            setPredictionHistory(historyResponse.data);
+          }
+        } catch (historyErr) {
+          // History endpoint might not exist yet
         }
       } catch (err) {
         // No existing prediction
@@ -53,7 +75,7 @@ const DashboardPage = () => {
     if (isAuthenticated) {
       fetchExistingPrediction();
     }
-  }, [isAuthenticated, API]);
+  }, [isAuthenticated]);
 
   const handleLogout = async () => {
     await logout();
@@ -102,6 +124,11 @@ const DashboardPage = () => {
     <div className="min-h-screen relative overflow-hidden" data-testid="dashboard-page">
       <StarField />
       
+      {/* AI Loading Animation */}
+      <AnimatePresence>
+        {isLoadingPrediction && <AILoadingAnimation />}
+      </AnimatePresence>
+      
       <div className="relative z-20 min-h-screen flex flex-col">
         {/* Header */}
         <header className="py-4 px-4">
@@ -122,6 +149,18 @@ const DashboardPage = () => {
               className="flex items-center gap-2 sm:gap-4"
             >
               <LanguageSelector />
+              {/* History Button */}
+              {predictionHistory.length > 0 && (
+                <Button
+                  data-testid="history-btn"
+                  onClick={() => setShowHistory(!showHistory)}
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-white"
+                >
+                  <History className="w-4 h-4" />
+                </Button>
+              )}
               <span className="text-white text-sm hidden md:block">
                 {user?.name || user?.email}
               </span>
@@ -141,7 +180,53 @@ const DashboardPage = () => {
         {/* Main Content */}
         <main className="flex-1 flex flex-col items-center justify-center px-4 py-8">
           <AnimatePresence mode="wait">
-            {prediction ? (
+            {/* Pending Approval State */}
+            {isPendingApproval ? (
+              <motion.div
+                key="pending"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="w-full max-w-lg"
+              >
+                <div className="glass rounded-2xl p-8 md:p-12 text-center">
+                  <motion.div
+                    animate={{ 
+                      scale: [1, 1.1, 1],
+                      rotate: [0, 5, -5, 0]
+                    }}
+                    transition={{ 
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }}
+                    className="mb-6"
+                  >
+                    <Clock className="w-20 h-20 text-amber-400 mx-auto" />
+                  </motion.div>
+                  
+                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                    {t.predictionProcessing || 'Η πρόβλεψή σου επεξεργάζεται'}
+                  </h2>
+                  
+                  <p className="text-muted-foreground mb-6 text-lg">
+                    {t.predictionPendingMessage || 'Η τεχνητή νοημοσύνη μας αναλύει τα δεδομένα σου. Θα λάβεις το αποτέλεσμα στο email σου σύντομα!'}
+                  </p>
+                  
+                  <div className="bg-white/5 rounded-xl p-4 mb-6">
+                    <div className="flex items-center justify-center gap-2 text-purple-300">
+                      <Mail className="w-5 h-5" />
+                      <span>{user?.email}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-center gap-2 text-sm text-white/50">
+                    <Sparkles className="w-4 h-4 animate-pulse" />
+                    <span>{t.checkEmailSoon || 'Θα σε ειδοποιήσουμε με email όταν είναι έτοιμη!'}</span>
+                  </div>
+                </div>
+              </motion.div>
+            ) : prediction ? (
               <motion.div
                 key="result"
                 initial={{ opacity: 0, scale: 0.9 }}
