@@ -19,7 +19,6 @@ import LeadDashboard from "./pages/LeadDashboard";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import AdminApprovalDashboard from "./pages/AdminApprovalDashboard";
 import BestTimingPage from "./pages/BestTimingPage";
-import QuickStartPage from "./pages/QuickStartPage";
 import ChatWidget from "./components/ChatWidget";
 import FloatingVideoCarousel from "./components/FloatingVideoCarousel";
 
@@ -38,7 +37,6 @@ const AppRouter = () => {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/start" element={<QuickStartPage />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/subscribe" element={<SubscribePage />} />
