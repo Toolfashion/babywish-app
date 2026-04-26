@@ -124,11 +124,15 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
   const indicatorColor = gender === 'male' ? 'bg-green-500' : 'bg-yellow-400'; // Green for male, Yellow for female
   
   // Draggable position state - positioned at bottom of screen (~2cm from bottom)
+  // iOS Safari fix: Use CSS env() for safe area and fixed positioning
   const getInitialPosition = () => {
     if (typeof window === 'undefined') return { x: 20, y: 500 };
     const isMobile = window.innerWidth < 768;
-    // Position ~75px from bottom (approximately 2cm)
-    const bottomOffset = 75;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    
+    // iOS needs more bottom offset due to home indicator
+    const bottomOffset = isIOS ? 120 : 75;
+    
     if (side === 'left') {
       return {
         x: isMobile ? 20 : 20,
@@ -147,7 +151,9 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
   useEffect(() => {
     const handleResize = () => {
       const isMobile = window.innerWidth < 768;
-      const bottomOffset = 75; // ~2cm from bottom
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const bottomOffset = isIOS ? 120 : 75; // iOS needs more space for home indicator
+      
       if (side === 'left') {
         setPosition({
           x: isMobile ? 20 : 20,
