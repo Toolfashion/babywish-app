@@ -379,6 +379,49 @@ const FloatingReelButton = ({
 // Main component that renders both buttons
 const FloatingVideoCarousel = () => {
   const { t } = useLanguage();
+  
+  // Calculate positions - always on the RIGHT side
+  const calculatePositions = () => {
+    if (typeof window === 'undefined') {
+      return { tiktok: { x: 300, y: 200 }, facebook: { x: 300, y: 255 } };
+    }
+    const isMobile = window.innerWidth < 768;
+    const screenWidth = window.innerWidth;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    
+    // FORCE right side position - screenWidth minus button width and margin
+    const rightPosition = screenWidth - (isMobile ? 90 : 110);
+    
+    // TikTok position - between Register and Facebook (moved down)
+    const tiktokY = isIOS ? (isMobile ? 190 : 240) : (isMobile ? 210 : 260);
+    // Facebook position (below TikTok)
+    const facebookY = tiktokY + (isMobile ? 50 : 55);
+    
+    return {
+      tiktok: { x: rightPosition, y: tiktokY },
+      facebook: { x: rightPosition, y: facebookY }
+    };
+  };
+  
+  const [positions, setPositions] = useState({ tiktok: { x: 300, y: 200 }, facebook: { x: 300, y: 255 } });
+  
+  // Calculate positions on mount AND resize
+  useEffect(() => {
+    // Calculate immediately on mount
+    const newPositions = calculatePositions();
+    setPositions(newPositions);
+    
+    // Also recalculate on resize
+    const handleResize = () => {
+      const newPos = calculatePositions();
+      setPositions(newPos);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+    return () => window.removeEventListener('resize', calculatePositions);
+  }, []);
 
   // TikTok videos
   const tiktokVideos = [
@@ -398,25 +441,22 @@ const FloatingVideoCarousel = () => {
     { id: 4, url: 'https://www.facebook.com/share/r/1Efwdv5fgw/?mibextid=wwXIfr', label: '4', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/o0lfvl81_IMG_5933.jpeg' },
     { id: 5, url: 'https://www.facebook.com/share/v/1BAJnfbpAa/?mibextid=wwXIfr', label: '5', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/0frrsvhw_IMG_5934.jpeg' },
   ];
-
-  // Check if mobile
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   
   return (
     <>
-      {/* TikTok Reels Button - Left side, adjusted for mobile */}
+      {/* TikTok Reels Button - Right side */}
       <FloatingReelButton 
         type="tiktok"
         videos={tiktokVideos}
-        initialPosition={{ x: 16, y: isMobile ? 70 : 130 }}
+        initialPosition={positions.tiktok}
         t={t}
       />
       
-      {/* Facebook Reels Button - Left side, below TikTok */}
+      {/* Facebook Reels Button - Right side, below TikTok */}
       <FloatingReelButton 
         type="facebook"
         videos={facebookVideos}
-        initialPosition={{ x: 16, y: isMobile ? 120 : 185 }}
+        initialPosition={positions.facebook}
         t={t}
       />
     </>
