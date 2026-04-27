@@ -420,8 +420,6 @@ const FloatingVideoCarousel = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-    return () => window.removeEventListener('resize', calculatePositions);
-  }, []);
 
   // TikTok videos
   const tiktokVideos = [
