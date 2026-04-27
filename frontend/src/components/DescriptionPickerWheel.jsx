@@ -124,25 +124,31 @@ const DescriptionPickerWheel = () => {
             >
               {desc.highlight ? (
                 <div className="text-center w-full">
-                  <p className="text-sm md:text-base leading-relaxed text-gray-200">
+                  <p className="text-lg md:text-xl leading-relaxed font-semibold"
+                    style={{ 
+                      color: '#ffffff',
+                      textShadow: '0 0 15px rgba(255,255,255,0.5), 0 4px 10px rgba(0,0,0,0.8)'
+                    }}
+                  >
                     {desc.text}
                   </p>
                   <p 
-                    className="font-bold mt-1 text-base md:text-lg"
+                    className="font-bold mt-2 text-xl md:text-2xl"
                     style={{ 
-                      background: 'linear-gradient(90deg, #22d3ee, #60a5fa, #a78bfa, #f472b6)',
-                      backgroundSize: '200% 100%',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                      animation: 'gradientMoveDesc 4s ease-in-out infinite',
+                      color: '#22d3ee',
+                      textShadow: '0 0 25px rgba(34, 211, 238, 1), 0 0 50px rgba(96, 165, 250, 0.8), 0 4px 15px rgba(0,0,0,0.9)'
                     }}
                   >
                     {desc.highlight}
                   </p>
                 </div>
               ) : (
-                <p className="text-sm md:text-base text-center leading-relaxed text-gray-200">
+                <p className="text-lg md:text-xl text-center leading-relaxed font-semibold"
+                  style={{ 
+                    color: '#ffffff',
+                    textShadow: '0 0 15px rgba(255,255,255,0.5), 0 4px 10px rgba(0,0,0,0.8)'
+                  }}
+                >
                   {desc.text}
                 </p>
               )}
