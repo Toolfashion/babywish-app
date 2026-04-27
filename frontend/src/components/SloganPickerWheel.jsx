@@ -54,11 +54,18 @@ const SloganPickerWheel = () => {
         .slogan-swiper .swiper-slide {
           width: 100% !important;
         }
+        .slogan-swiper .swiper-wrapper {
+          -webkit-transform-style: preserve-3d !important;
+          transform-style: preserve-3d !important;
+        }
         .slogan-swiper .swiper-slide {
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
           text-align: center !important;
+          -webkit-backface-visibility: hidden !important;
+          backface-visibility: hidden !important;
+          -webkit-transform: translate3d(0,0,0) !important;
         }
         .slogan-swiper .swiper-slide > div {
           width: 100% !important;
@@ -117,16 +124,12 @@ const SloganPickerWheel = () => {
               style={{ textAlign: 'center', width: '100%', padding: '0 15px', boxSizing: 'border-box' }}
             >
               <p 
-                className="text-sm md:text-lg lg:text-xl leading-tight tracking-wide"
+                className="text-lg md:text-xl lg:text-2xl leading-tight tracking-wide"
                 style={{ 
                   fontFamily: "'Cinzel', serif", 
                   fontWeight: 700,
-                  background: slogan.gradient,
-                  backgroundSize: '200% 100%',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  animation: 'gradientMove 4s ease-in-out infinite',
+                  color: '#ffffff',
+                  textShadow: '0 0 20px rgba(34, 211, 238, 0.9), 0 0 40px rgba(168, 85, 247, 0.7), 0 4px 15px rgba(0,0,0,0.8)',
                   textAlign: 'center',
                   width: '100%',
                   wordWrap: 'break-word',
@@ -136,20 +139,11 @@ const SloganPickerWheel = () => {
                 {slogan.line1}
               </p>
               <p 
-                className="text-lg md:text-xl lg:text-2xl font-bold mt-1"
+                className="text-2xl md:text-3xl lg:text-4xl font-bold mt-2"
                 style={{ 
                   fontFamily: "'Cinzel', serif",
-                  ...(slogan.sameColorHighlight ? {
-                    background: slogan.gradient,
-                    backgroundSize: '200% 100%',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    animation: 'gradientMove 4s ease-in-out infinite'
-                  } : {
-                    color: 'white',
-                    textShadow: '0 0 10px rgba(34, 211, 238, 0.5)'
-                  })
+                  color: '#22d3ee',
+                  textShadow: '0 0 30px rgba(34, 211, 238, 1), 0 0 60px rgba(96, 165, 250, 0.8), 0 4px 15px rgba(0,0,0,0.9)'
                 }}
               >
                 {slogan.highlight1}
