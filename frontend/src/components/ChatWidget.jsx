@@ -7,9 +7,9 @@ import { useLanguage } from '../context/LanguageContext';
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 // Galaxy/Milky Way background for night theme
-const GALAXY_URL = "https://images.unsplash.com/photo-1638189330012-44e36a97312a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwyfHxkZWVwJTIwcHVycGxlJTIwbmVidWxhJTIwc3BhY2UlMjBiYWNrZ3JvdW5kJTIwc2VhbWxlc3MlMjB0ZXh0dXJlfGVufDB8fHx8MTc3MjY5MTg5Mnww&ixlib=rb-4.1.0&q=85";
+const GALAXY_URL = "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/se8axh3p_IMG_6186.jpeg";
 
-const DATA_SPHERE_URL = "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/htnzuozv_IMG_5952.jpeg";
+const DATA_SPHERE_URL = "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/1tmd7oet_IMG_6191.jpeg";
 
 // Angel images - line drawings (new versions)
 const ANGEL_BOY_URL = "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/nva1ylbn_IMG_5956.jpeg";
@@ -360,15 +360,27 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
               onClick={() => !isDragging && setIsOpen(true)}
               className="relative w-12 h-12 flex items-center justify-center"
             >  
-              {/* Data Sphere Background */}
+              {/* Video Background for Toggle Button */}
               <div 
                 className="absolute inset-0 rounded-full overflow-hidden"
-                style={{
-                  background: `url(${DATA_SPHERE_URL}) center/cover`,
-                  animation: 'dataSphereRotate 20s linear infinite',
-                  opacity: 0.7
-                }}
-              />
+                style={{ opacity: 0.85 }}
+              >
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{
+                    transform: 'scale(1.5)',
+                    WebkitTransform: 'scale(1.5)',
+                  }}
+                >
+                  <source src="/chatwidget-bg.mp4" type="video/mp4" />
+                  {/* Fallback to static image if video fails */}
+                  <img src={DATA_SPHERE_URL} alt="" className="w-full h-full object-cover" />
+                </video>
+              </div>
               
               {/* Outer Loading Circle */}
               <svg 
