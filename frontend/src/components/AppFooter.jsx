@@ -58,15 +58,18 @@ const AppFooter = () => {
         </div>
       </footer>
 
-      {/* Right Side Slogan - Simple iOS Fix - Transparent */}
+      {/* Right Side Slogan - iOS Safari Compatible with CSS Transform */}
       <div
         id="slogan-badge"
+        data-testid="slogan-badge-vertical"
         style={{
           position: 'fixed',
-          right: '15px',
-          top: '40%',
+          right: '8px',
+          top: '50%',
+          transform: 'translateY(-50%)',
           zIndex: 99999,
           pointerEvents: 'none',
+          WebkitTransform: 'translateY(-50%)',
         }}
       >
         <p
@@ -77,9 +80,13 @@ const AppFooter = () => {
             color: '#40E0D0',
             textShadow: '0 0 15px rgba(64, 224, 208, 0.8), 0 0 30px rgba(64, 224, 208, 0.5), 2px 2px 4px rgba(0,0,0,0.8)',
             whiteSpace: 'nowrap',
-            letterSpacing: '1px',
+            letterSpacing: '2px',
             margin: 0,
-            writingMode: 'vertical-lr',
+            transform: 'rotate(90deg)',
+            WebkitTransform: 'rotate(90deg)',
+            transformOrigin: 'center center',
+            WebkitTransformOrigin: 'center center',
+            display: 'inline-block',
           }}
         >
           {slogan}
