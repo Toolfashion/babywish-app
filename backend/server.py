@@ -45,6 +45,38 @@ api_router = APIRouter(prefix="/api")
 async def health_check():
     return {"status": "healthy", "service": "babywish-api"}
 
+@api_router.get("/debug/chat-status")
+async def debug_chat_status():
+    """Debug endpoint to check AI chat configuration"""
+    mistral_key = os.environ.get('MISTRAL_API_KEY')
+    emergent_key = os.environ.get('EMERGENT_LLM_KEY')
+    
+    result = {
+        "mistral_configured": bool(mistral_key),
+        "mistral_key_length": len(mistral_key) if mistral_key else 0,
+        "mistral_key_prefix": mistral_key[:8] + "..." if mistral_key and len(mistral_key) > 8 else None,
+        "emergent_configured": bool(emergent_key),
+        "test_result": None,
+        "error": None
+    }
+    
+    if mistral_key:
+        try:
+            from mistralai import Mistral
+            client = Mistral(api_key=mistral_key.strip())
+            # Simple test call
+            response = client.chat.complete(
+                model="mistral-small-latest",
+                messages=[{"role": "user", "content": "Say 'OK' in one word"}]
+            )
+            result["test_result"] = "SUCCESS"
+            result["test_response"] = response.choices[0].message.content[:50]
+        except Exception as e:
+            result["test_result"] = "FAILED"
+            result["error"] = f"{type(e).__name__}: {str(e)}"
+    
+    return result
+
 # Download endpoint for code files
 @api_router.get("/download/{filename}")
 async def download_file(filename: str):
@@ -2722,33 +2754,43 @@ async def chat_with_assistant(chat_message: ChatMessage):
         mistral_key = os.environ.get('MISTRAL_API_KEY')
         emergent_key = os.environ.get('EMERGENT_LLM_KEY')
         
+        # Debug logging
+        logging.info(f"Chat request - Gender: {chat_message.gender}, Session: {session_id}")
+        logging.info(f"MISTRAL_API_KEY present: {bool(mistral_key)}, length: {len(mistral_key) if mistral_key else 0}")
+        
         if mistral_key:
             # Use Mistral AI SDK (works on Render)
-            client = Mistral(api_key=mistral_key)
+            try:
+                client = Mistral(api_key=mistral_key.strip())
             
-            # Get or create conversation history for this session
-            if session_id not in chat_sessions:
-                chat_sessions[session_id] = []
-            
-            # Build messages with history
-            messages = [{"role": "system", "content": system_prompt}]
-            messages.extend(chat_sessions[session_id])
-            messages.append({"role": "user", "content": chat_message.message})
-            
-            # Call Mistral API
-            chat_response = await asyncio.to_thread(
-                client.chat.complete,
-                model="mistral-small-latest",
-                messages=messages
-            )
-            
-            response = chat_response.choices[0].message.content
-            
-            # Store in session history (keep last 10 exchanges)
-            chat_sessions[session_id].append({"role": "user", "content": chat_message.message})
-            chat_sessions[session_id].append({"role": "assistant", "content": response})
-            if len(chat_sessions[session_id]) > 20:
-                chat_sessions[session_id] = chat_sessions[session_id][-20:]
+                # Get or create conversation history for this session
+                if session_id not in chat_sessions:
+                    chat_sessions[session_id] = []
+                
+                # Build messages with history
+                messages = [{"role": "system", "content": system_prompt}]
+                messages.extend(chat_sessions[session_id])
+                messages.append({"role": "user", "content": chat_message.message})
+                
+                # Call Mistral API
+                chat_response = await asyncio.to_thread(
+                    client.chat.complete,
+                    model="mistral-small-latest",
+                    messages=messages
+                )
+                
+                response = chat_response.choices[0].message.content
+                logging.info(f"Mistral response received successfully for session: {session_id}")
+                
+                # Store in session history (keep last 10 exchanges)
+                chat_sessions[session_id].append({"role": "user", "content": chat_message.message})
+                chat_sessions[session_id].append({"role": "assistant", "content": response})
+                if len(chat_sessions[session_id]) > 20:
+                    chat_sessions[session_id] = chat_sessions[session_id][-20:]
+                    
+            except Exception as mistral_error:
+                logging.error(f"Mistral API Error: {type(mistral_error).__name__}: {str(mistral_error)}")
+                raise HTTPException(status_code=500, detail=f"AI service error: {str(mistral_error)[:100]}")
                 
         elif emergent_key:
             # Fallback to Emergent (only works in Emergent environment)
