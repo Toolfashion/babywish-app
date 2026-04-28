@@ -10,8 +10,6 @@ import LanguageSelector from '../components/LanguageSelector';
 import FloatingBabyClouds from '../components/FloatingBabyClouds';
 import SloganPickerWheel from '../components/SloganPickerWheel';
 import DescriptionPickerWheel from '../components/DescriptionPickerWheel';
-import FloatingVideoCarousel from '../components/FloatingVideoCarousel';
-import ChatWidget from '../components/ChatWidget';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -22,7 +20,7 @@ const LandingPage = () => {
     if (isAuthenticated) {
       navigate('/dashboard');
     } else {
-      navigate('/register');
+      navigate('/start'); // Quick 3-step flow
     }
   };
 
@@ -37,8 +35,6 @@ const LandingPage = () => {
     <div className="min-h-screen relative overflow-hidden" data-testid="landing-page">
       <StarField />
       <FloatingBabyClouds />
-      <FloatingVideoCarousel />
-      <ChatWidget />
       
       <div className="relative z-20 min-h-screen flex flex-col">
         {/* Promo Banner - Special Offers */}
@@ -132,6 +128,10 @@ const LandingPage = () => {
               <h1 className="text-xl md:text-2xl font-bold gradient-text" data-testid="app-title">
                 {t.appTitle}
               </h1>
+              {/* Beta Badge */}
+              <span className="px-2 py-0.5 text-xs font-bold bg-amber-500 text-black rounded-full animate-pulse">
+                BETA
+              </span>
               <Moon className="w-6 h-6 text-purple-400 animate-pulse-slow" />
             </motion.div>
 
@@ -377,6 +377,12 @@ const LandingPage = () => {
             <p className="text-xs text-muted-foreground/50 text-center">
               {t.footer}
             </p>
+            <button 
+              onClick={() => navigate('/terms')}
+              className="text-xs text-purple-400 hover:text-purple-300 underline mt-1 block mx-auto text-center"
+            >
+              Terms & Conditions | Refund Policy
+            </button>
           </div>
         </footer>
       </div>
