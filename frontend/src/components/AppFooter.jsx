@@ -58,14 +58,16 @@ const AppFooter = () => {
         </div>
       </footer>
 
-      {/* Right Side Slogan Badge - 33px */}
+      {/* Right Side Slogan Badge - iOS Compatible */}
       <div
         className="fixed z-50"
         style={{
-          right: '5px',
-          top: '50%',
-          transform: 'translateY(-50%) rotate(-90deg)',
-          transformOrigin: 'center center',
+          right: '8px',
+          top: '45%',
+          writingMode: 'vertical-rl',
+          textOrientation: 'mixed',
+          WebkitTransform: 'rotate(180deg)',
+          transform: 'rotate(180deg)',
         }}
       >
         <p
