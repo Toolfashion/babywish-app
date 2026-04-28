@@ -58,30 +58,28 @@ const AppFooter = () => {
         </div>
       </footer>
 
-      {/* Right Side Slogan Badge - iOS Compatible - Higher position */}
+      {/* Right Side Slogan - Simple iOS Fix - Transparent */}
       <div
+        id="slogan-badge"
         style={{
           position: 'fixed',
-          right: '10px',
-          top: '50%',
-          zIndex: 9998,
-          background: 'rgba(0, 0, 0, 0.5)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
-          padding: '8px 12px',
-          borderRadius: '20px',
-          border: '1px solid rgba(64, 224, 208, 0.3)',
+          right: '15px',
+          top: '40%',
+          zIndex: 99999,
+          pointerEvents: 'none',
         }}
       >
         <p
           style={{
             fontFamily: "'Cinzel', serif",
-            fontSize: '10px',
+            fontSize: '12px',
+            fontWeight: 'bold',
             color: '#40E0D0',
-            textShadow: '0 0 10px rgba(64, 224, 208, 0.5)',
+            textShadow: '0 0 15px rgba(64, 224, 208, 0.8), 0 0 30px rgba(64, 224, 208, 0.5), 2px 2px 4px rgba(0,0,0,0.8)',
             whiteSpace: 'nowrap',
-            letterSpacing: '0.5px',
+            letterSpacing: '1px',
             margin: 0,
+            writingMode: 'vertical-lr',
           }}
         >
           {slogan}
