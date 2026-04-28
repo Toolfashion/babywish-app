@@ -58,12 +58,12 @@ const AppFooter = () => {
         </div>
       </footer>
 
-      {/* Right Side Slogan Badge - iOS Compatible - Horizontal */}
+      {/* Right Side Slogan Badge - iOS Compatible - Higher position */}
       <div
         style={{
           position: 'fixed',
           right: '10px',
-          bottom: '80px',
+          top: '50%',
           zIndex: 9998,
           background: 'rgba(0, 0, 0, 0.5)',
           backdropFilter: 'blur(8px)',
