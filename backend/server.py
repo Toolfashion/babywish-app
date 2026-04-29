@@ -2070,6 +2070,187 @@ async def reject_prediction(prediction_id: str, reason: str = "", admin: dict = 
         "prediction_id": prediction_id
     }
 
+# ===================== PROMO APPLICATIONS =====================
+
+class PromoApplicationRequest(BaseModel):
+    email: str
+    offer_type: str  # 'launch50' or 'freepass100'
+    video_links: List[str]
+    review_link: str
+    social_platform: str  # 'tiktok', 'facebook', 'instagram'
+
+@api_router.post("/promo/apply")
+async def submit_promo_application(request: PromoApplicationRequest):
+    """Submit a promo application for 50% or 100% discount"""
+    
+    # Validate offer type
+    if request.offer_type not in ['launch50', 'freepass100']:
+        raise HTTPException(status_code=400, detail="Invalid offer type")
+    
+    # Validate video count
+    required_videos = 5 if request.offer_type == 'launch50' else 9
+    if len(request.video_links) < required_videos:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Απαιτούνται τουλάχιστον {required_videos} videos για αυτή την προσφορά"
+        )
+    
+    # Check for existing pending application with same email
+    existing = await db.promo_applications.find_one({
+        "email": request.email.lower(),
+        "status": "pending"
+    })
+    
+    if existing:
+        raise HTTPException(
+            status_code=400, 
+            detail="Υπάρχει ήδη εκκρεμής αίτηση με αυτό το email"
+        )
+    
+    # Create application
+    application = {
+        "id": str(uuid.uuid4()),
+        "email": request.email.lower(),
+        "offer_type": request.offer_type,
+        "video_links": request.video_links,
+        "review_link": request.review_link,
+        "social_platform": request.social_platform,
+        "status": "pending",  # pending, approved, rejected
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "promo_code": None,  # Will be set when approved
+        "reviewed_at": None,
+        "reviewed_by": None
+    }
+    
+    await db.promo_applications.insert_one(application)
+    
+    # Send notification email to admin
+    try:
+        discount = "50%" if request.offer_type == 'launch50' else "100%"
+        resend.Emails.send({
+            "from": f"BabyWish <{SENDER_EMAIL}>",
+            "to": [NOTIFICATION_EMAIL],
+            "subject": f"🎁 Νέα Αίτηση Προσφοράς {discount}",
+            "html": f"""
+            <h2>Νέα Αίτηση Προσφοράς</h2>
+            <p><strong>Email:</strong> {request.email}</p>
+            <p><strong>Προσφορά:</strong> {discount} ({request.offer_type})</p>
+            <p><strong>Πλατφόρμα:</strong> {request.social_platform}</p>
+            <p><strong>Video Links:</strong></p>
+            <ul>
+                {"".join(f'<li><a href="{link}">{link}</a></li>' for link in request.video_links)}
+            </ul>
+            <p><strong>Review Link:</strong> <a href="{request.review_link}">{request.review_link}</a></p>
+            <hr>
+            <p>Ελέγξτε την αίτηση στο Admin Dashboard.</p>
+            """
+        })
+    except Exception as e:
+        logging.error(f"Failed to send promo notification email: {e}")
+    
+    return {
+        "success": True,
+        "message": "Η αίτησή σας υποβλήθηκε επιτυχώς!",
+        "application_id": application["id"]
+    }
+
+@api_router.get("/admin/promo-applications")
+async def get_promo_applications(admin: dict = Depends(get_admin_user)):
+    """Get all promo applications for admin review"""
+    applications = await db.promo_applications.find(
+        {},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return {"applications": applications}
+
+@api_router.post("/admin/promo/approve/{application_id}")
+async def approve_promo_application(
+    application_id: str, 
+    promo_code: str = "",
+    admin: dict = Depends(get_admin_user)
+):
+    """Approve a promo application and assign a Stripe promo code"""
+    application = await db.promo_applications.find_one(
+        {"id": application_id},
+        {"_id": 0}
+    )
+    
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    if application["status"] != "pending":
+        raise HTTPException(status_code=400, detail="Application already processed")
+    
+    # Update application
+    await db.promo_applications.update_one(
+        {"id": application_id},
+        {"$set": {
+            "status": "approved",
+            "promo_code": promo_code,
+            "reviewed_at": datetime.now(timezone.utc).isoformat(),
+            "reviewed_by": admin["user_id"]
+        }}
+    )
+    
+    # Send approval email to user
+    try:
+        discount = "50%" if application["offer_type"] == 'launch50' else "100%"
+        resend.Emails.send({
+            "from": f"BabyWish <{SENDER_EMAIL}>",
+            "to": [application["email"]],
+            "subject": f"✅ Η Αίτησή σας Εγκρίθηκε! Κωδικός {discount}",
+            "html": f"""
+            <h2>🎉 Συγχαρητήρια!</h2>
+            <p>Η αίτησή σας για έκπτωση {discount} εγκρίθηκε!</p>
+            <p><strong>Ο κωδικός έκπτωσής σας είναι:</strong></p>
+            <div style="background: #f0f0f0; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 2px; margin: 20px 0;">
+                {promo_code}
+            </div>
+            <p>Χρησιμοποιήστε τον κατά την αγορά στο <a href="https://getbabywish.com">getbabywish.com</a></p>
+            <p>Ευχαριστούμε που διαδώσατε το BabyWish! 💕</p>
+            """
+        })
+    except Exception as e:
+        logging.error(f"Failed to send promo approval email: {e}")
+    
+    return {
+        "success": True,
+        "message": "Application approved",
+        "application_id": application_id
+    }
+
+@api_router.post("/admin/promo/reject/{application_id}")
+async def reject_promo_application(
+    application_id: str, 
+    reason: str = "",
+    admin: dict = Depends(get_admin_user)
+):
+    """Reject a promo application"""
+    application = await db.promo_applications.find_one(
+        {"id": application_id},
+        {"_id": 0}
+    )
+    
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    await db.promo_applications.update_one(
+        {"id": application_id},
+        {"$set": {
+            "status": "rejected",
+            "rejection_reason": reason,
+            "reviewed_at": datetime.now(timezone.utc).isoformat(),
+            "reviewed_by": admin["user_id"]
+        }}
+    )
+    
+    return {
+        "success": True,
+        "message": "Application rejected",
+        "application_id": application_id
+    }
+
 # Daily horoscope messages by zodiac element and mood
 HOROSCOPE_TEMPLATES = {
     "Fire": {
