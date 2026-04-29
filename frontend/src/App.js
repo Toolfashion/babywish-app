@@ -24,6 +24,7 @@ import QuickStartPage from "./pages/QuickStartPage";
 import TermsPage from "./pages/TermsPage";
 import ChatWidget from "./components/ChatWidget";
 import FloatingVideoCarousel from "./components/FloatingVideoCarousel";
+import AppFooter from "./components/AppFooter";
 
 // Check for session_id in URL hash (OAuth callback)
 const AppRouter = () => {
@@ -87,6 +88,8 @@ function App() {
             {/* Two ChatWidgets - Female (left/pink) and Male (right/blue) */}
             <ChatWidget gender="female" side="left" />
             <ChatWidget gender="male" side="right" />
+            {/* Footer with Disclaimer and Slogan */}
+            <AppFooter />
           </AuthProvider>
         </LanguageProvider>
       </BrowserRouter>
