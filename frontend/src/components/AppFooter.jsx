@@ -33,14 +33,12 @@ const AppFooter = () => {
 
   return (
     <>
-      {/* Bottom Footer Bar */}
+      {/* Bottom Footer Bar - Transparent */}
       <footer 
         className="relative w-full z-40"
         style={{
           paddingBottom: 'env(safe-area-inset-bottom, 5px)',
-          background: 'rgba(0, 0, 0, 0.4)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
+          background: 'transparent',
         }}
       >
         <div className="flex items-center justify-center py-2 px-4">
@@ -57,41 +55,6 @@ const AppFooter = () => {
           </p>
         </div>
       </footer>
-
-      {/* Right Side Slogan - iOS Safari Compatible with CSS Transform */}
-      <div
-        id="slogan-badge"
-        data-testid="slogan-badge-vertical"
-        style={{
-          position: 'fixed',
-          right: '8px',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          zIndex: 99999,
-          pointerEvents: 'none',
-          WebkitTransform: 'translateY(-50%)',
-        }}
-      >
-        <p
-          style={{
-            fontFamily: "'Cinzel', serif",
-            fontSize: '12px',
-            fontWeight: 'bold',
-            color: '#40E0D0',
-            textShadow: '0 0 15px rgba(64, 224, 208, 0.8), 0 0 30px rgba(64, 224, 208, 0.5), 2px 2px 4px rgba(0,0,0,0.8)',
-            whiteSpace: 'nowrap',
-            letterSpacing: '2px',
-            margin: 0,
-            transform: 'rotate(90deg)',
-            WebkitTransform: 'rotate(90deg)',
-            transformOrigin: 'center center',
-            WebkitTransformOrigin: 'center center',
-            display: 'inline-block',
-          }}
-        >
-          {slogan}
-        </p>
-      </div>
     </>
   );
 };
