@@ -49,8 +49,8 @@ const StarField = () => {
     },
   ];
 
-  // Get current day's background and photographer
-  const currentBackground = dayBackgrounds[dayOfWeek];
+  // Get current day's background and photographer (with safeguard)
+  const currentBackground = dayBackgrounds[dayOfWeek] || dayBackgrounds[0];
 
   // Check if it's day or night based on user's local time
   useEffect(() => {
