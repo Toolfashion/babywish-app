@@ -1,4 +1,4 @@
-imrt { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const StarField = () => {
   const containerRef = useRef(null);
@@ -9,7 +9,7 @@ const StarField = () => {
   // ========================================
   const BACKGROUND_ENABLED = true;
   
-  // Day backgrounds with photographer credits
+  // Day backgrounds - photographer credits embedded in images
   // Sunday (0) = default beach image, Monday-Saturday (1-6) = metropolis photos
   const dayBackgrounds = [
     // Sunday (0) - Default romantic beach sunset
@@ -19,33 +19,33 @@ const StarField = () => {
     },
     // Monday (1) - New York
     { 
-      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/zgqu5kiy_IMG_6219.jpeg",
-      photographer: "Tom Fournier" 
+      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/v2j15krb_IMG_6219.heic",
+      photographer: null 
     },
     // Tuesday (2) - Tokyo
     { 
-      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/r9c3ce75_IMG_6220.jpeg",
-      photographer: "Phil Evenden" 
+      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/g8bjibiu_IMG_6220.heic",
+      photographer: null 
     },
     // Wednesday (3) - Paris
     { 
-      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/iiezny83_IMG_6221.jpeg",
-      photographer: "Bento Justin" 
+      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/35pivlsw_IMG_6221.heic",
+      photographer: null 
     },
     // Thursday (4) - Moscow
     { 
-      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/e2cuw5kz_IMG_6222.jpeg",
-      photographer: "Roman Verton" 
+      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/wd56ikl1_IMG_6222.heic",
+      photographer: null 
     },
     // Friday (5) - New Delhi
     { 
-      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/a968q913_IMG_6223.jpeg",
-      photographer: "Monojit Dutta" 
+      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/bewhk2ln_IMG_6223.heic",
+      photographer: null 
     },
     // Saturday (6) - Sydney
     { 
-      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/ejojxhx3_IMG_6224.jpeg",
-      photographer: "Adrian Rubiales" 
+      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/auf7tvv8_IMG_6224.heic",
+      photographer: null 
     },
   ];
 
