@@ -25,10 +25,14 @@ const LandingPage = () => {
   };
 
   // Dynamic features based on language with icons and actions
+  const showComingSoonMessage = () => {
+    alert(t.featureComingSoon || "This feature is coming soon! Our software is being updated. 🚀");
+  };
+
   const features = [
     { name: t.feature1, icon: "👶", action: () => navigate('/names') },
-    { name: t.feature2, icon: "♈", action: () => navigate('/horoscope') },
-    { name: t.feature3, icon: "🍀", action: () => navigate('/lucky-elements') },
+    { name: t.feature2, icon: "🏥", action: showComingSoonMessage },
+    { name: t.feature3, icon: "🏠", action: showComingSoonMessage },
   ];
 
   return (
