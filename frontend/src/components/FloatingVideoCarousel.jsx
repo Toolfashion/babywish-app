@@ -393,8 +393,8 @@ const FloatingVideoCarousel = () => {
     const leftPosition = isMobile ? 20 : 30;
     
     // Y position - below the BABYWISH logo (accounting for iOS safe area)
-    // Moved up by 34px (0.9cm)
-    const baseY = isIOS ? (isMobile ? 126 : 146) : (isMobile ? 106 : 126);
+    // Moved up by 34px (0.9cm), then down by 11px (0.3cm) = net -23px
+    const baseY = isIOS ? (isMobile ? 137 : 157) : (isMobile ? 117 : 137);
     
     // TikTok first, Facebook second (horizontal arrangement)
     const buttonWidth = isMobile ? 85 : 95;
