@@ -4,7 +4,69 @@ import { useLanguage } from '../context/LanguageContext';
 const DescriptionPickerWheel = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState('in');
-  const { t } = useLanguage();
+  const { t } import { useLanguage } from '../context/LanguageContext';
+
+const AppFooter = () => {
+  const { language } = useLanguage();
+
+  // Slogan translations - "Love, invincible in battle!" from Antigone by Sophocles
+  const sloganTranslations = {
+    en: "Love, invincible in battle!",
+    el: "Ἔρως ἀνίκατε μάχαν!",
+    de: "Eros, unbesiegbar im Kampf!",
+    fr: "Éros, invincible au combat!",
+    es: "¡Eros, invencible en batalla!",
+    it: "Eros, invincibile in battaglia!",
+    pt: "Eros, invencível na batalha!",
+    nl: "Eros, onoverwinnelijk in de strijd!",
+    pl: "Eros, niezwyciężony w walce!",
+    ru: "Эрос, непобедимый в битве!",
+    uk: "Ерос, непереможний у битві!",
+    zh: "爱神，战无不胜！",
+    ja: "エロス、戦いに無敵！",
+    ko: "에로스, 전투에서 무적!",
+    ar: "إيروس، الذي لا يُقهر في المعركة!",
+    hi: "इरोस, युद्ध में अजेय!",
+    tr: "Eros, savaşta yenilmez!",
+    vi: "Eros, bất khả chiến bại!",
+    fa: "اروس، شکست‌ناپذیر در نبرد!",
+    sv: "Eros, oövervinnelig i strid!",
+    sr: "Ерос, непобедив у боју!",
+    cs: "Eros, nepřemožitelný v boji!"
+  };
+
+  const slogan = sloganTranslations[language] || sloganTranslations.en;
+
+  return (
+    <>
+      {/* Bottom Footer Bar - Transparent */}
+      <footer 
+        className="relative w-full z-40"
+        style={{
+          paddingBottom: 'env(safe-area-inset-bottom, 5px)',
+          background: 'transparent',
+        }}
+      >
+        <div className="flex items-center justify-center py-2 px-4">
+          <p 
+            className="font-semibold tracking-wide"
+            style={{
+              fontFamily: "'Cinzel', serif",
+              fontSize: '13px',
+              color: '#40E0D0',
+              textShadow: '0 0 10px rgba(64, 224, 208, 0.5), 0 1px 3px rgba(0,0,0,0.5)',
+            }}
+          >
+            {slogan}
+          </p>
+        </div>
+      </footer>
+    </>
+  );
+};
+
+export default AppFooter;
+ useLanguage();
 
   // Description texts array with translations
   const descriptions = [
@@ -12,7 +74,7 @@ const DescriptionPickerWheel = () => {
       text: t.desc1 || 'Enter the parents\' birthdays and let AI reveal the gender of your future child.',
       highlight: null
     },
-    {
+  
       text: t.desc2 || 'Through the first and only',
       highlight: 'Data-Driven Baby Gender',
       highlight2: 'AI Agenten mindjerrs',
