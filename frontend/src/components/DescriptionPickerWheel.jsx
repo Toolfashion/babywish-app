@@ -1,15 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { EffectCreative, Pagination, Autoplay } from 'swiper/modules';
-
-// Import Swiper styles
-import 'swiper/css';
-import 'swiper/css/effect-creative';
-import 'swiper/css/pagination';
 
 const DescriptionPickerWheel = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [slideDirection, setSlideDirection] = useState('in');
   const { t } = useLanguage();
 
   // Description texts array with translations
@@ -20,8 +14,8 @@ const DescriptionPickerWheel = () => {
     },
     {
       text: t.desc2 || 'Through the first and only',
-      highlight: 'Data-Driven Baby Gender AI',
-      highlightOnNewLine: true
+      highlight: 'Data-Driven Baby Gender',
+      highlight2: 'AI Agenten mindjerrs',
     },
     {
       text: t.desc3 || 'algorithm that analyzes the biological and statistical cycles of the couple for gender prediction.',
@@ -29,133 +23,152 @@ const DescriptionPickerWheel = () => {
     },
   ];
 
+  // Auto-rotate descriptions every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSlideDirection('out');
+      
+      setTimeout(() => {
+        setActiveIndex((prev) => (prev + 1) % descriptions.length);
+        setSlideDirection('in');
+      }, 600);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [descriptions.length]);
+
+  const currentDesc = descriptions[activeIndex];
+
   return (
     <div 
       className="relative mx-auto rounded-2xl overflow-hidden"
       style={{
         width: '90%',
         maxWidth: '550px',
-        minHeight: '100px',
         background: 'rgba(0, 0, 0, 0.3)',
         backdropFilter: 'blur(4px)',
+        WebkitBackdropFilter: 'blur(4px)',
         border: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: '15px 12px',
+        minHeight: '110px',
       }}
     >
-      {/* CSS Animation for gradient */}
+      {/* CSS for vertical slide animation and rainbow */}
       <style>{`
-        @keyframes gradientMoveDesc {
+        @keyframes descSlideInFromBottom {
+          from {
+            transform: translateY(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        @keyframes descSlideOutToTop {
+          from {
+            transform: translateY(0);
+            opacity: 1;
+          }
+          to {
+            transform: translateY(-100%);
+            opacity: 0;
+          }
+        }
+        @keyframes rainbowMoveDesc {
           0%, 100% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
         }
-        .desc-swiper,
-        .desc-swiper .swiper-wrapper,
-        .desc-swiper .swiper-slide {
-          width: 100% !important;
+        .desc-slide-in {
+          animation: descSlideInFromBottom 0.6s ease-out forwards;
         }
-        .desc-swiper .swiper-wrapper {
-          -webkit-transform-style: preserve-3d !important;
-          transform-style: preserve-3d !important;
+        .desc-slide-out {
+          animation: descSlideOutToTop 0.6s ease-in forwards;
         }
-        .desc-swiper .swiper-slide {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          text-align: center !important;
-          -webkit-backface-visibility: hidden !important;
-          backface-visibility: hidden !important;
-          -webkit-transform: translate3d(0,0,0) !important;
-        }
-        .desc-swiper .swiper-slide > div {
-          width: 100% !important;
-          text-align: center !important;
-        }
-        .desc-swiper .swiper-pagination-bullet {
-          background: rgba(255, 255, 255, 0.3);
-          opacity: 1;
-        }
-        .desc-swiper .swiper-pagination-bullet-active {
-          background: #22d3ee;
-          width: 16px;
-          border-radius: 4px;
+        .rainbow-text-desc {
+          background: linear-gradient(90deg, #f472b6, #c084fc, #60a5fa, #22d3ee, #2dd4bf, #fbbf24, #f472b6);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: rainbowMoveDesc 4s linear infinite;
         }
       `}</style>
 
-      {/* Gradient overlays for depth */}
-      <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-black/40 to-transparent z-20 pointer-events-none" />
-      <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/40 to-transparent z-20 pointer-events-none" />
-
-      <Swiper
-        modules={[EffectCreative, Pagination, Autoplay]}
-        effect="creative"
-        grabCursor={true}
-        centeredSlides={true}
-        slidesPerView={1}
-        loop={true}
-        autoplay={{
-          delay: 5000,
-          disableOnInteraction: false,
-          pauseOnMouseEnter: true,
-        }}
-        creativeEffect={{
-          prev: {
-            translate: [0, '-80%', 0],
-            opacity: 0,
-            scale: 0.9,
-          },
-          next: {
-            translate: [0, '80%', 0],
-            opacity: 0,
-            scale: 0.9,
-          },
-        }}
-        speed={600}
-        pagination={{ 
-          clickable: true,
-          dynamicBullets: true,
-        }}
-        onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
-        className="desc-swiper"
-        style={{ paddingBottom: '35px', height: '120px' }}
+      {/* Description content with vertical slide */}
+      <div 
+        className={`flex flex-col items-center justify-center w-full text-center px-2 ${
+          slideDirection === 'in' ? 'desc-slide-in' : 'desc-slide-out'
+        }`}
       >
-        {descriptions.map((desc, index) => (
-          <SwiperSlide key={index}>
-            <div 
-              className="flex flex-col items-center justify-center w-full px-4 py-2"
+        {currentDesc.highlight ? (
+          <>
+            <p 
+              className="text-sm md:text-base leading-relaxed font-semibold"
+              style={{ 
+                color: '#ffffff',
+                textShadow: '0 0 15px rgba(255,255,255,0.5), 0 4px 10px rgba(0,0,0,0.8)',
+                margin: 0,
+              }}
             >
-              {desc.highlight ? (
-                <div className="text-center w-full">
-                  <p className="text-lg md:text-xl leading-relaxed font-semibold"
-                    style={{ 
-                      color: '#ffffff',
-                      textShadow: '0 0 15px rgba(255,255,255,0.5), 0 4px 10px rgba(0,0,0,0.8)'
-                    }}
-                  >
-                    {desc.text}
-                  </p>
-                  <p 
-                    className="font-bold mt-2 text-xl md:text-2xl"
-                    style={{ 
-                      color: '#22d3ee',
-                      textShadow: '0 0 25px rgba(34, 211, 238, 1), 0 0 50px rgba(96, 165, 250, 0.8), 0 4px 15px rgba(0,0,0,0.9)'
-                    }}
-                  >
-                    {desc.highlight}
-                  </p>
-                </div>
-              ) : (
-                <p className="text-lg md:text-xl text-center leading-relaxed font-semibold"
-                  style={{ 
-                    color: '#ffffff',
-                    textShadow: '0 0 15px rgba(255,255,255,0.5), 0 4px 10px rgba(0,0,0,0.8)'
-                  }}
-                >
-                  {desc.text}
-                </p>
-              )}
-            </div>
-          </SwiperSlide>
+              {currentDesc.text}
+            </p>
+            <p 
+              className="font-bold mt-2 text-base md:text-lg"
+              style={{ 
+                color: '#22d3ee',
+                textShadow: '0 0 25px rgba(34, 211, 238, 1), 0 0 50px rgba(96, 165, 250, 0.8), 0 4px 15px rgba(0,0,0,0.9)',
+                margin: 0,
+              }}
+            >
+              {currentDesc.highlight}
+            </p>
+            {currentDesc.highlight2 && (
+              <p 
+                className="font-bold mt-1 text-base md:text-lg rainbow-text-desc"
+                style={{ 
+                  textShadow: '0 4px 15px rgba(0,0,0,0.5)',
+                  margin: 0,
+                }}
+              >
+                {currentDesc.highlight2}
+              </p>
+            )}
+          </>
+        ) : (
+          <p 
+            className="text-sm md:text-base text-center leading-relaxed font-semibold"
+            style={{ 
+              color: '#ffffff',
+              textShadow: '0 0 15px rgba(255,255,255,0.5), 0 4px 10px rgba(0,0,0,0.8)',
+              margin: 0,
+            }}
+          >
+            {currentDesc.text}
+          </p>
+        )}
+      </div>
+
+      {/* Pagination dots */}
+      <div className="flex justify-center gap-2 mt-3">
+        {descriptions.map((_, idx) => (
+          <button
+            key={idx}
+            onClick={() => {
+              setSlideDirection('out');
+              setTimeout(() => {
+                setActiveIndex(idx);
+                setSlideDirection('in');
+              }, 300);
+            }}
+            className={`rounded-full transition-all duration-300 ${
+              idx === activeIndex 
+                ? 'w-4 h-2 bg-cyan-400' 
+                : 'w-2 h-2 bg-white/30 hover:bg-white/50'
+            }`}
+          />
         ))}
-      </Swiper>
+      </div>
     </div>
   );
 };
