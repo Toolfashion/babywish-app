@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+imrt { useEffect, useRef, useState } from 'react';
 
 const StarField = () => {
   const containerRef = useRef(null);
