@@ -3,10 +3,54 @@ import { useEffect, useRef, useState } from 'react';
 const StarField = () => {
   const containerRef = useRef(null);
   const [isNight, setIsNight] = useState(true);
+  const [dayOfWeek, setDayOfWeek] = useState(0);
 
-  // SINGLE BACKGROUND - Romantic couple beach sunset with palm trees
-  // (7-day rotation backup saved in: BACKUP_StarField_7DayRotation.jsx)
-  const singleDayBackground = "https://images.unsplash.com/photo-1566942482387-e8dc927e5829?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHw0fHxjb3VwbGUlMjB3YWxraW5nJTIwYmVhY2glMjBkaXN0YW50JTIwc21hbGwlMjBzaWxob3VldHRlJTIwdHJvcGljYWwlMjBzdW5zZXQlMjB3aWRlJTIwbGFuZHNjYXBlJTIwc2t5JTIwc2VhfGVufDB8fHx8MTc3NzAxOTA3Mnww&ixlib=rb-4.1.0&q=85";
+  // 6-DAY ROTATION + Sunday default
+  // ========================================
+  const BACKGROUND_ENABLED = true;
+  
+  // Day backgrounds with photographer credits
+  // Sunday (0) = default beach image, Monday-Saturday (1-6) = metropolis photos
+  const dayBackgrounds = [
+    // Sunday (0) - Default romantic beach sunset
+    { 
+      url: "https://images.unsplash.com/photo-1566942482387-e8dc927e5829?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHw0fHxjb3VwbGUlMjB3YWxraW5nJTIwYmVhY2glMjBkaXN0YW50JTIwc21hbGwlMjBzaWxob3VldHRlJTIwdHJvcGljYWwlMjBzdW5zZXQlMjB3aWRlJTIwbGFuZHNjYXBlJTIwc2t5JTIwc2VhfGVufDB8fHx8MTc3NzAxOTA3Mnww&ixlib=rb-4.1.0&q=85",
+      photographer: null 
+    },
+    // Monday (1) - New York
+    { 
+      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/zgqu5kiy_IMG_6219.jpeg",
+      photographer: "Tom Fournier" 
+    },
+    // Tuesday (2) - Tokyo
+    { 
+      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/r9c3ce75_IMG_6220.jpeg",
+      photographer: "Phil Evenden" 
+    },
+    // Wednesday (3) - Paris
+    { 
+      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/iiezny83_IMG_6221.jpeg",
+      photographer: "Bento Justin" 
+    },
+    // Thursday (4) - Moscow
+    { 
+      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/e2cuw5kz_IMG_6222.jpeg",
+      photographer: "Roman Verton" 
+    },
+    // Friday (5) - New Delhi
+    { 
+      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/a968q913_IMG_6223.jpeg",
+      photographer: "Monojit Dutta" 
+    },
+    // Saturday (6) - Sydney
+    { 
+      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/ejojxhx3_IMG_6224.jpeg",
+      photographer: "Adrian Rubiales" 
+    },
+  ];
+
+  // Get current day's background and photographer
+  const currentBackground = dayBackgrounds[dayOfWeek];
 
   // Check if it's day or night based on user's local time
   useEffect(() => {
@@ -15,6 +59,8 @@ const StarField = () => {
       const hour = now.getHours();
       // Night: 18:00 - 06:00, Day: 06:00 - 18:00
       setIsNight(hour < 6 || hour >= 18);
+      // Set day of week (0 = Sunday, 1 = Monday, etc.)
+      setDayOfWeek(now.getDay());
     };
 
     checkDayNight();
@@ -125,10 +171,10 @@ const StarField = () => {
     backgroundRepeat: 'no-repeat',
   };
 
-  // Day background - single image (restored 7-day rotation in BACKUP file)
+  // Day background - changes based on day of week
   const dayBackground = {
-    backgroundImage: `url('${singleDayBackground}')`,
-    backgroundSize: '100% 100%', // Zoom out - show full image
+    backgroundImage: `url('${currentBackground.url}')`,
+    backgroundSize: '100% 100%',
     backgroundPosition: 'center center',
     backgroundRepeat: 'no-repeat',
   };
@@ -146,6 +192,24 @@ const StarField = () => {
             isNight ? 'bg-[#05020D]/80' : 'bg-black/20'
           }`} 
         />
+        
+        {/* Photographer credit - bottom left, handwritten style */}
+        {!isNight && currentBackground.photographer && (
+          <div 
+            className="absolute z-50"
+            style={{
+              bottom: 'calc(env(safe-area-inset-bottom, 0px) + 60px)',
+              left: '12px',
+              fontFamily: "'Dancing Script', cursive",
+              fontSize: '11px',
+              color: 'rgba(255, 255, 255, 0.7)',
+              textShadow: '1px 1px 3px rgba(0, 0, 0, 0.9)',
+              letterSpacing: '0.5px',
+            }}
+          >
+            📷 {currentBackground.photographer}
+          </div>
+        )}
         
         {/* Moon for nighttime */}
         {isNight && (
