@@ -389,21 +389,24 @@ const FloatingVideoCarousel = () => {
     const screenWidth = window.innerWidth;
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     
-    // FORCE right side position - screenWidth minus button width and margin
-    const rightPosition = screenWidth - (isMobile ? 90 : 110);
+    // LEFT side position - below BABYWISH logo
+    const leftPosition = isMobile ? 20 : 30;
     
-    // TikTok position - between Register and Facebook (moved down)
-    const tiktokY = isIOS ? (isMobile ? 190 : 240) : (isMobile ? 210 : 260);
-    // Facebook position (below TikTok)
-    const facebookY = tiktokY + (isMobile ? 50 : 55);
+    // Y position - below the BABYWISH logo (accounting for iOS safe area)
+    // Moved up by 34px (0.9cm)
+    const baseY = isIOS ? (isMobile ? 126 : 146) : (isMobile ? 106 : 126);
+    
+    // TikTok first, Facebook second (horizontal arrangement)
+    const buttonWidth = isMobile ? 85 : 95;
+    const gap = 64; // 1.7cm distance between buttons
     
     return {
-      tiktok: { x: rightPosition, y: tiktokY },
-      facebook: { x: rightPosition, y: facebookY }
+      tiktok: { x: leftPosition, y: baseY },
+      facebook: { x: leftPosition + buttonWidth + gap, y: baseY }
     };
   };
   
-  const [positions, setPositions] = useState({ tiktok: { x: 300, y: 200 }, facebook: { x: 300, y: 255 } });
+  const [positions, setPositions] = useState(() => calculatePositions());
   
   // Calculate positions on mount AND resize
   useEffect(() => {
@@ -442,7 +445,7 @@ const FloatingVideoCarousel = () => {
   
   return (
     <>
-      {/* TikTok Reels Button - Right side */}
+      {/* TikTok Reels Button - Left side, first */}
       <FloatingReelButton 
         type="tiktok"
         videos={tiktokVideos}
@@ -450,7 +453,7 @@ const FloatingVideoCarousel = () => {
         t={t}
       />
       
-      {/* Facebook Reels Button - Right side, below TikTok */}
+      {/* Facebook Reels Button - Left side, next to TikTok */}
       <FloatingReelButton 
         type="facebook"
         videos={facebookVideos}
