@@ -3,7 +3,7 @@ import { useLanguage } from '../context/LanguageContext';
 const AppFooter = () => {
   const { language } = useLanguage();
 
-  // Slogan translations - "Love, invincible in!" from Antigone by Sophocles
+  // Slogan translations - "Love, invincible in battle!" from Antigone by Sophocles
   const sloganTranslations = {
     en: "Love, invincible in battle!",
     el: "Ἔρως ἀνίκατε μάχαν!",
