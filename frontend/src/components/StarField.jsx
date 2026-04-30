@@ -163,13 +163,8 @@ const StarField = () => {
     };
   }, [isNight]);
 
-  // Night background - galaxy/nebula
-  const nightBackground = {
-    backgroundImage: `url('https://images.unsplash.com/photo-1638189330012-44e36a97312a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwyfHxkZWVwJTIwcHVycGxlJTIwbmVidWxhJTIwc3BhY2UlMjBiYWNrZ3JvdW5kJTIwc2VhbWxlc3MlMjB0ZXh0dXJlfGVufDB8fHx8MTc3MjY5MTg5Mnww&ixlib=rb-4.1.0&q=85')`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
-  };
+  // Night background video URL
+  const nightVideoUrl = "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/iv5scmmt_copy_A6FBE56C-63FE-4F0E-92CA-7FF292864282.MOV";
 
   // Day background - changes based on day of week
   const dayBackground = {
@@ -184,12 +179,26 @@ const StarField = () => {
       {/* Background with smooth day/night transition */}
       <div 
         className="fixed inset-0 z-0 transition-all duration-1000"
-        style={isNight ? nightBackground : dayBackground}
+        style={!isNight ? dayBackground : {}}
       >
+        {/* Night Video Background */}
+        {isNight && (
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ zIndex: -1 }}
+          >
+            <source src={nightVideoUrl} type="video/mp4" />
+          </video>
+        )}
+        
         {/* Overlay - darker at night, subtle during day */}
         <div 
           className={`absolute inset-0 transition-all duration-1000 ${
-            isNight ? 'bg-[#05020D]/80' : 'bg-black/20'
+            isNight ? 'bg-[#05020D]/60' : 'bg-black/20'
           }`} 
         />
         
