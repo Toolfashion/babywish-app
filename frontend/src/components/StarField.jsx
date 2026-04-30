@@ -57,8 +57,10 @@ const StarField = () => {
     const checkDayNight = () => {
       const now = new Date();
       const hour = now.getHours();
-      // Night: 18:00 - 06:00, Day: 06:00 - 18:00
-      setIsNight(hour < 6 || hour >= 18);
+      const minutes = now.getMinutes();
+      // Day: 07:00 - 20:30, Night: 20:30 - 07:00
+      const isNightTime = hour < 7 || hour > 20 || (hour === 20 && minutes >= 30);
+      setIsNight(isNightTime);
       // Set day of week (0 = Sunday, 1 = Monday, etc.)
       setDayOfWeek(now.getDay());
     };
