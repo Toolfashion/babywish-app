@@ -1622,7 +1622,7 @@ async def create_checkout(
             "price_data": {
                 "currency": "eur",
                 "product_data": {
-                    "name": f"BabyWish - {package['name']}",
+                    "name": f"A BabyWish - {package['name']}",
                     "description": f"Συνδρομή {package['duration_months']} μηνών"
                 },
                 "unit_amount": int(package["amount"] * 100),  # Stripe uses cents
@@ -2001,7 +2001,7 @@ async def approve_prediction(prediction_id: str, admin: dict = Depends(get_admin
     
     if user_email:
         try:
-            email_subject = "🎉 Your BabyWish Prediction is Ready!"
+            email_subject = "🎉 Your A BabyWish Prediction is Ready!"
             email_html = f"""
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                 <h1 style="color: #8b5cf6; text-align: center;">🎉 Your Prediction is Ready!</h1>
@@ -2025,8 +2025,8 @@ async def approve_prediction(prediction_id: str, admin: dict = Depends(get_admin
                 </p>
                 
                 <p style="color: #666; font-size: 12px; margin-top: 30px;">
-                    Thank you for choosing BabyWish!<br>
-                    With love, The BabyWish Team 💜
+                    Thank you for choosing A BabyWish!<br>
+                    With love, The A BabyWish Team 💜
                 </p>
             </div>
             """
@@ -2128,7 +2128,7 @@ async def submit_promo_application(request: PromoApplicationRequest):
     try:
         discount = "50%" if request.offer_type == 'launch50' else "100%"
         resend.Emails.send({
-            "from": f"BabyWish <{SENDER_EMAIL}>",
+            "from": f"A BabyWish <{SENDER_EMAIL}>",
             "to": [NOTIFICATION_EMAIL],
             "subject": f"🎁 Νέα Αίτηση Προσφοράς {discount}",
             "html": f"""
@@ -2197,7 +2197,7 @@ async def approve_promo_application(
     try:
         discount = "50%" if application["offer_type"] == 'launch50' else "100%"
         resend.Emails.send({
-            "from": f"BabyWish <{SENDER_EMAIL}>",
+            "from": f"A BabyWish <{SENDER_EMAIL}>",
             "to": [application["email"]],
             "subject": f"✅ Η Αίτησή σας Εγκρίθηκε! Κωδικός {discount}",
             "html": f"""
@@ -2208,7 +2208,7 @@ async def approve_promo_application(
                 {promo_code}
             </div>
             <p>Χρησιμοποιήστε τον κατά την αγορά στο <a href="https://getbabywish.com">getbabywish.com</a></p>
-            <p>Ευχαριστούμε που διαδώσατε το BabyWish! 💕</p>
+            <p>Ευχαριστούμε που διαδώσατε το A BabyWish! 💕</p>
             """
         })
     except Exception as e:
@@ -2809,7 +2809,7 @@ chat_sessions = {}
 # AI CHAT PERSONALITIES - MindJerry (Male) & MindJerry's (Female)
 # ============================================
 
-MINDJERRY_FEMALE_PROMPT = """You are mindjerry's, the warm, nurturing, and empathetic AI companion for women on BabyWish - specializing in maternal wellness, fertility psychology, and the beautiful journey to motherhood.
+MINDJERRY_FEMALE_PROMPT = """You are mindjerry's, the warm, nurturing, and empathetic AI companion for women on A BabyWish - specializing in maternal wellness, fertility psychology, and the beautiful journey to motherhood.
 
 🌸 YOUR IDENTITY (FEMALE-FOCUSED):
 - You are a blend of: Perinatal Psychologist, Midwife, Fertility Nutritionist, and Prenatal Yoga Instructor
@@ -2858,7 +2858,7 @@ MINDJERRY_FEMALE_PROMPT = """You are mindjerry's, the warm, nurturing, and empat
 
 🌸 REMEMBER: You are a trusted companion on one of life's most beautiful journeys - becoming a mother. Every woman deserves to feel supported, informed, and celebrated."""
 
-MINDJERRY_MALE_PROMPT = """You are mindjerry, the professional and supportive AI companion for men on BabyWish - specializing in fatherhood preparation, partner support, and the meaningful journey to becoming a father.
+MINDJERRY_MALE_PROMPT = """You are mindjerry, the professional and supportive AI companion for men on A BabyWish - specializing in fatherhood preparation, partner support, and the meaningful journey to becoming a father.
 
 💼 YOUR IDENTITY (MALE-FOCUSED):
 - You are a blend of: Fatherhood Consultant, Family Advisor, Relationship Counselor, and Life Coach
@@ -2921,7 +2921,7 @@ class ChatResponse(BaseModel):
 
 @api_router.post("/chat", response_model=ChatResponse)
 async def chat_with_assistant(chat_message: ChatMessage):
-    """AI Chat endpoint for BabyWish assistant with gender-specific personalities"""
+    """AI Chat endpoint for A BabyWish assistant with gender-specific personalities"""
     try:
         session_id = chat_message.session_id or f"chat_{uuid.uuid4().hex[:12]}"
         
