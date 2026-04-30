@@ -276,12 +276,17 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
     try {
       const response = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        },
         body: JSON.stringify({
           message: text.trim(),
           session_id: sessionId,
           gender: gender  // Send gender for personality selection
-        })
+        }),
+        cache: 'no-store'
       });
 
       if (!response.ok) throw new Error('Failed to send message');
@@ -360,16 +365,21 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
               onClick={() => !isDragging && setIsOpen(true)}
               className="relative w-12 h-12 flex items-center justify-center"
             >  
-              {/* Video Background for Toggle Button */}
+              {/* Background Container - Static image as base, video overlay */}
               <div 
                 className="absolute inset-0 rounded-full overflow-hidden"
-                style={{ opacity: 0.85 }}
+                style={{ 
+                  opacity: 0.85,
+                  background: `url(${DATA_SPHERE_URL}) center/cover`,
+                }}
               >
+                {/* Video overlay - will show on supported browsers */}
                 <video
                   autoPlay
                   loop
                   muted
                   playsInline
+                  webkit-playsinline="true"
                   className="absolute inset-0 w-full h-full object-cover"
                   style={{
                     transform: 'scale(1.5)',
@@ -377,8 +387,6 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
                   }}
                 >
                   <source src="/chatwidget-bg.mp4" type="video/mp4" />
-                  {/* Fallback to static image if video fails */}
-                  <img src={DATA_SPHERE_URL} alt="" className="w-full h-full object-cover" />
                 </video>
               </div>
               
