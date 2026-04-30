@@ -73,7 +73,7 @@ const TermsPage = () => {
                   <div>
                     <h2 className="text-xl font-bold text-amber-400 mb-2">Entertainment Disclaimer</h2>
                     <p className="text-white/70">
-                      BabyWish is an <strong>entertainment service</strong> that uses statistical analysis and AI algorithms 
+                      A BabyWish is an <strong>entertainment service</strong> that uses statistical analysis and AI algorithms 
                       to generate predictions. Our service is <strong>NOT</strong> a medical diagnostic tool and should 
                       <strong> NOT</strong> be used for medical decisions. The predictions provided are for 
                       <strong> entertainment purposes only</strong> and do not guarantee any specific outcome.
@@ -89,7 +89,7 @@ const TermsPage = () => {
                   1. Service Description
                 </h2>
                 <p>
-                  BabyWish provides AI-powered gender predictions based on statistical analysis of parental birth dates. 
+                  A BabyWish provides AI-powered gender predictions based on statistical analysis of parental birth dates. 
                   Our algorithms analyze biological cycles and probability patterns to generate predictions. 
                   This service is designed for entertainment and educational purposes.
                 </p>
@@ -219,11 +219,11 @@ const TermsPage = () => {
               {/* Final Disclaimer */}
               <section className="text-center py-6 border-t border-white/10">
                 <p className="text-white/50 text-sm">
-                  By using BabyWish, you acknowledge that you have read and agree to these Terms & Conditions. 
+                  By using A BabyWish, you acknowledge that you have read and agree to these Terms & Conditions. 
                   This service is for entertainment purposes only and should not replace medical advice.
                 </p>
                 <p className="text-white/30 text-xs mt-4">
-                  © 2025 BabyWish. All rights reserved.
+                  © 2025 A BabyWish. All rights reserved.
                 </p>
               </section>
             </div>
@@ -235,4 +235,3 @@ const TermsPage = () => {
 };
 
 export default TermsPage;
-
