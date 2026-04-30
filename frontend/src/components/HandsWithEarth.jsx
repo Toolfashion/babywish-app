@@ -19,22 +19,24 @@ const HandsWithEarth = () => {
           }}
         />
         
-        {/* Rotating Earth */}
+        {/* Rotating Earth - Video */}
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 90, repeat: Infinity, ease: "linear" }}
-          className="relative w-40 h-40 md:w-56 md:h-56 rounded-full overflow-hidden"
+          className="relative w-52 h-52 md:w-72 md:h-72 rounded-full overflow-hidden flex items-center justify-center"
           style={{
             boxShadow: '0 0 40px rgba(6, 182, 212, 0.5), 0 0 80px rgba(217, 70, 239, 0.3)'
           }}
         >
-          <img
-            src="https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/7he002t2_IMG_5309.jpeg"
-            alt="Earth"
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
             className="w-full h-full object-cover"
-            style={{ objectPosition: 'center 30%' }}
-            data-testid="hero-earth-image"
-          />
+            style={{ objectPosition: 'center center' }}
+            data-testid="hero-earth-video"
+          >
+            <source src="https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/0cqx2ba0_ReactNativeBlobUtilTmp_arrhaygkshus8ga2oozzf.MP4" type="video/mp4" />
+          </video>
         </motion.div>
         
         {/* Sun flare on top right */}
@@ -61,31 +63,6 @@ const HandsWithEarth = () => {
           transition={{ duration: 3, repeat: Infinity }}
         />
       </motion.div>
-
-      {/* Floating sparkles around Earth */}
-      {[...Array(8)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute rounded-full pointer-events-none"
-          style={{
-            width: Math.random() * 4 + 2 + 'px',
-            height: Math.random() * 4 + 2 + 'px',
-            left: `${30 + Math.random() * 40}%`,
-            top: `${20 + Math.random() * 60}%`,
-            background: i % 2 === 0 ? '#FFD700' : '#06B6D4'
-          }}
-          animate={{
-            opacity: [0, 1, 0],
-            scale: [0.5, 1.3, 0.5],
-            y: [0, -10, 0]
-          }}
-          transition={{
-            duration: 2 + Math.random(),
-            repeat: Infinity,
-            delay: i * 0.3,
-          }}
-        />
-      ))}
     </div>
   );
 };
