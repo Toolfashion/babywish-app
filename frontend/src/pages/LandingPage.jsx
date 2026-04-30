@@ -118,17 +118,17 @@ const LandingPage = () => {
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-3"
+              className="flex items-center gap-1.5"
             >
-              <Star className="w-6 h-6 text-amber-400 animate-pulse-slow" />
-              <h1 className="text-xl md:text-2xl font-bold gradient-text" data-testid="app-title">
+              <Star className="w-5 h-5 text-amber-400 animate-pulse-slow" />
+              <h1 className="text-lg md:text-xl font-bold gradient-text" data-testid="app-title">
                 {t.appTitle}
               </h1>
               {/* Beta Badge */}
-              <span className="px-2 py-0.5 text-xs font-bold bg-amber-500 text-black rounded-full animate-pulse">
+              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-black rounded-full animate-pulse">
                 BETA
               </span>
-              <Moon className="w-6 h-6 text-purple-400 animate-pulse-slow" />
+              <Moon className="w-5 h-5 text-purple-400 animate-pulse-slow" />
             </motion.div>
 
             <motion.div
