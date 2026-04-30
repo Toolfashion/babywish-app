@@ -1,5 +1,5 @@
 /**
- * BabyWish PWA Service Worker
+ * A BabyWish PWA Service Worker
  * ===========================
  * SINGLE CODEBASE - Αλλαγές εμφανίζονται αυτόματα σε iOS & Android
  * 
@@ -130,7 +130,7 @@ self.addEventListener('message', (event) => {
 // Push notifications (future use)
 self.addEventListener('push', (event) => {
   const options = {
-    body: event.data ? event.data.text() : 'New update from BabyWish!',
+    body: event.data ? event.data.text() : 'New update from A BabyWish!',
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     vibrate: [100, 50, 100],
@@ -138,7 +138,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification('BabyWish', options)
+    self.registration.showNotification('A BabyWish', options)
   );
 });
 
