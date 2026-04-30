@@ -144,8 +144,8 @@ export const translations = {
     // Slogans
     slogan1Line1: "Die Wissenschaft der Wahrscheinlichkeit, im Dienste",
     slogan1Highlight: "Ihrer Familie!",
-    slogan2Line1: "Planen Sie Ihre Zukunft, basierend auf Ihrer eigenen",
-    slogan2Highlight: "biologischen Uhr!",
+    slogan2Line1: "Ihr zukünftiges Kind, basierend auf Ihrem",
+    slogan2Highlight: "biologischen Zyklus!",
     
     // Description Wheel
     desc1: "Geben Sie die Geburtstage der Eltern ein und lassen Sie KI das Geschlecht Ihres zukünftigen Kindes enthüllen.",
@@ -276,8 +276,8 @@ export const translations = {
     // Slogans
     slogan1Line1: "The science of probability, at the service of",
     slogan1Highlight: "your family!",
-    slogan2Line1: "Plan your future, based on your own",
-    slogan2Highlight: "biological clock!",
+    slogan2Line1: "Your future child, based on your",
+    slogan2Highlight: "biological cycle!",
     
     // Description Wheel
     desc1: "Enter the parents' birthdays and let AI reveal the gender of your future child.",
@@ -383,8 +383,8 @@ export const translations = {
     // Slogans
     slogan1Line1: "Наука вероятности на службе",
     slogan1Highlight: "вашей семьи!",
-    slogan2Line1: "Планируйте будущее на основе ваших",
-    slogan2Highlight: "биологических часов!",
+    slogan2Line1: "Ваш будущий ребёнок, на основе вашего",
+    slogan2Highlight: "биологического цикла!",
     
     // Description Wheel
     desc1: "Введите даты рождения родителей, и ИИ раскроет пол вашего будущего ребенка.",
@@ -490,8 +490,8 @@ export const translations = {
     // Slogans
     slogan1Line1: "概率科学，服务于",
     slogan1Highlight: "您的家庭！",
-    slogan2Line1: "根据您自己的",
-    slogan2Highlight: "生物钟规划未来！",
+    slogan2Line1: "您未来的孩子，基于您的",
+    slogan2Highlight: "生物周期！",
     
     // Description Wheel
     desc1: "输入父母的生日，让AI揭示您未来孩子的性别。",
@@ -597,8 +597,8 @@ export const translations = {
     // Slogans
     slogan1Line1: "संभावना का विज्ञान, आपके परिवार की",
     slogan1Highlight: "सेवा में!",
-    slogan2Line1: "अपनी खुद की जैविक घड़ी के आधार पर",
-    slogan2Highlight: "भविष्य की योजना बनाएं!",
+    slogan2Line1: "आपका भविष्य का बच्चा, आपके",
+    slogan2Highlight: "जैविक चक्र के आधार पर!",
     
     // Description Wheel
     desc1: "माता-पिता की जन्मतिथि दर्ज करें और AI को अपने भविष्य के बच्चे का लिंग प्रकट करने दें।",
@@ -704,8 +704,8 @@ export const translations = {
     // Slogans
     slogan1Line1: "La ciencia de la probabilidad, al servicio de",
     slogan1Highlight: "¡tu familia!",
-    slogan2Line1: "Planifica tu futuro, basado en tu propio",
-    slogan2Highlight: "¡reloj biológico!",
+    slogan2Line1: "Su futuro hijo, basado en su",
+    slogan2Highlight: "¡ciclo biológico!",
     
     // Description Wheel
     desc1: "Ingresa las fechas de nacimiento de los padres y deja que la IA revele el género de tu futuro hijo.",
@@ -811,8 +811,8 @@ export const translations = {
     // Slogans
     slogan1Line1: "A ciência da probabilidade, ao serviço da",
     slogan1Highlight: "sua família!",
-    slogan2Line1: "Planeie o seu futuro, baseado no seu próprio",
-    slogan2Highlight: "relógio biológico!",
+    slogan2Line1: "O seu futuro filho, baseado no seu",
+    slogan2Highlight: "ciclo biológico!",
     
     // Description Wheel
     desc1: "Insira as datas de nascimento dos pais e deixe a IA revelar o género do seu futuro filho.",
@@ -918,8 +918,8 @@ export const translations = {
     // Slogans
     slogan1Line1: "La science des probabilités, au service de",
     slogan1Highlight: "votre famille!",
-    slogan2Line1: "Planifiez votre avenir, basé sur votre propre",
-    slogan2Highlight: "horloge biologique!",
+    slogan2Line1: "Votre futur enfant, basé sur votre",
+    slogan2Highlight: "cycle biologique!",
     
     // Description Wheel
     desc1: "Entrez les dates de naissance des parents et laissez l'IA révéler le sexe de votre futur enfant.",
@@ -1025,8 +1025,8 @@ export const translations = {
     // Slogans
     slogan1Line1: "Olasılık bilimi, ailenizin",
     slogan1Highlight: "hizmetinde!",
-    slogan2Line1: "Kendi biyolojik saatinize göre",
-    slogan2Highlight: "geleceğinizi planlayın!",
+    slogan2Line1: "Gelecekteki çocuğunuz, biyolojik",
+    slogan2Highlight: "döngünüze göre!",
     
     // Description Wheel
     desc1: "Ebeveynlerin doğum tarihlerini girin ve yapay zekanın gelecekteki çocuğunuzun cinsiyetini açıklamasına izin verin.",
@@ -1132,8 +1132,8 @@ export const translations = {
     // Slogans
     slogan1Line1: "علم احتمال، در خدمت",
     slogan1Highlight: "خانواده شما!",
-    slogan2Line1: "آینده خود را بر اساس ساعت",
-    slogan2Highlight: "بیولوژیکی خود برنامه‌ریزی کنید!",
+    slogan2Line1: "فرزند آینده شما، بر اساس",
+    slogan2Highlight: "چرخه بیولوژیکی شما!",
     
     // Description Wheel
     desc1: "تاریخ تولد والدین را وارد کنید و اجازه دهید هوش مصنوعی جنسیت فرزند آینده شما را آشکار کند.",
@@ -1239,8 +1239,8 @@ export const translations = {
     // Slogans
     slogan1Line1: "علم الاحتمالات، في خدمة",
     slogan1Highlight: "عائلتك!",
-    slogan2Line1: "خطط لمستقبلك، بناءً على",
-    slogan2Highlight: "ساعتك البيولوجية!",
+    slogan2Line1: "طفلك المستقبلي، بناءً على",
+    slogan2Highlight: "دورتك البيولوجية!",
     
     // Description Wheel
     desc1: "أدخل تواريخ ميلاد الوالدين ودع الذكاء الاصطناعي يكشف جنس طفلك المستقبلي.",
@@ -1346,8 +1346,8 @@ export const translations = {
     // Slogans
     slogan1Line1: "確率の科学が、あなたの家族の",
     slogan1Highlight: "ために！",
-    slogan2Line1: "あなた自身の体内時計に基づいて",
-    slogan2Highlight: "未来を計画しましょう！",
+    slogan2Line1: "あなたの未来の子供、あなたの",
+    slogan2Highlight: "生物学的サイクルに基づいて！",
     
     // Description Wheel
     desc1: "両親の誕生日を入力して、AIがあなたの将来の子供の性別を明らかにします。",
@@ -1453,8 +1453,8 @@ export const translations = {
     // Slogans
     slogan1Line1: "Sannolikhetens vetenskap, i din familjs",
     slogan1Highlight: "tjänst!",
-    slogan2Line1: "Planera din framtid, baserat på din egen",
-    slogan2Highlight: "biologiska klocka!",
+    slogan2Line1: "Ditt framtida barn, baserat på din",
+    slogan2Highlight: "biologiska cykel!",
     
     // Description Wheel
     desc1: "Ange föräldrarnas födelsedagar och låt AI avslöja ditt framtida barns kön.",
@@ -1693,8 +1693,8 @@ export const translations = {
     // Slogans
     slogan1Line1: "La scienza della probabilità, al servizio della",
     slogan1Highlight: "tua famiglia!",
-    slogan2Line1: "Pianifica il tuo futuro, basato sul tuo",
-    slogan2Highlight: "orologio biologico!",
+    slogan2Line1: "Il vostro futuro bambino, basato sul vostro",
+    slogan2Highlight: "ciclo biologico!",
     
     // Description Wheel
     desc1: "Inserisci le date di nascita dei genitori e lascia che l'IA riveli il sesso del tuo futuro bambino.",
@@ -1799,8 +1799,8 @@ export const translations = {
     // Slogans
     slogan1Line1: "Наука вероватноће, у служби",
     slogan1Highlight: "ваше породице!",
-    slogan2Line1: "Планирајте будућност на основу вашег",
-    slogan2Highlight: "биолошког сата!",
+    slogan2Line1: "Ваше будуће дете, на основу вашег",
+    slogan2Highlight: "биолошког циклуса!",
     
     // Description Wheel
     desc1: "Унесите датуме рођења родитеља и дозволите вештачкој интелигенцији да открије пол вашег будућег детета.",
@@ -1905,8 +1905,8 @@ export const translations = {
     // Slogans
     slogan1Line1: "Nauka prawdopodobieństwa, w służbie",
     slogan1Highlight: "Twojej rodziny!",
-    slogan2Line1: "Zaplanuj swoją przyszłość, w oparciu o własny",
-    slogan2Highlight: "zegar biologiczny!",
+    slogan2Line1: "Twoje przyszłe dziecko, na podstawie twojego",
+    slogan2Highlight: "cyklu biologicznego!",
     
     // Description Wheel
     desc1: "Wprowadź daty urodzenia rodziców i pozwól AI ujawnić płeć Twojego przyszłego dziecka.",
@@ -2011,8 +2011,8 @@ export const translations = {
     // Slogans
     slogan1Line1: "Věda pravděpodobnosti, ve službách",
     slogan1Highlight: "vaší rodiny!",
-    slogan2Line1: "Plánujte svou budoucnost, na základě vlastních",
-    slogan2Highlight: "biologických hodin!",
+    slogan2Line1: "Vaše budoucí dítě, na základě vašeho",
+    slogan2Highlight: "biologického cyklu!",
     
     // Description Wheel
     desc1: "Zadejte data narození rodičů a nechte AI odhalit pohlaví vašeho budoucího dítěte.",
