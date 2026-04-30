@@ -38,23 +38,6 @@ const HandsWithEarth = () => {
             <source src="https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/0cqx2ba0_ReactNativeBlobUtilTmp_arrhaygkshus8ga2oozzf.MP4" type="video/mp4" />
           </video>
         </motion.div>
-        
-        {/* Sun flare on top right */}
-        <motion.div
-          className="absolute -top-2 -right-2 w-10 h-10 md:w-14 md:h-14"
-          animate={{ 
-            opacity: [0.6, 1, 0.6],
-            scale: [0.9, 1.15, 0.9]
-          }}
-          transition={{ duration: 2.5, repeat: Infinity }}
-        >
-          <div 
-            className="w-full h-full rounded-full"
-            style={{
-              background: 'radial-gradient(circle, rgba(255,230,100,1) 0%, rgba(255,180,50,0.6) 40%, transparent 70%)'
-            }}
-          />
-        </motion.div>
 
         {/* Pulsing outer ring */}
         <motion.div
