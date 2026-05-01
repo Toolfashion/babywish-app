@@ -4,6 +4,7 @@ const StarField = () => {
   const containerRef = useRef(null);
   const [isNight, setIsNight] = useState(true);
   const [dayOfWeek, setDayOfWeek] = useState(0);
+  const [sunTimes, setSunTimes] = useState({ sunrise: '07:00', sunset: '20:30' });
 
   // 6-DAY ROTATION + Sunday default
   // ========================================
@@ -52,15 +53,72 @@ const StarField = () => {
   // Get current day's background and photographer (with safeguard)
   const currentBackground = dayBackgrounds[dayOfWeek] || dayBackgrounds[0];
 
-  // Check if it's day or night based on user's local time
+  // Fetch sunrise/sunset times based on user's location (IP-based)
+  useEffect(() => {
+    const fetchSunTimes = async () => {
+      try {
+        // First get user's location from IP
+        const geoResponse = await fetch('https://ipapi.co/json/');
+        const geoData = await geoResponse.json();
+        const { latitude, longitude } = geoData;
+        
+        if (latitude && longitude) {
+          // Get sunrise/sunset times for that location
+          const sunResponse = await fetch(
+            `https://api.sunrise-sunset.org/json?lat=${latitude}&lng=${longitude}&formatted=0`
+          );
+          const sunData = await sunResponse.json();
+          
+          if (sunData.status === 'OK') {
+            // Convert UTC times to local time
+            const sunrise = new Date(sunData.results.sunrise);
+            const sunset = new Date(sunData.results.sunset);
+            
+            setSunTimes({
+              sunrise: `${sunrise.getHours().toString().padStart(2, '0')}:${sunrise.getMinutes().toString().padStart(2, '0')}`,
+              sunset: `${sunset.getHours().toString().padStart(2, '0')}:${sunset.getMinutes().toString().padStart(2, '0')}`,
+              sunriseHour: sunrise.getHours(),
+              sunriseMinute: sunrise.getMinutes(),
+              sunsetHour: sunset.getHours(),
+              sunsetMinute: sunset.getMinutes()
+            });
+            
+            console.log(`[StarField] Location: ${geoData.city}, ${geoData.country_name}`);
+            console.log(`[StarField] Sunrise: ${sunrise.toLocaleTimeString()}, Sunset: ${sunset.toLocaleTimeString()}`);
+          }
+        }
+      } catch (error) {
+        console.log('[StarField] Using default times (07:00-20:30)', error.message);
+        // Keep default times on error
+        setSunTimes({
+          sunrise: '07:00',
+          sunset: '20:30',
+          sunriseHour: 7,
+          sunriseMinute: 0,
+          sunsetHour: 20,
+          sunsetMinute: 30
+        });
+      }
+    };
+    
+    fetchSunTimes();
+  }, []);
+
+  // Check if it's day or night based on sunrise/sunset times
   useEffect(() => {
     const checkDayNight = () => {
       const now = new Date();
-      const hour = now.getHours();
-      const minutes = now.getMinutes();
-      // Day: 07:00 - 20:30, Night: 20:30 - 07:00
-      const isNightTime = hour < 7 || hour > 20 || (hour === 20 && minutes >= 30);
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      const currentTime = currentHour * 60 + currentMinute; // Minutes since midnight
+      
+      const sunriseTime = (sunTimes.sunriseHour || 7) * 60 + (sunTimes.sunriseMinute || 0);
+      const sunsetTime = (sunTimes.sunsetHour || 20) * 60 + (sunTimes.sunsetMinute || 30);
+      
+      // It's night if before sunrise or after sunset
+      const isNightTime = currentTime < sunriseTime || currentTime >= sunsetTime;
       setIsNight(isNightTime);
+      
       // Set day of week (0 = Sunday, 1 = Monday, etc.)
       setDayOfWeek(now.getDay());
     };
@@ -70,7 +128,7 @@ const StarField = () => {
     const interval = setInterval(checkDayNight, 60000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [sunTimes]);
 
   // Create and animate stars
   useEffect(() => {
@@ -165,8 +223,8 @@ const StarField = () => {
     };
   }, [isNight]);
 
-  // Night background video URL
-  const nightVideoUrl = "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/iv5scmmt_copy_A6FBE56C-63FE-4F0E-92CA-7FF292864282.MOV";
+  // Night background video URL - MP4 format for better browser compatibility
+  const nightVideoUrl = "/galaxy-bg.mp4";
 
   // Day background - changes based on day of week
   const dayBackground = {
@@ -183,24 +241,24 @@ const StarField = () => {
         className="fixed inset-0 z-0 transition-all duration-1000"
         style={!isNight ? dayBackground : {}}
       >
-        {/* Night Video Background */}
+        {/* Night Background Image */}
         {isNight && (
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ zIndex: -1 }}
-          >
-            <source src={nightVideoUrl} type="video/mp4" />
-          </video>
+          <div
+            className="absolute inset-0"
+            style={{ 
+              zIndex: -1,
+              backgroundImage: 'url(/night-bg.jpg)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'left center',
+              backgroundRepeat: 'no-repeat'
+            }}
+          />
         )}
         
         {/* Overlay - darker at night, subtle during day */}
         <div 
           className={`absolute inset-0 transition-all duration-1000 ${
-            isNight ? 'bg-[#05020D]/60' : 'bg-black/20'
+            isNight ? 'bg-[#05020D]/30' : 'bg-black/20'
           }`} 
         />
         
@@ -222,16 +280,6 @@ const StarField = () => {
           </div>
         )}
         
-        {/* Moon for nighttime */}
-        {isNight && (
-          <div 
-            className="absolute top-16 right-24 w-16 h-16 rounded-full"
-            style={{
-              background: 'radial-gradient(circle at 30% 30%, #FFFACD 0%, #F0E68C 50%, #DAA520 100%)',
-              boxShadow: '0 0 40px 10px rgba(255, 250, 205, 0.3)',
-            }}
-          />
-        )}
       </div>
       
       {/* Animated stars */}
