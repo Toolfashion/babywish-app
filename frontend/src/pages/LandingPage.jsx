@@ -278,13 +278,12 @@ const LandingPage = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={feature.action}
-                  className="px-5 py-3 rounded-full bg-white/10 border border-white/20 text-sm text-white hover:bg-white/20 active:bg-white/30 transition-all cursor-pointer touch-manipulation select-none"
+                  className="px-5 py-3 rounded-2xl bg-white/10 border border-white/20 text-sm text-white hover:bg-white/20 active:bg-white/30 transition-all cursor-pointer touch-manipulation select-none min-w-[140px]"
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                   data-testid={`feature-btn-${feature.name}`}
                 >
-                  <span className="mr-2">{feature.icon}</span>
-                  <Sparkles className="w-4 h-4 inline mr-2 text-primary" />
-                  {feature.name}
+                  <span className="text-xl mb-1 block">{feature.icon}</span>
+                  <span className="whitespace-pre-line text-xs leading-tight">{feature.name}</span>
                 </motion.button>
               ))}
             </motion.div>
