@@ -115,7 +115,9 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const [currentBaby, setCurrentBaby] = useState(gender === 'male' ? 'boy' : 'girl');
-  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [showAngel, setShowAngel] = useState(false);
+  // Different starting positions: Male starts at 0, Female starts at 50 (opposite side)
+  const [loadingProgress, setLoadingProgress] = useState(gender === 'male' ? 0 : 50);
   const messagesEndRef = useRef(null);
   
   // Color based on gender
@@ -185,21 +187,54 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
     setMessages([{ type: 'assistant', text: welcomeText }]);
   }, [language, gender]);
 
-  // Alternate angel every 9 seconds
+  // Angel visibility cycle: Hidden 12s -> Visible 5s -> Hidden 12s -> etc
+  // Different start delays per gender so they don't sync
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentBaby(prev => prev === 'boy' ? 'girl' : 'boy');
-    }, 9000);
-    return () => clearInterval(interval);
-  }, []);
+    const hideTime = 12000; // 12 seconds hidden
+    const showTime = 5000;  // 5 seconds visible
+    const initialDelay = gender === 'male' ? 0 : 6000; // Female starts 6s later
+    
+    let showTimeout;
+    let hideTimeout;
+    
+    const startCycle = () => {
+      // Show angel after hideTime
+      showTimeout = setTimeout(() => {
+        setShowAngel(true);
+        // Also switch which angel (boy/girl)
+        setCurrentBaby(prev => prev === 'boy' ? 'girl' : 'boy');
+        
+        // Hide angel after showTime
+        hideTimeout = setTimeout(() => {
+          setShowAngel(false);
+          // Restart cycle
+          startCycle();
+        }, showTime);
+      }, hideTime);
+    };
+    
+    // Initial delay before first cycle
+    const initialTimeout = setTimeout(() => {
+      startCycle();
+    }, initialDelay);
+    
+    return () => {
+      clearTimeout(initialTimeout);
+      clearTimeout(showTimeout);
+      clearTimeout(hideTimeout);
+    };
+  }, [gender]);
 
-  // Loading circle animation
+  // Loading circle animation - VERY different speeds per gender
+  // Male: slow (150ms per step), Female: fast (70ms per step)
+  // Starting positions also different (0 vs 50) so they never sync
   useEffect(() => {
+    const loadingSpeed = gender === 'male' ? 150 : 70;
     const interval = setInterval(() => {
       setLoadingProgress(prev => (prev + 1) % 100);
-    }, 100);
+    }, loadingSpeed);
     return () => clearInterval(interval);
-  }, []);
+  }, [gender]);
 
   // Drag handlers
   const handleDragStart = (e) => {
@@ -319,23 +354,37 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
   // Calculate circle dash offset for loading animation
   const circumference = 2 * Math.PI * 45;
   const dashOffset = circumference - (loadingProgress / 100) * circumference;
+  
+  // Different animation speeds for male/female widgets
+  const rotationSpeed = gender === 'male' ? '12s' : '8s';
+  const pulseSpeed = gender === 'male' ? '3s' : '2.5s';
+  const sphereRotateSpeed = gender === 'male' ? '25s' : '20s';
 
   return (
     <>
-      {/* CSS for animations */}
+      {/* CSS for animations - different speeds per gender */}
       <style>{`
-        @keyframes rotateGlow {
-          0% { filter: hue-rotate(0deg) drop-shadow(0 0 8px rgba(0, 212, 255, 0.6)); }
-          50% { filter: hue-rotate(180deg) drop-shadow(0 0 12px rgba(255, 105, 180, 0.6)); }
-          100% { filter: hue-rotate(360deg) drop-shadow(0 0 8px rgba(0, 212, 255, 0.6)); }
+        @keyframes rotateGlow${gender} {
+          0% { filter: hue-rotate(0deg) drop-shadow(0 0 8px ${gender === 'male' ? 'rgba(59, 130, 246, 0.6)' : 'rgba(249, 115, 22, 0.6)'}); }
+          50% { filter: hue-rotate(180deg) drop-shadow(0 0 12px ${gender === 'male' ? 'rgba(6, 182, 212, 0.6)' : 'rgba(236, 72, 153, 0.6)'}); }
+          100% { filter: hue-rotate(360deg) drop-shadow(0 0 8px ${gender === 'male' ? 'rgba(59, 130, 246, 0.6)' : 'rgba(249, 115, 22, 0.6)'}); }
         }
-        @keyframes pulseRing {
+        @keyframes pulseRing${gender} {
           0%, 100% { transform: scale(1); opacity: 0.8; }
           50% { transform: scale(1.05); opacity: 1; }
         }
-        @keyframes dataSphereRotate {
+        @keyframes dataSphereRotate${gender} {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+        .rotate-glow-${gender} {
+          animation: rotateGlow${gender} ${rotationSpeed} linear infinite;
+        }
+        .pulse-ring-${gender} {
+          animation: pulseRing${gender} ${pulseSpeed} ease-in-out infinite;
+        }
+        .sphere-rotate-${gender} {
+          animation: dataSphereRotate${gender} ${sphereRotateSpeed} linear infinite;
         }
       `}</style>
 
@@ -426,32 +475,25 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
                 </defs>
               </svg>
               
-              {/* Baby image - fills to outer circle */}
+              {/* Sphere video background only - no angels */}
               <div 
                 className="absolute inset-1 rounded-full flex items-center justify-center overflow-hidden"
-                style={{
-                  background: `url(${DATA_SPHERE_URL}) center/cover`,
-                }}
               >
-                <AnimatePresence mode="wait">
-                  <motion.img
-                    key={currentBaby}
-                    src={currentBaby === 'boy' ? ANGEL_BOY_URL : ANGEL_GIRL_URL}
-                    alt={currentBaby === 'boy' ? 'Angel Boy' : 'Angel Girl'}
-                    className="w-9 h-9 object-cover rounded-full"
-                    initial={{ opacity: 0, scale: 0.6 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.6 }}
-                    transition={{ 
-                      duration: 2.5,
-                      ease: "easeInOut"
-                    }}
-                    style={{
-                      filter: 'invert(1) contrast(1.5)',
-                      mixBlendMode: 'screen'
-                    }}
-                  />
-                </AnimatePresence>
+                {/* Data Sphere Video Background */}
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  webkit-playsinline="true"
+                  className="absolute inset-0 w-full h-full object-cover rounded-full"
+                  style={{
+                    transform: 'scale(2)',
+                    WebkitTransform: 'scale(2)',
+                  }}
+                >
+                  <source src="/datasphere-bg.mp4" type="video/mp4" />
+                </video>
               </div>
 
               {/* Small Inner Loading Circle - Color based on gender */}
@@ -557,29 +599,25 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
                       </linearGradient>
                     </defs>
                   </svg>
-                  {/* Angel icon with data sphere background - inverted */}
+                  {/* Sphere video background only - no angels */}
                   <div 
                     className="absolute inset-0 rounded-full flex items-center justify-center overflow-hidden"
-                    style={{
-                      background: `url(${DATA_SPHERE_URL}) center/cover`,
-                    }}
                   >
-                    <AnimatePresence mode="wait">
-                      <motion.img
-                        key={currentBaby}
-                        src={currentBaby === 'boy' ? ANGEL_BOY_URL : ANGEL_GIRL_URL}
-                        alt={widgetName}
-                        className="w-12 h-12 object-cover rounded-full"
-                        initial={{ opacity: 0, scale: 0.6 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.6 }}
-                        transition={{ duration: 2.5, ease: "easeInOut" }}
-                        style={{ 
-                          filter: 'invert(1) contrast(1.5)',
-                          mixBlendMode: 'screen'
-                        }}
-                      />
-                    </AnimatePresence>
+                    {/* Data Sphere Video Background */}
+                    <video
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      webkit-playsinline="true"
+                      className="absolute inset-0 w-full h-full object-cover rounded-full"
+                      style={{
+                        transform: 'scale(2)',
+                        WebkitTransform: 'scale(2)',
+                      }}
+                    >
+                      <source src="/datasphere-bg.mp4" type="video/mp4" />
+                    </video>
                   </div>
                 </div>
                 
@@ -614,20 +652,19 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
                 >
                   {msg.type === 'assistant' && (
                     <div 
-                      className="w-8 h-8 rounded-full flex items-center justify-center mr-2 flex-shrink-0 overflow-hidden"
-                      style={{
-                        background: `url(${DATA_SPHERE_URL}) center/cover`,
-                      }}
+                      className="w-8 h-8 rounded-full flex items-center justify-center mr-2 flex-shrink-0 overflow-hidden relative"
                     >
-                      <img 
-                        src={currentBaby === 'boy' ? ANGEL_BOY_URL : ANGEL_GIRL_URL}
-                        alt=""
-                        className="w-7 h-7 object-cover rounded-full"
-                        style={{ 
-                          filter: 'invert(1) contrast(1.5)',
-                          mixBlendMode: 'screen'
-                        }}
-                      />
+                      {/* Mini video background only */}
+                      <video
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="absolute inset-0 w-full h-full object-cover rounded-full"
+                        style={{ transform: 'scale(2)' }}
+                      >
+                        <source src="/datasphere-bg.mp4" type="video/mp4" />
+                      </video>
                     </div>
                   )}
                   <div
