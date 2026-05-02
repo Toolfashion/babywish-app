@@ -8,8 +8,9 @@
  * - Cache μόνο για offline fallback
  */
 
-const CACHE_VERSION = 'v2.2.0';
+const CACHE_VERSION = 'v3.0.0';
 const CACHE_NAME = `babywish-${CACHE_VERSION}`;
+const BUILD_TIME = '20260502'; // Cache busting timestamp
 
 // Minimal static files to cache for offline
 const OFFLINE_FILES = [
@@ -18,6 +19,14 @@ const OFFLINE_FILES = [
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png'
+];
+
+// Files that should NEVER be cached (always fresh)
+const NO_CACHE_FILES = [
+  '/datasphere-bg.mp4',
+  '/chatwidget-bg.mp4',
+  '/galaxy-bg.mp4',
+  '/night-bg.jpg'
 ];
 
 // Install - Cache minimal files
@@ -86,6 +95,18 @@ self.addEventListener('fetch', (event) => {
   // API calls - Always network, no cache
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(fetch(request));
+    return;
+  }
+
+  // Video/Image assets - ALWAYS fresh, never cache
+  if (NO_CACHE_FILES.some(file => url.pathname.includes(file)) ||
+      url.pathname.endsWith('.mp4') || 
+      url.pathname.endsWith('.mov') ||
+      url.pathname.endsWith('.webm')) {
+    event.respondWith(
+      fetch(request, { cache: 'no-store' })
+        .catch(() => caches.match(request))
+    );
     return;
   }
 
