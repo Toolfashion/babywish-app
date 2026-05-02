@@ -9,9 +9,9 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 // Galaxy/Milky Way background for night theme
 const GALAXY_URL = "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/se8axh3p_IMG_6186.jpeg";
 
-const DATA_SPHERE_URL = "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/1tmd7oet_IMG_6191.jpeg";
+// Video background is now /datasphere-bg.mp4 in public folder
 
-// Angel images - line drawings (new versions)
+// Angel images - line drawings (kept for future use)
 const ANGEL_BOY_URL = "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/nva1ylbn_IMG_5956.jpeg";
 const ANGEL_GIRL_URL = "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/udsslgan_IMG_5955.jpeg";
 
@@ -414,15 +414,10 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
               onClick={() => !isDragging && setIsOpen(true)}
               className="relative w-12 h-12 flex items-center justify-center"
             >  
-              {/* Background Container - Static image as base, video overlay */}
+              {/* Background Container - New datasphere video */}
               <div 
                 className="absolute inset-0 rounded-full overflow-hidden"
-                style={{ 
-                  opacity: 0.85,
-                  background: `url(${DATA_SPHERE_URL}) center/cover`,
-                }}
               >
-                {/* Video overlay - will show on supported browsers */}
                 <video
                   autoPlay
                   loop
@@ -431,11 +426,11 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
                   webkit-playsinline="true"
                   className="absolute inset-0 w-full h-full object-cover"
                   style={{
-                    transform: 'scale(1.5)',
-                    WebkitTransform: 'scale(1.5)',
+                    transform: 'scale(2)',
+                    WebkitTransform: 'scale(2)',
                   }}
                 >
-                  <source src="/chatwidget-bg.mp4" type="video/mp4" />
+                  <source src="/datasphere-bg.mp4" type="video/mp4" />
                 </video>
               </div>
               
