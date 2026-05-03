@@ -12,6 +12,32 @@ import FloatingBabyClouds from '../components/FloatingBabyClouds';
 import SloganPickerWheel from '../components/SloganPickerWheel';
 import DescriptionPickerWheel from '../components/DescriptionPickerWheel';
 
+// Rainbow effect with slogan colors 🌈
+const rainbowStyle = `
+  @keyframes shimmer {
+    0% { background-position: -400% center; }
+    100% { background-position: 400% center; }
+  }
+  .shimmer-text {
+    background: linear-gradient(
+      90deg,
+      #f472b6 0%,
+      #c084fc 17%,
+      #60a5fa 34%,
+      #22d3ee 50%,
+      #2dd4bf 67%,
+      #fbbf24 84%,
+      #f472b6 100%
+    );
+    background-size: 400% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: shimmer 36s linear infinite;
+  }
+`;
+
 const LandingPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, loading } = useAuth();
@@ -48,6 +74,8 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden" data-testid="landing-page">
+      {/* Inject rainbow animation CSS */}
+      <style>{rainbowStyle}</style>
       <StarField />
       <FloatingBabyClouds />
       
@@ -56,31 +84,19 @@ const LandingPage = () => {
         <div
           className="relative px-4 py-1 overflow-hidden"
         >
-          {/* Animated Rainbow Background */}
+          {/* Static Gradient Background - no animation conflict */}
           <div className="absolute inset-0 overflow-hidden">
-            <style>{`
-              @keyframes rainbowShift {
-                0% { background-position: 0% 50%; }
-                50% { background-position: 100% 50%; }
-                100% { background-position: 0% 50%; }
-              }
-            `}</style>
             <div 
               style={{
                 position: 'absolute',
                 inset: 0,
                 background: `linear-gradient(90deg, 
-                  rgba(255,100,150,0.6), 
-                  rgba(255,180,100,0.6), 
-                  rgba(255,255,120,0.6), 
-                  rgba(120,255,150,0.6), 
-                  rgba(120,200,255,0.6), 
-                  rgba(200,150,255,0.6), 
-                  rgba(255,100,200,0.6),
-                  rgba(255,100,150,0.6)
+                  rgba(255,100,150,0.5), 
+                  rgba(200,150,255,0.5), 
+                  rgba(120,200,255,0.5), 
+                  rgba(255,100,150,0.5)
                 )`,
-                backgroundSize: '300% 100%',
-                animation: 'rainbowShift 8s ease-in-out infinite',
+                backgroundSize: '200% 100%',
               }}
             />
           </div>
@@ -92,7 +108,7 @@ const LandingPage = () => {
               <span className="text-sm">🎁</span>
               <span className="font-bold text-xs text-yellow-300 drop-shadow-lg">Launch 50%</span>
               <span className="text-xs text-white/80">5 videos + review</span>
-              <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">4/9</span>
+              <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">9/9</span>
             </div>
             
             {/* Line 2 - Free Pass 100% */}
@@ -100,7 +116,7 @@ const LandingPage = () => {
               <span className="text-sm">🌟</span>
               <span className="font-bold text-xs text-green-300 drop-shadow-lg">Free Pass 100%</span>
               <span className="text-xs text-white/80">9 videos + review</span>
-              <span className="text-[10px] bg-green-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">0/3</span>
+              <span className="text-[10px] bg-green-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">3/3</span>
               <Button
                 onClick={() => setShowPromoForm(true)}
                 size="sm"
@@ -121,7 +137,7 @@ const LandingPage = () => {
               className="flex items-center gap-1.5"
             >
               <Star className="w-5 h-5 text-amber-400 animate-pulse-slow" />
-              <h1 className="text-lg md:text-xl font-bold gradient-text" data-testid="app-title">
+              <h1 className="text-lg md:text-xl font-bold shimmer-text" data-testid="app-title">
                 {t.appTitle}
               </h1>
               {/* Beta Badge */}
@@ -212,17 +228,29 @@ const LandingPage = () => {
               <HandsWithEarth />
             </motion.div>
 
-            {/* Title */}
+            {/* Title with shimmer animation - giving life! */}
             <motion.h2
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight mb-6"
+              className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight mb-4"
             >
-              <span className="gradient-text">{t.heroTitle1}</span>
+              <span className="shimmer-text">{t.heroTitle1}</span>
               <br />
-              <span className="text-white">{t.heroTitle2}</span>
+              <span className="shimmer-text">{t.heroTitle2}</span>
+              <br />
+              <span className="shimmer-text">{t.heroTitle3 || t.heroTitle2}</span>
             </motion.h2>
+
+            {/* Tagline - Small text below title */}
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.22 }}
+              className="text-sm text-white/70 mb-6 max-w-lg mx-auto italic"
+            >
+              {t.heroTagline}
+            </motion.p>
 
             {/* Slogan - iOS Picker Wheel Style */}
             <motion.div
