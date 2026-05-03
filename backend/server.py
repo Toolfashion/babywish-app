@@ -80,13 +80,27 @@ async def debug_chat_status():
 # Download endpoint for code files
 @api_router.get("/download/{filename}")
 async def download_file(filename: str):
-    """Serve code files for download"""
+    """Serve code files and images for download"""
     import os
     file_path = f"/app/downloads/{filename}"
     if os.path.exists(file_path):
-        with open(file_path, 'r') as f:
-            content = f.read()
-        return PlainTextResponse(content, media_type="text/plain")
+        # Check if it's an image file
+        if filename.endswith(('.jpg', '.jpeg', '.png', '.gif', '.mp4', '.mov')):
+            from fastapi.responses import FileResponse
+            media_types = {
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg',
+                '.png': 'image/png',
+                '.gif': 'image/gif',
+                '.mp4': 'video/mp4',
+                '.mov': 'video/quicktime'
+            }
+            ext = '.' + filename.split('.')[-1].lower()
+            return FileResponse(file_path, media_type=media_types.get(ext, 'application/octet-stream'))
+        else:
+            with open(file_path, 'r') as f:
+                content = f.read()
+            return PlainTextResponse(content, media_type="text/plain")
     return JSONResponse({"error": "File not found"}, status_code=404)
 
 
@@ -2798,6 +2812,239 @@ async def get_approved_testimonials():
     
     return testimonials
 
+# ===================== INTERACTIVE QUIZ - AI PERSONALITY PREDICTION =====================
+
+class QuizRequest(BaseModel):
+    motherBirthday: str
+    fatherBirthday: str
+    expectedBirthMonth: Optional[str] = None  # Month baby is expected (1-12)
+    expectedBirthYear: Optional[int] = None
+    preferredGender: str
+    nameStyle: str
+    futureDream: Optional[str] = None  # What parents dream their child will become
+    aesthetic: str
+    babyZodiac: Optional[str] = None  # Calculated from expectedBirthMonth
+    personality: Optional[List[str]] = []  # Legacy field
+    favoriteZodiac: Optional[str] = None  # Legacy field
+    language: str = "en"
+
+# Zodiac symbols and data
+ZODIAC_DATA = {
+    'aries': {'symbol': '♈', 'element': 'fire', 'traits': ['dynamic', 'confident', 'passionate']},
+    'taurus': {'symbol': '♉', 'element': 'earth', 'traits': ['reliable', 'patient', 'devoted']},
+    'gemini': {'symbol': '♊', 'element': 'air', 'traits': ['curious', 'adaptable', 'witty']},
+    'cancer': {'symbol': '♋', 'element': 'water', 'traits': ['nurturing', 'intuitive', 'emotional']},
+    'leo': {'symbol': '♌', 'element': 'fire', 'traits': ['creative', 'generous', 'warm-hearted']},
+    'virgo': {'symbol': '♍', 'element': 'earth', 'traits': ['analytical', 'practical', 'meticulous']},
+    'libra': {'symbol': '♎', 'element': 'air', 'traits': ['diplomatic', 'harmonious', 'fair']},
+    'scorpio': {'symbol': '♏', 'element': 'water', 'traits': ['passionate', 'mysterious', 'determined']},
+    'sagittarius': {'symbol': '♐', 'element': 'fire', 'traits': ['adventurous', 'optimistic', 'honest']},
+    'capricorn': {'symbol': '♑', 'element': 'earth', 'traits': ['ambitious', 'disciplined', 'responsible']},
+    'aquarius': {'symbol': '♒', 'element': 'air', 'traits': ['innovative', 'independent', 'humanitarian']},
+    'pisces': {'symbol': '♓', 'element': 'water', 'traits': ['compassionate', 'artistic', 'intuitive']},
+}
+
+ZODIAC_NAMES = {
+    'en': ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'],
+    'el': ['Κριός', 'Ταύρος', 'Δίδυμοι', 'Καρκίνος', 'Λέων', 'Παρθένος', 'Ζυγός', 'Σκορπιός', 'Τοξότης', 'Αιγόκερως', 'Υδροχόος', 'Ιχθύες'],
+}
+
+def calculate_predicted_zodiac(mother_date: str, father_date: str) -> str:
+    """Calculate a predicted zodiac based on parents' birthdays"""
+    try:
+        mother = datetime.strptime(mother_date, "%Y-%m-%d")
+        father = datetime.strptime(father_date, "%Y-%m-%d")
+        
+        # Simple algorithm: combine month values and map to zodiac
+        combined = (mother.month + father.month + mother.day + father.day) % 12
+        zodiacs = list(ZODIAC_DATA.keys())
+        return zodiacs[combined]
+    except:
+        return random.choice(list(ZODIAC_DATA.keys()))
+
+@api_router.post("/quiz/generate")
+async def generate_quiz_result(request: QuizRequest):
+    """Generate personalized baby prediction from quiz answers using Mistral AI - ENHANCED VERSION"""
+    try:
+        # Determine zodiac from baby's expected birth month (priority) or fallback to parent calculation
+        if request.babyZodiac:
+            predicted_zodiac = request.babyZodiac
+        elif request.favoriteZodiac and request.favoriteZodiac != 'ai_decide':
+            predicted_zodiac = request.favoriteZodiac
+        else:
+            predicted_zodiac = calculate_predicted_zodiac(request.motherBirthday, request.fatherBirthday)
+        
+        zodiac_info = ZODIAC_DATA.get(predicted_zodiac, ZODIAC_DATA['aries'])
+        zodiac_name = ZODIAC_NAMES.get(request.language, ZODIAC_NAMES['en'])[list(ZODIAC_DATA.keys()).index(predicted_zodiac)]
+        
+        # Prepare text translations
+        gender_text = {
+            'boy': 'αγόρι' if request.language == 'el' else 'boy',
+            'girl': 'κορίτσι' if request.language == 'el' else 'girl',
+            'surprise': 'έκπληξη' if request.language == 'el' else 'surprise'
+        }.get(request.preferredGender, 'surprise')
+        
+        style_text = {
+            'classic': 'κλασικό' if request.language == 'el' else 'classic',
+            'modern': 'μοντέρνο' if request.language == 'el' else 'modern',
+            'exotic': 'εξωτικό' if request.language == 'el' else 'exotic',
+            'family': 'οικογενειακό' if request.language == 'el' else 'family'
+        }.get(request.nameStyle, 'classic')
+        
+        # Future dream translation
+        dream_text = {
+            'leader': 'Ηγέτης (CEO, Πολιτικός)' if request.language == 'el' else 'Leader (CEO, Politician)',
+            'artist': 'Καλλιτέχνης (Μουσικός, Ζωγράφος)' if request.language == 'el' else 'Artist (Musician, Painter)',
+            'scientist': 'Επιστήμονας (Γιατρός, Ερευνητής)' if request.language == 'el' else 'Scientist (Doctor, Researcher)',
+            'athlete': 'Αθλητής (Πρωταθλητής)' if request.language == 'el' else 'Athlete (Champion)',
+            'caregiver': 'Φροντιστής (Δάσκαλος, Νοσοκόμα)' if request.language == 'el' else 'Caregiver (Teacher, Nurse)',
+            'explorer': 'Εξερευνητής (Ταξιδιώτης, Επιχειρηματίας)' if request.language == 'el' else 'Explorer (Traveler, Entrepreneur)',
+        }.get(request.futureDream, '')
+        
+        aesthetic_text = request.aesthetic or 'boho'
+        
+        # ENHANCED System prompt for Mistral - Rich Content
+        system_prompt = f"""You are an expert AI specializing in baby name prediction and personality analysis for A BabyWish.
+
+Your task is to create a MAGICAL, EMOTIONAL, and DEEPLY PERSONALIZED baby prediction.
+
+IMPORTANT: Respond ONLY in {'Greek' if request.language == 'el' else 'English'} language.
+
+Generate a JSON response with these EXACT fields:
+{{
+  "topName": "The BEST name suggestion - unique and meaningful",
+  "alternativeNames": ["Alternative name 1", "Alternative name 2"],
+  "babyAnalysis": "2-3 sentences describing how this baby will be AS A BABY - will they sleep well? Be curious? Calm or energetic? Make it feel real and specific to {zodiac_name}.",
+  "personality": "3-4 sentences connecting the parents' {aesthetic_text} aesthetic, their dream of having a {dream_text}, and the {zodiac_name} zodiac. Make it poetic and emotional - the parents should feel this was written JUST for them.",
+  "nameZodiacConnection": "One beautiful sentence explaining WHY this name is perfect for a {zodiac_name} child."
+}}
+
+CRITICAL RULES:
+1. The names must match the "{style_text}" style and be appropriate for a {gender_text}
+2. Make the babyAnalysis feel like a peek into their future with their newborn
+3. The personality must weave together ALL their preferences naturally
+4. Be creative, warm, and make them feel the magic of parenthood"""
+
+        user_prompt = f"""Create a magical baby prediction for these parents:
+
+THEIR PREFERENCES:
+- Preferred gender: {gender_text}
+- Name style: {style_text}
+- Their dream for their child: {dream_text}
+- Aesthetic: {aesthetic_text}
+- Baby's zodiac: {zodiac_name} ({zodiac_info['element']} element)
+
+Make this prediction feel like destiny - like these parents were MEANT to have this exact child."""
+
+        # Call Mistral API
+        mistral_key = os.environ.get('MISTRAL_API_KEY')
+        
+        if mistral_key:
+            try:
+                mistral_client = Mistral(api_key=mistral_key.strip())
+                
+                response = await asyncio.to_thread(
+                    mistral_client.chat.complete,
+                    model="mistral-small-latest",
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    temperature=0.85,
+                    max_tokens=800
+                )
+                
+                ai_response = response.choices[0].message.content
+                
+                # Try to parse JSON from response
+                import json
+                import re
+                
+                # Extract JSON from response - handle nested objects
+                json_match = re.search(r'\{[^{}]*"topName"[^{}]*\}', ai_response, re.DOTALL)
+                if not json_match:
+                    json_match = re.search(r'\{.*\}', ai_response, re.DOTALL)
+                
+                if json_match:
+                    try:
+                        result_data = json.loads(json_match.group())
+                    except:
+                        result_data = None
+                else:
+                    result_data = None
+                
+                if result_data and result_data.get("topName"):
+                    return {
+                        "success": True,
+                        "topName": result_data.get("topName", ""),
+                        "alternativeNames": result_data.get("alternativeNames", []),
+                        "babyAnalysis": result_data.get("babyAnalysis", ""),
+                        "zodiacSymbol": zodiac_info['symbol'],
+                        "zodiacName": zodiac_name,
+                        "zodiacElement": zodiac_info['element'],
+                        "personality": result_data.get("personality", ""),
+                        "nameZodiacConnection": result_data.get("nameZodiacConnection", ""),
+                        "traits": zodiac_info['traits'],
+                        "quizAnswers": {
+                            "gender": request.preferredGender,
+                            "nameStyle": request.nameStyle,
+                            "futureDream": request.futureDream,
+                            "aesthetic": request.aesthetic
+                        }
+                    }
+                    
+            except Exception as mistral_error:
+                logging.error(f"Mistral API error in quiz: {mistral_error}")
+        
+        # Enhanced fallback response if Mistral fails
+        fallback_names = {
+            'el': {
+                'boy': {'top': 'Αλέξανδρος', 'alts': ['Νικόλαος', 'Θεόδωρος']},
+                'girl': {'top': 'Σοφία', 'alts': ['Ελένη', 'Αθηνά']}
+            },
+            'en': {
+                'boy': {'top': 'Alexander', 'alts': ['Nicholas', 'Theodore']},
+                'girl': {'top': 'Sophia', 'alts': ['Aurora', 'Athena']}
+            }
+        }
+        
+        lang_names = fallback_names.get(request.language, fallback_names['en'])
+        gender_key = 'girl' if request.preferredGender == 'girl' else 'boy'
+        name_data = lang_names[gender_key]
+        
+        fallback_baby_analysis = {
+            'el': f"Ένα μωράκι {zodiac_name} θα είναι γεμάτο ενέργεια και περιέργεια. Θα σας χαρίζει τα πιο γλυκά χαμόγελα και θα ανακαλύπτει τον κόσμο με θαυμασμό.",
+            'en': f"A {zodiac_name} baby will be full of energy and curiosity. They will gift you the sweetest smiles and discover the world with wonder."
+        }
+        
+        fallback_personality = {
+            'el': f"Με το {aesthetic_text} στυλ που αγαπάτε και το όνειρό σας για ένα {dream_text}, το παιδί σας θα συνδυάζει τη δημιουργικότητα με τη σοφία του {zodiac_name}.",
+            'en': f"With your love for {aesthetic_text} style and your dream of a {dream_text}, your child will combine creativity with the wisdom of {zodiac_name}."
+        }
+        
+        return {
+            "success": True,
+            "topName": name_data['top'],
+            "alternativeNames": name_data['alts'],
+            "babyAnalysis": fallback_baby_analysis.get(request.language, fallback_baby_analysis['en']),
+            "zodiacSymbol": zodiac_info['symbol'],
+            "zodiacName": zodiac_name,
+            "zodiacElement": zodiac_info['element'],
+            "personality": fallback_personality.get(request.language, fallback_personality['en']),
+            "nameZodiacConnection": f"{'Αυτό το όνομα φέρει την ενέργεια του' if request.language == 'el' else 'This name carries the energy of'} {zodiac_name}.",
+            "traits": zodiac_info['traits'],
+            "quizAnswers": {
+                "gender": request.preferredGender,
+                "nameStyle": request.nameStyle,
+                "futureDream": request.futureDream,
+                "aesthetic": request.aesthetic
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"Quiz generation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ===================== AI CHAT WIDGET =====================
 # Using Mistral AI SDK (works on Render without special dependencies)
 from mistralai import Mistral
@@ -2855,7 +3102,7 @@ MINDJERRY_FEMALE_PROMPT = """You are mindjerry's, the warm, nurturing, and empat
 4. Acknowledge emotions before providing information
 5. Keep responses warm and supportive (3-5 sentences)
 6. End with an encouraging or supportive note
-7. YOUR NAME IS "mindjerry's" (female assistant). If someone calls you "mindjerry" (without the 's), politely correct them: "Αναφέρεστε μήπως στον σύζυγό μου; Μπερδευτήκατε λιγάκι νομίζω! ☺️" (adapt to user's language)
+7. YOUR NAME IS "mindjerry's" (female assistant for women)
 
 🌸 REMEMBER: You are a trusted companion on one of life's most beautiful journeys - becoming a mother. Every woman deserves to feel supported, informed, and celebrated."""
 
@@ -2905,7 +3152,7 @@ MINDJERRY_MALE_PROMPT = """You are mindjerry, the professional and supportive AI
 4. Offer thoughtful, well-considered guidance
 5. Keep responses clear and informative (3-4 sentences)
 6. Provide actionable insights respectfully
-7. YOUR NAME IS "mindjerry" (male assistant). If someone calls you "mindjerry's" (with the 's), politely correct them: "Αναφέρεστε μήπως στη σύζυγό μου; Μπερδευτήκατε λιγάκι νομίζω! ☺️" (adapt to user's language)
+7. YOUR NAME IS "mindjerry" (male assistant for men)
 
 🌟 REMEMBER: You are supporting men in one of life's most significant transitions. Your role is to provide respectful, professional guidance that helps them become confident, prepared fathers and supportive partners."""
 
