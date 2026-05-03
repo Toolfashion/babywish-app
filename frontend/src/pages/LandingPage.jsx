@@ -11,6 +11,7 @@ import LanguageSelector from '../components/LanguageSelector';
 import FloatingBabyClouds from '../components/FloatingBabyClouds';
 import SloganPickerWheel from '../components/SloganPickerWheel';
 import DescriptionPickerWheel from '../components/DescriptionPickerWheel';
+import InteractiveQuiz from '../components/InteractiveQuiz';
 
 // Rainbow effect with slogan colors 🌈
 const rainbowStyle = `
@@ -62,17 +63,20 @@ const LandingPage = () => {
   };
 
   // Dynamic features based on language with icons and actions
+  const [showQuiz, setShowQuiz] = useState(false);
+  
   const showComingSoonMessage = () => {
     alert(t.featureComingSoon || "This feature is coming soon! Our software is being updated. 🚀");
   };
 
   const features = [
-    { name: t.feature1, icon: "👶", action: () => navigate('/names') },
+    { name: t.feature1, icon: "👶", action: () => setShowQuiz(true) },
     { name: t.feature2, icon: "🏥", action: showComingSoonMessage },
     { name: t.feature3, icon: "🏠", action: showComingSoonMessage },
   ];
 
   return (
+    <>
     <div className="min-h-screen relative overflow-hidden" data-testid="landing-page">
       {/* Inject rainbow animation CSS */}
       <style>{rainbowStyle}</style>
@@ -293,45 +297,77 @@ const LandingPage = () => {
               <DescriptionPickerWheel />
             </motion.div>
 
-            {/* Features - Interactive */}
+            {/* AI Fun & Lifestyle Section - FREE */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
-              className="flex flex-wrap justify-center gap-4 mb-10"
+              className="mb-10"
             >
-              {features.map((feature) => (
-                <motion.button
-                  key={feature.name}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={feature.action}
-                  className="px-5 py-3 rounded-2xl bg-white/10 border border-white/20 text-sm text-white hover:bg-white/20 active:bg-white/30 transition-all cursor-pointer touch-manipulation select-none min-w-[140px]"
-                  style={{ WebkitTapHighlightColor: 'transparent' }}
-                  data-testid={`feature-btn-${feature.name}`}
-                >
-                  <span className="text-xl mb-1 block">{feature.icon}</span>
-                  <span className="whitespace-pre-line text-xs leading-tight">{feature.name}</span>
-                </motion.button>
-              ))}
+              {/* Section Header with FREE Badge */}
+              <div className="text-center mb-4">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 mb-2">
+                  <span className="text-lg">✨</span>
+                  <span className="text-white font-semibold text-sm">AI Fun & Lifestyle</span>
+                  <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-500 text-white rounded-full animate-pulse">
+                    {t.free || 'ΔΩΡΕΑΝ'}
+                  </span>
+                </div>
+                <p className="text-white/50 text-xs">
+                  {t.funModulesSubtitle || 'Παίξτε, εμπνευστείτε, μοιραστείτε!'}
+                </p>
+              </div>
+              
+              {/* Feature Buttons */}
+              <div className="flex flex-wrap justify-center gap-4">
+                {features.map((feature) => (
+                  <motion.button
+                    key={feature.name}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={feature.action}
+                    className="px-5 py-3 rounded-2xl bg-white/10 border border-white/20 text-sm text-white hover:bg-white/20 active:bg-white/30 transition-all cursor-pointer touch-manipulation select-none min-w-[140px]"
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
+                    data-testid={`feature-btn-${feature.name}`}
+                  >
+                    <span className="text-xl mb-1 block">{feature.icon}</span>
+                    <span className="whitespace-pre-line text-xs leading-tight">{feature.name}</span>
+                  </motion.button>
+                ))}
+              </div>
             </motion.div>
 
-            {/* CTA Button */}
+            {/* Premium Prediction CTA */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
+              className="text-center"
             >
+              {/* PRO Badge */}
+              <div className="inline-flex items-center gap-2 mb-3">
+                <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full shadow-lg shadow-amber-500/30">
+                  PRO
+                </span>
+                <span className="text-white/60 text-sm">{t.premiumPrediction || 'Επαγγελματική Πρόβλεψη'}</span>
+              </div>
+              
               <Button
                 data-testid="get-started-btn"
                 onClick={handleGetStarted}
-                className="px-10 py-6 text-lg font-bold rounded-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg shadow-purple-500/25 btn-glow animate-glow-pulse"
+                className="px-10 py-6 text-lg font-bold rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500 hover:from-amber-600 hover:via-orange-600 hover:to-pink-600 shadow-lg shadow-orange-500/25 btn-glow animate-glow-pulse"
               >
                 <span className="flex items-center gap-3">
-                  {t.getStarted}
+                  <span>🎯</span>
+                  {t.getProfessionalPrediction || 'Λάβετε την Πρόβλεψη'}
                   <ArrowRight className="w-5 h-5" />
                 </span>
               </Button>
+              
+              {/* Sub-text */}
+              <p className="text-amber-400/80 text-xs mt-2 font-medium">
+                {t.biologicalCycles || 'Βιολογικοί Κύκλοι'} • 95% {t.accuracy || 'Ακρίβεια'}
+              </p>
             </motion.div>
 
             {/* Pricing Preview */}
@@ -409,6 +445,8 @@ const LandingPage = () => {
           </div>
         </footer>
       </div>
+    </div>
+      
       {/* Promo Application Modal */}
       <PromoApplicationModal
         isOpen={showPromoForm}
@@ -423,7 +461,18 @@ const LandingPage = () => {
           alert('✅ Η αίτησή σας υποβλήθηκε επιτυχώς! Θα λάβετε email εντός 24-48 ωρών.');
         }}
       />
-    </div>
+      
+      {/* Interactive Quiz Modal */}
+      {showQuiz && (
+        <InteractiveQuiz 
+          onClose={() => setShowQuiz(false)}
+          onComplete={(result) => {
+            setShowQuiz(false);
+            navigate('/pricing');
+          }}
+        />
+      )}
+    </>
   );
 };
 
