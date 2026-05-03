@@ -112,7 +112,7 @@ const LandingPage = () => {
               <span className="text-sm">🎁</span>
               <span className="font-bold text-xs text-yellow-300 drop-shadow-lg">Launch 50%</span>
               <span className="text-xs text-white/80">5 videos + review</span>
-              <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">9/9</span>
+              <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">4/9</span>
             </div>
             
             {/* Line 2 - Free Pass 100% */}
@@ -120,7 +120,7 @@ const LandingPage = () => {
               <span className="text-sm">🌟</span>
               <span className="font-bold text-xs text-green-300 drop-shadow-lg">Free Pass 100%</span>
               <span className="text-xs text-white/80">9 videos + review</span>
-              <span className="text-[10px] bg-green-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">3/3</span>
+              <span className="text-[10px] bg-green-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">0/3</span>
               <Button
                 onClick={() => setShowPromoForm(true)}
                 size="sm"
