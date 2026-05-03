@@ -237,7 +237,7 @@ const LandingPage = () => {
             >
               <span className="shimmer-text">{t.heroTitle1}</span>
               <br />
-              <span className="shimmer-text">{t.heroTitle2}</span>
+              <span className="text-white">{t.heroTitle2}</span>
               <br />
               <span className="shimmer-text">{t.heroTitle3 || t.heroTitle2}</span>
             </motion.h2>
