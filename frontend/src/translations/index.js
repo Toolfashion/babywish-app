@@ -26,6 +26,13 @@ export const translations = {
     feature2: "Gesundheit-Bildung\nFreizeit",
     feature3: "Lifestyle\nKleidung-Zuhause",
     getStarted: "Jetzt Starten",
+    // Fun Modules vs Premium
+    free: "KOSTENLOS",
+    funModulesSubtitle: "Spielen, inspirieren, teilen!",
+    premiumPrediction: "Professionelle Vorhersage",
+    getProfessionalPrediction: "Vorhersage erhalten",
+    biologicalCycles: "Biologische Zyklen",
+    accuracy: "Genauigkeit",
     priceFrom: "Ab €10 für eine vollständige Vorhersage",
     footer: "Nur zu Unterhaltungszwecken",
     
@@ -181,6 +188,13 @@ export const translations = {
     feature2: "Health-Education\nFree time",
     feature3: "Lifestyle\nClothing-Home",
     getStarted: "Get Started",
+    // Fun Modules vs Premium
+    free: "FREE",
+    funModulesSubtitle: "Play, get inspired, share!",
+    premiumPrediction: "Professional Prediction",
+    getProfessionalPrediction: "Get Your Prediction",
+    biologicalCycles: "Biological Cycles",
+    accuracy: "Accuracy",
     priceFrom: "From €10 for a complete prediction",
     footer: "For entertainment purposes only",
     
@@ -1515,6 +1529,12 @@ export const translations = {
     feature3: "Lifestyle\nΈνδυση-Σπίτι",
     featureComingSoon: "Αυτή η λειτουργία δεν είναι ακόμα διαθέσιμη. Το λογισμικό μας ενημερώνεται σύντομα! 🚀",
     getStarted: "Ξεκινήστε",
+    // Fun Modules vs Premium
+    free: "ΔΩΡΕΑΝ",
+    funModulesSubtitle: "Παίξτε, εμπνευστείτε, μοιραστείτε!",
+    premiumPrediction: "Επαγγελματική Πρόβλεψη",
+    getProfessionalPrediction: "Λάβετε την Πρόβλεψη",
+    biologicalCycles: "Βιολογικοί Κύκλοι",
     priceFrom: "Από €10 για πλήρη πρόβλεψη",
     footer: "Μόνο για ψυχαγωγικούς σκοπούς",
     
