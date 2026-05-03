@@ -679,4 +679,3 @@ const InteractiveQuiz = ({ onClose, onComplete }) => {
 };
 
 export default InteractiveQuiz;
-
