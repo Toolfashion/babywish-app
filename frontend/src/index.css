@@ -34,7 +34,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #05020D;
   color: #F8FAFC;
+  /* iOS Safari: Use dvh for dynamic viewport height */
   min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
   /* iOS Safari: Critical - prevent body transform from breaking fixed children */
   -webkit-transform: none;
   transform: none;
@@ -42,6 +45,11 @@ body {
   transform-style: flat;
   /* iOS Safari: Smooth scrolling */
   -webkit-overflow-scrolling: touch;
+  /* iOS Safe Area */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 /* iOS Safari: Ensure #root doesn't create transform context */
@@ -50,6 +58,27 @@ body {
   transform: none;
   -webkit-transform-style: flat;
   transform-style: flat;
+  /* iOS: Dynamic viewport height */
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+}
+
+/* iOS Safe Area for headers */
+header, nav, .header, .navbar {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* iOS Safe Area for footers */
+footer, .footer, .bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Main content container - iOS fix */
+.min-h-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
 }
 
 h1, h2, h3, h4, h5, h6 {
