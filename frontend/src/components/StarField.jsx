@@ -236,10 +236,11 @@ const StarField = () => {
   const nightVideoUrl = "/galaxy-bg.mp4";
 
   // Day background - changes based on day of week
+  // Use 'cover' and clip bottom to hide photographer watermark in image
   const dayBackground = {
     backgroundImage: `url('${currentBackground.url}')`,
-    backgroundSize: '100% 100%',
-    backgroundPosition: 'center center',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center top',
     backgroundRepeat: 'no-repeat',
   };
 
