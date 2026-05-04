@@ -8,9 +8,9 @@
  * - Cache μόνο για offline fallback
  */
 
-const CACHE_VERSION = 'v3.0.0';
+const CACHE_VERSION = 'v4.0.0';
 const CACHE_NAME = `babywish-${CACHE_VERSION}`;
-const BUILD_TIME = '20260502'; // Cache busting timestamp
+const BUILD_TIME = '20260504'; // Cache busting timestamp
 
 // Minimal static files to cache for offline
 const OFFLINE_FILES = [
@@ -24,9 +24,13 @@ const OFFLINE_FILES = [
 // Files that should NEVER be cached (always fresh)
 const NO_CACHE_FILES = [
   '/datasphere-bg.mp4',
-  '/chatwidget-bg.mp4',
-  '/galaxy-bg.mp4',
-  '/night-bg.jpg'
+  '/night-bg.jpg',
+  '/IMG_6219.jpeg',
+  '/IMG_6220.jpeg',
+  '/IMG_6221.jpeg',
+  '/IMG_6222.jpeg',
+  '/IMG_6223.jpeg',
+  '/IMG_6224.jpeg'
 ];
 
 // Install - Cache minimal files
