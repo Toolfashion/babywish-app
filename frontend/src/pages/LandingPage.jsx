@@ -227,11 +227,12 @@ const LandingPage = () => {
             </motion.div>
 
             {/* Title with shimmer animation - giving life! */}
+            {/* Responsive text size - smaller for longer languages like German */}
             <motion.h2
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight mb-4"
+              className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight mb-4"
             >
               <span className="shimmer-text">{t.heroTitle1}</span>
               <br />
