@@ -126,8 +126,7 @@ const StarField = () => {
       
       // It's night if before sunrise or after sunset
       const isNightTime = currentTime < sunriseTime || currentTime >= sunsetTime;
-      // TESTING: Force night to show shooting star
-      setIsNight(true);
+      setIsNight(isNightTime);
       
       // Set day of week (0 = Sunday, 1 = Monday, etc.)
       setDayOfWeek(now.getDay());
