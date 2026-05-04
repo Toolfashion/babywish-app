@@ -1,28 +1,27 @@
 /**
  * A BabyWish PWA Service Worker
  * ===========================
- * SINGLE CODEBASE - Αλλαγές εμφανίζονται αυτόματα σε iOS & Android
+ * VERSION 5.0.0 - FORCE CACHE CLEAR
  * 
- * Strategy: Network First with Cache Fallback
- * - Πάντα παίρνει fresh content από server
- * - Cache μόνο για offline fallback
+ * Strategy: Network First - ALWAYS fetch fresh content
  */
 
-const CACHE_VERSION = 'v4.0.0';
+const CACHE_VERSION = 'v5.0.0';
 const CACHE_NAME = `babywish-${CACHE_VERSION}`;
-const BUILD_TIME = '20260504'; // Cache busting timestamp
+const BUILD_TIME = '20260504-force';
 
-// Minimal static files to cache for offline
+// Minimal static files to cache for offline ONLY
 const OFFLINE_FILES = [
-  '/',
-  '/index.html',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png'
 ];
 
-// Files that should NEVER be cached (always fresh)
+// Files that should NEVER be cached (always fresh from network)
 const NO_CACHE_FILES = [
+  '/',
+  '/index.html',
+  '/static/',
   '/datasphere-bg.mp4',
   '/night-bg.jpg',
   '/IMG_6219.jpeg',
@@ -30,7 +29,10 @@ const NO_CACHE_FILES = [
   '/IMG_6221.jpeg',
   '/IMG_6222.jpeg',
   '/IMG_6223.jpeg',
-  '/IMG_6224.jpeg'
+  '/IMG_6224.jpeg',
+  '.jsx',
+  '.js',
+  '.css'
 ];
 
 // Install - Cache minimal files
@@ -114,18 +116,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // HTML/JS/CSS - Network First with Cache Fallback
+  // HTML/JS/CSS - ALWAYS Network, minimal caching
   event.respondWith(
-    fetch(request)
+    fetch(request, { cache: 'no-store' })
       .then((response) => {
-        // Cache successful responses for offline
-        if (response.ok) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
-          });
-        }
         return response;
+      })
+      .catch(() => {
+        // Only use cache when offline
+        return caches.match(request);
+      });
       })
       .catch(() => {
         // Offline - try cache
