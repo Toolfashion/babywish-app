@@ -115,19 +115,13 @@ const LandingPage = () => {
               <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">4/9</span>
             </div>
             
-            {/* Line 2 - Free Pass 100% */}
-            <div className="flex items-center gap-2 flex-wrap justify-center">
+            {/* Line 2 - Free Pass 100% - SOLD OUT */}
+            <div className="flex items-center gap-2 flex-wrap justify-center opacity-60">
               <span className="text-sm">🌟</span>
-              <span className="font-bold text-xs text-green-300 drop-shadow-lg">Free Pass 100%</span>
+              <span className="font-bold text-xs text-green-300 drop-shadow-lg line-through">Free Pass 100%</span>
               <span className="text-xs text-white/80">9 videos + review</span>
-              <span className="text-[10px] bg-green-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">0/3</span>
-              <Button
-                onClick={() => setShowPromoForm(true)}
-                size="sm"
-                className="font-semibold text-[10px] px-2 py-0.5 h-5 bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:from-pink-600 hover:to-purple-600 rounded-full shadow-md ml-1"
-              >
-                📝 Αίτηση
-              </Button>
+              <span className="text-[10px] bg-gray-500 text-white px-1.5 py-0.5 rounded-full">0/3</span>
+              <span className="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded-full font-bold">SOLD OUT</span>
             </div>
           </div>
         </div>
