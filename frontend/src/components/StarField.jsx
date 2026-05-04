@@ -3,50 +3,59 @@ import { useEffect, useRef, useState } from 'react';
 const StarField = () => {
   const containerRef = useRef(null);
   const [isNight, setIsNight] = useState(true);
-  const [dayOfWeek, setDayOfWeek] = useState(0);
+  const [dayOfWeek, setDayOfWeek] = useState(1);
   const [sunTimes, setSunTimes] = useState({ sunrise: '07:00', sunset: '20:30' });
 
-  // 6-DAY ROTATION + Sunday default
+  // 6-DAY ROTATION PROGRAM (Monday-Saturday)
   // ========================================
+  // Sunday shows Monday's image (no separate Sunday)
   const BACKGROUND_ENABLED = true;
   
-  // Day backgrounds - photographer credits embedded in images
-  // Sunday (0) = default beach image, Monday-Saturday (1-6) = metropolis photos
+  // Day backgrounds with photographer credits
+  // Monday (1) to Saturday (6) - 6 Metropolis Photos
+  // URLs point to LOCAL files in /public folder
   const dayBackgrounds = [
-    // Sunday (0) - Default romantic beach sunset
+    // Index 0 - Used for Sunday, shows Monday's image
     { 
-      url: "https://images.unsplash.com/photo-1566942482387-e8dc927e5829?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHw0fHxjb3VwbGUlMjB3YWxraW5nJTIwYmVhY2glMjBkaXN0YW50JTIwc21hbGwlMjBzaWxob3VldHRlJTIwdHJvcGljYWwlMjBzdW5zZXQlMjB3aWRlJTIwbGFuZHNjYXBlJTIwc2t5JTIwc2VhfGVufDB8fHx8MTc3NzAxOTA3Mnww&ixlib=rb-4.1.0&q=85",
-      photographer: null 
+      url: "/IMG_6219.jpeg",
+      city: "New York",
+      photographer: "Tom Fournier"
     },
     // Monday (1) - New York
     { 
-      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/v2j15krb_IMG_6219.heic",
-      photographer: null 
+      url: "/IMG_6219.jpeg",
+      city: "New York",
+      photographer: "Tom Fournier"
     },
     // Tuesday (2) - Tokyo
     { 
-      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/g8bjibiu_IMG_6220.heic",
-      photographer: null 
+      url: "/IMG_6220.jpeg",
+      city: "Tokyo",
+      photographer: "Phil Evenden"
     },
     // Wednesday (3) - Paris
     { 
-      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/35pivlsw_IMG_6221.heic",
-      photographer: null 
+      url: "/IMG_6221.jpeg",
+      city: "Paris",
+      photographer: "Bente Justin"
     },
     // Thursday (4) - Moscow
     { 
-      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/wd56ikl1_IMG_6222.heic",
-      photographer: null 
+      url: "/IMG_6222.jpeg",
+      city: "Moscow",
+      photographer: "Roman Verton"
     },
     // Friday (5) - New Delhi
     { 
-      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/bewhk2ln_IMG_6223.heic",
-      photographer: null 
+      url: "/IMG_6223.jpeg",
+      city: "New Delhi",
+      photographer: "Monojit Dutta"
     },
     // Saturday (6) - Sydney
     { 
-      url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/auf7tvv8_IMG_6224.heic",
-      photographer: null 
+      url: "/IMG_6224.jpeg",
+      city: "Sydney",
+      photographer: "Adrian Rubiales"
     },
   ];
 
@@ -117,7 +126,8 @@ const StarField = () => {
       
       // It's night if before sunrise or after sunset
       const isNightTime = currentTime < sunriseTime || currentTime >= sunsetTime;
-      setIsNight(isNightTime);
+      // TESTING: Force night to show shooting star
+      setIsNight(true);
       
       // Set day of week (0 = Sunday, 1 = Monday, etc.)
       setDayOfWeek(now.getDay());
