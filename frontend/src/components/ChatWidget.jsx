@@ -418,12 +418,18 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
               <div 
                 className="absolute inset-0 rounded-full overflow-hidden"
               >
+                {/* Fallback background for iOS */}
+                <div 
+                  className="absolute inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-cyan-900"
+                  style={{ background: `url(${GALAXY_URL}) center/cover` }}
+                />
                 <video
                   autoPlay
                   loop
                   muted
                   playsInline
                   webkit-playsinline="true"
+                  preload="auto"
                   className="absolute inset-0 w-full h-full object-cover"
                   style={{
                     transform: 'scale(2)',
@@ -474,6 +480,11 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
               <div 
                 className="absolute inset-1 rounded-full flex items-center justify-center overflow-hidden"
               >
+                {/* Fallback background for iOS */}
+                <div 
+                  className="absolute inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-cyan-900 rounded-full"
+                  style={{ background: `url(${GALAXY_URL}) center/cover` }}
+                />
                 {/* Data Sphere Video Background */}
                 <video
                   autoPlay
@@ -481,6 +492,7 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
                   muted
                   playsInline
                   webkit-playsinline="true"
+                  preload="auto"
                   className="absolute inset-0 w-full h-full object-cover rounded-full"
                   style={{
                     transform: 'scale(2)',
@@ -540,10 +552,10 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
             initial={{ opacity: 0, y: 100, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 100, scale: 0.9 }}
-            className="fixed bottom-32 right-4 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[520px] rounded-2xl shadow-2xl border border-purple-500/30 flex flex-col overflow-hidden ios-fixed"
+            className={`fixed bottom-32 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[520px] rounded-2xl shadow-2xl border border-purple-500/30 flex flex-col overflow-hidden ios-fixed ${side === 'left' ? 'left-4' : 'right-4'}`}
             style={{
               position: 'fixed',
-              right: '16px',
+              ...(side === 'left' ? { left: '16px' } : { right: '16px' }),
               bottom: '128px',
               zIndex: 9999,
               background: 'linear-gradient(180deg, rgba(15, 10, 30, 0.98) 0%, rgba(30, 20, 50, 0.98) 100%)',
@@ -598,6 +610,11 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
                   <div 
                     className="absolute inset-0 rounded-full flex items-center justify-center overflow-hidden"
                   >
+                    {/* Fallback background for iOS */}
+                    <div 
+                      className="absolute inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-cyan-900 rounded-full"
+                      style={{ background: `url(${GALAXY_URL}) center/cover` }}
+                    />
                     {/* Data Sphere Video Background */}
                     <video
                       autoPlay
@@ -605,6 +622,7 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
                       muted
                       playsInline
                       webkit-playsinline="true"
+                      preload="auto"
                       className="absolute inset-0 w-full h-full object-cover rounded-full"
                       style={{
                         transform: 'scale(2)',
@@ -623,7 +641,7 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
                       LIVE
                     </span>
                   </h3>
-                  <p className="text-cyan-300/70 text-xs">{gender === 'male' ? 'Data-Driven Baby Gender AI' : 'Family Psychology AI'}</p>
+                  <p className="text-cyan-300/70 text-xs">Family Psychology AI</p>
                 </div>
               </div>
               
@@ -740,10 +758,10 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
               {/* Branding */}
               <div className="flex justify-center items-center gap-2 mt-3 pt-2 border-t border-purple-500/10">
                 <span className="text-[10px] text-purple-400/60">Powered by</span>
-                <span className="text-[10px] font-bold bg-gradient-to-r from-cyan-400 to-pink-400 bg-clip-text text-transparent">
-                  AI Mindjerry
+                <span className="text-[10px] font-bold bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-400 bg-clip-text text-transparent">
+                  AI The Mindjerrs
                 </span>
-                <span className="text-[10px] text-purple-400/60">• Data-Driven Baby Gender AI</span>
+                <span className="text-[10px] text-purple-400/60">• Data-Driven Baby Gender Agenten</span>
               </div>
             </div>
           </motion.div>
