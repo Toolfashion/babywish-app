@@ -1,0 +1,15 @@
+# BabyWish Robots.txt
+# https://getbabywish.com
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://getbabywish.com/sitemap.xml
+
+# Canonical domain
+Host: https://getbabywish.com
+
+# Disallow preview/staging environments
+Disallow: /*.preview.emergentagent.com
+Disallow: /*preview*
