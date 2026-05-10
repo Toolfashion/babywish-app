@@ -8,19 +8,16 @@ const StarField = () => {
 
   // 6-DAY ROTATION PROGRAM (Monday-Saturday)
   // ========================================
-  // Sunday shows Monday's image (no separate Sunday)
+  // Sunday (0) = Basic starry background (night-bg.jpg) - NO metropolis
+  // Monday (1) to Saturday (6) = Metropolis photos
   const BACKGROUND_ENABLED = true;
   
   // Day backgrounds with photographer credits
   // Monday (1) to Saturday (6) - 6 Metropolis Photos
   // URLs point to LOCAL files in /public folder
   const dayBackgrounds = [
-    // Index 0 - Used for Sunday, shows Monday's image
-    { 
-      url: "/IMG_6219.jpeg",
-      city: "New York",
-      photographer: "Tom Fournier"
-    },
+    // Index 0 - Sunday: NO PHOTO (null = use basic background)
+    null,
     // Monday (1) - New York
     { 
       url: "/IMG_6219.jpeg",
@@ -59,8 +56,11 @@ const StarField = () => {
     },
   ];
 
-  // Get current day's background and photographer (with safeguard)
-  const currentBackground = dayBackgrounds[dayOfWeek] || dayBackgrounds[0];
+  // Get current day's background (null for Sunday = basic background)
+  const currentBackground = dayBackgrounds[dayOfWeek];
+  
+  // Check if we should show metropolis photo (Monday-Saturday only, and during daytime)
+  const showMetropolisPhoto = !isNight && currentBackground !== null && dayOfWeek >= 1 && dayOfWeek <= 6;
 
   // Fetch sunrise/sunset times based on user's location (IP-based)
   useEffect(() => {
@@ -235,24 +235,24 @@ const StarField = () => {
   // Night background video URL - MP4 format for better browser compatibility
   const nightVideoUrl = "/galaxy-bg.mp4";
 
-  // Day background - changes based on day of week
+  // Day background - changes based on day of week (Monday-Saturday only)
   // Use 'cover' and clip bottom to hide photographer watermark in image
-  const dayBackground = {
+  const dayBackground = showMetropolisPhoto ? {
     backgroundImage: `url('${currentBackground.url}')`,
     backgroundSize: 'cover',
     backgroundPosition: 'center top',
     backgroundRepeat: 'no-repeat',
-  };
+  } : {};
 
   return (
     <>
       {/* Background with smooth day/night transition */}
       <div 
         className="fixed inset-0 z-0 transition-all duration-1000"
-        style={!isNight ? dayBackground : {}}
+        style={showMetropolisPhoto ? dayBackground : {}}
       >
-        {/* Night Background Image */}
-        {isNight && (
+        {/* Night/Sunday Background Image - shows at night OR on Sunday */}
+        {(isNight || dayOfWeek === 0) && (
           <div
             className="absolute inset-0"
             style={{ 
@@ -268,16 +268,16 @@ const StarField = () => {
         {/* Overlay - darker at night, subtle during day */}
         <div 
           className={`absolute inset-0 transition-all duration-1000 ${
-            isNight ? 'bg-[#05020D]/30' : 'bg-black/20'
+            (isNight || dayOfWeek === 0) ? 'bg-[#05020D]/30' : 'bg-black/20'
           }`} 
         />
         
-        {/* Photographer credit - bottom left, handwritten style */}
-        {!isNight && currentBackground.photographer && (
+        {/* Photographer credit - bottom left, lower position */}
+        {showMetropolisPhoto && currentBackground.photographer && (
           <div 
             className="absolute z-50"
             style={{
-              bottom: 'calc(env(safe-area-inset-bottom, 0px) + 60px)',
+              bottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)',
               left: '12px',
               fontFamily: "'Dancing Script', cursive",
               fontSize: '11px',
@@ -299,8 +299,8 @@ const StarField = () => {
         aria-hidden="true"
       />
       
-      {/* Shooting stars (night only) */}
-      {isNight && <ShootingStars />}
+      {/* Shooting stars (night or Sunday) */}
+      {(isNight || dayOfWeek === 0) && <ShootingStars />}
     </>
   );
 };
