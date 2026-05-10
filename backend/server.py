@@ -31,8 +31,8 @@ stripe.api_key = stripe_api_key
 
 # Resend Email
 resend.api_key = os.environ.get('RESEND_API_KEY')
-NOTIFICATION_EMAIL = os.environ.get('NOTIFICATION_EMAIL', 'getbabywish@hotmail.com')
-SENDER_EMAIL = "getbabywish@outlook.com"
+NOTIFICATION_EMAIL = os.environ.get('NOTIFICATION_EMAIL', 'getbabywish@protonmail.com')
+SENDER_EMAIL = "getbabywish@protonmail.com"
 
 # Create the main app without a prefix
 app = FastAPI()
@@ -1952,7 +1952,7 @@ async def get_my_predictions(user: dict = Depends(get_current_user)):
 
 # ===================== ADMIN PREDICTION APPROVAL =====================
 
-ADMIN_EMAILS = ["owner@getbabywish.com", "getbabywish@outlook.com", "getbabywish@hotmail.com"]
+ADMIN_EMAILS = ["owner@getbabywish.com", "getbabywish@protonmail.com", "getbabywish@hotmail.com"]
 
 async def get_admin_user(user: dict = Depends(get_current_user)):
     """Check if user is admin"""
@@ -2724,7 +2724,7 @@ async def submit_refund_request(request: RefundRequest):
         """
         
         sender_email = os.environ.get('SENDER_EMAIL', 'noreply@getbabywish.com')
-        admin_email = os.environ.get('ADMIN_EMAIL', 'getbabywish@hotmail.com')
+        admin_email = os.environ.get('ADMIN_EMAIL', 'getbabywish@protonmail.com')
         
         resend.api_key = os.environ.get('RESEND_API_KEY')
         if resend.api_key:
