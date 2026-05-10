@@ -30,7 +30,7 @@ const TermsPage = () => {
       setRefundEmail('');
       setRefundReason('');
     } catch (error) {
-      toast.error('Failed to submit request. Please email us directly at getbabywish@hotmail.com');
+      toast.error('Failed to submit request. Please email us directly at getbabywish@protonmail.com');
     } finally {
       setIsSubmitting(false);
     }
@@ -211,7 +211,7 @@ const TermsPage = () => {
                 </h2>
                 <p className="mb-2">For any questions, refund requests, or concerns:</p>
                 <ul className="space-y-1">
-                  <li><strong>Email:</strong> getbabywish@hotmail.com</li>
+                  <li><strong>Email:</strong> getbabywish@protonmail.com</li>
                   <li><strong>Website:</strong> getbabywish.com</li>
                 </ul>
               </section>
