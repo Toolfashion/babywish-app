@@ -22,18 +22,18 @@ const SloganPickerWheel = () => {
     },
   ];
 
-  // Auto-rotate slogans every 6 seconds (slower)
+  // Auto-rotate slogans every 9 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       // Slide out
       setSlideDirection('out');
       
-      // After slide out animation, change slogan and slide in
+      // After slide out animation completes, change slogan and slide in
       setTimeout(() => {
         setActiveIndex((prev) => (prev + 1) % slogans.length);
         setSlideDirection('in');
-      }, 800); // Match the CSS transition duration
-    }, 6000); // 6 seconds between changes
+      }, 1200); // Wait for slide out to complete
+    }, 9000); // 9 seconds between changes
 
     return () => clearInterval(interval);
   }, [slogans.length]);
@@ -81,10 +81,10 @@ const SloganPickerWheel = () => {
           50% { background-position: 100% 50%; }
         }
         .slogan-slide-in {
-          animation: slideInFromBottom 0.8s ease-out forwards;
+          animation: slideInFromBottom 1.2s ease-out forwards;
         }
         .slogan-slide-out {
-          animation: slideOutToTop 0.8s ease-in forwards;
+          animation: slideOutToTop 1.2s ease-in forwards;
         }
         .rainbow-text {
           background: linear-gradient(90deg, #f472b6, #c084fc, #60a5fa, #22d3ee, #2dd4bf, #fbbf24, #f472b6);
