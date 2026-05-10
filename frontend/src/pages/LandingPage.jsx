@@ -42,7 +42,7 @@ const rainbowStyle = `
 const LandingPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, loading } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [showPromoForm, setShowPromoForm] = useState(false);
   const [promoFormData, setPromoFormData] = useState({
     email: '',
@@ -112,7 +112,7 @@ const LandingPage = () => {
               <span className="text-sm">🎁</span>
               <span className="font-bold text-xs text-yellow-300 drop-shadow-lg">Launch 50%</span>
               <span className="text-xs text-white/80">5 videos + review</span>
-              <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">4/9</span>
+              <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">2/9</span>
             </div>
             
             {/* Line 2 - Free Pass 100% - SOLD OUT */}
@@ -227,12 +227,16 @@ const LandingPage = () => {
             </motion.div>
 
             {/* Title with shimmer animation - giving life! */}
-            {/* Responsive text size - smaller for longer languages like German */}
+            {/* Responsive text size - smaller for longer languages like German/Turkish */}
             <motion.h2
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight mb-4"
+              className={`font-black tracking-tight mb-4 ${
+                ['de', 'tr'].includes(language) 
+                  ? 'text-xl sm:text-2xl lg:text-3xl' 
+                  : 'text-2xl sm:text-3xl lg:text-4xl'
+              }`}
             >
               <span className="shimmer-text">{t.heroTitle1}</span>
               <br />
@@ -261,25 +265,32 @@ const LandingPage = () => {
               <SloganPickerWheel />
             </motion.div>
 
-            {/* Guarantee Banner - Moved up */}
+            {/* Guarantee Banner */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3 }}
-              className="glass rounded-2xl p-6 max-w-xl mx-auto mb-6 border border-amber-500/30"
+              className="glass rounded-xl px-4 py-2.5 max-w-sm mx-auto mb-6 border border-amber-500/30"
             >
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <span className="text-3xl">🎯</span>
-                <span className="text-2xl md:text-3xl font-black text-amber-400">95%</span>
-                <span className="text-white font-semibold text-lg">{t.accuracy}</span>
+              {/* Accuracy Section */}
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xl">🎯</span>
+                <div>
+                  <span className="text-xl font-black text-amber-400">95%</span>
+                  <span className="text-white font-medium text-sm ml-1">{t.accuracy || 'Ακρίβεια'}</span>
+                </div>
               </div>
-              <p className="text-white text-center font-medium mb-2">
-                {t.guaranteeText} <span className="text-amber-400 font-bold">{t.guaranteeBold}</span> {t.guaranteeEnd}
+              <p className="text-white/80 text-xs mb-3">
+                {t.accuracyDesc || 'Το A Babywish σας λέει με 95% βεβαιότητα το φύλο του μελλοντικού σας παιδιού.'}
               </p>
-              <p className="text-center text-sm text-emerald-400 font-semibold flex items-center justify-center gap-2">
-                <span>💰</span>
-                {t.moneyBack}
-              </p>
+              
+              {/* Money Back Section */}
+              <div className="flex items-start gap-2 pt-2 border-t border-white/10">
+                <span className="text-lg">💰</span>
+                <p className="text-emerald-400/90 text-xs">
+                  {t.moneyBackFull || 'Με μας δε ρισκάρετε τα χρήματά σας. Σας τα επιστρέφουμε πίσω αν η πρόβλεψή μας δεν είναι η αρχική μας διάγνωση.'}
+                </p>
+              </div>
             </motion.div>
 
             {/* Description - iOS Picker Wheel Style */}
