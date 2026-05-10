@@ -23,7 +23,7 @@ const DescriptionPickerWheel = () => {
     },
   ];
 
-  // Auto-rotate descriptions every 5 seconds
+  // Auto-rotate descriptions every 9 seconds (same as SloganPickerWheel)
   useEffect(() => {
     const interval = setInterval(() => {
       setSlideDirection('out');
@@ -31,8 +31,8 @@ const DescriptionPickerWheel = () => {
       setTimeout(() => {
         setActiveIndex((prev) => (prev + 1) % descriptions.length);
         setSlideDirection('in');
-      }, 600);
-    }, 5000);
+      }, 1200); // Wait for slide out to complete
+    }, 9000); // 9 seconds between changes
 
     return () => clearInterval(interval);
   }, [descriptions.length]);
@@ -80,10 +80,10 @@ const DescriptionPickerWheel = () => {
           50% { background-position: 100% 50%; }
         }
         .desc-slide-in {
-          animation: descSlideInFromBottom 0.6s ease-out forwards;
+          animation: descSlideInFromBottom 1.2s ease-out forwards;
         }
         .desc-slide-out {
-          animation: descSlideOutToTop 0.6s ease-in forwards;
+          animation: descSlideOutToTop 1.2s ease-in forwards;
         }
         .rainbow-text-desc {
           background: linear-gradient(90deg, #f472b6, #c084fc, #60a5fa, #22d3ee, #2dd4bf, #fbbf24, #f472b6);
