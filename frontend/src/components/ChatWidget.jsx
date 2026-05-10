@@ -119,6 +119,29 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
   // Different starting positions: Male starts at 0, Female starts at 50 (opposite side)
   const [loadingProgress, setLoadingProgress] = useState(gender === 'male' ? 0 : 50);
   const messagesEndRef = useRef(null);
+  const videoRef1 = useRef(null);
+  const videoRef2 = useRef(null);
+  const videoRef3 = useRef(null);
+  
+  // iOS video autoplay fix - try to play videos on any user interaction
+  useEffect(() => {
+    const playVideos = () => {
+      [videoRef1, videoRef2, videoRef3].forEach(ref => {
+        if (ref.current) {
+          ref.current.play().catch(() => {});
+        }
+      });
+    };
+    
+    // Try to play on first touch/click
+    document.addEventListener('touchstart', playVideos, { once: true });
+    document.addEventListener('click', playVideos, { once: true });
+    
+    return () => {
+      document.removeEventListener('touchstart', playVideos);
+      document.removeEventListener('click', playVideos);
+    };
+  }, []);
   
   // Color based on gender
   const accentColor = gender === 'male' ? '#00D4FF' : '#FF69B4'; // Blue for male, Pink for female
@@ -424,6 +447,7 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
                   style={{ background: `url(${GALAXY_URL}) center/cover` }}
                 />
                 <video
+                  ref={videoRef1}
                   autoPlay
                   loop
                   muted
@@ -487,6 +511,7 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
                 />
                 {/* Data Sphere Video Background */}
                 <video
+                  ref={videoRef2}
                   autoPlay
                   loop
                   muted
@@ -617,6 +642,7 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
                     />
                     {/* Data Sphere Video Background */}
                     <video
+                      ref={videoRef3}
                       autoPlay
                       loop
                       muted
