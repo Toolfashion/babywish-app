@@ -257,7 +257,7 @@ const StarField = () => {
             className="absolute inset-0"
             style={{ 
               zIndex: -1,
-              backgroundImage: 'url(/night-bg.jpg)',
+              backgroundImage: 'url(/IMG_6527.jpeg)',
               backgroundSize: 'cover',
               backgroundPosition: 'left center',
               backgroundRepeat: 'no-repeat'
