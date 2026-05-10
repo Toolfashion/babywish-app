@@ -17,9 +17,23 @@ const FacebookIcon = ({ className }) => (
   </svg>
 );
 
+// Instagram Icon Component
+const InstagramIcon = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+  </svg>
+);
+
+// X (Twitter) Icon Component
+const XIcon = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+  </svg>
+);
+
 // Single Floating Button Component
 const FloatingReelButton = ({ 
-  type, // 'tiktok' or 'facebook'
+  type, // 'tiktok', 'facebook', 'instagram', or 'twitter'
   videos,
   initialPosition,
   t
@@ -53,9 +67,13 @@ const FloatingReelButton = ({
   const VISIBLE_ITEMS = 5;
 
   const isTikTok = type === 'tiktok';
-  const label = isTikTok ? 'Reels' : 'Faceb.';
-  const Icon = isTikTok ? TikTokIcon : FacebookIcon;
-  // Same gradient for both buttons
+  const isFacebook = type === 'facebook';
+  const isInstagram = type === 'instagram';
+  const isTwitter = type === 'twitter';
+  
+  const label = isTikTok ? 'Reels.' : isFacebook ? 'Faceb.' : isInstagram ? 'Insta.' : 'X-Twi.';
+  const Icon = isTikTok ? TikTokIcon : isFacebook ? FacebookIcon : isInstagram ? InstagramIcon : XIcon;
+  // Same gradient for all buttons
   const gradientClass = 'from-cyan-600 to-purple-600';
 
   // Wheel scroll handler for the picker
@@ -205,11 +223,13 @@ const FloatingReelButton = ({
             boxShadow: isDragging ? '0 0 30px rgba(34, 211, 238, 0.5)' : '0 0 20px rgba(34, 211, 238, 0.3)'
           }}
           exit={{ opacity: 0, scale: 0.8 }}
-          className={`fixed z-50 bg-gradient-to-r ${gradientClass} rounded-full ${isMobile ? 'px-2 py-1.5' : 'px-3 py-2'} flex items-center gap-1.5 shadow-lg transition-shadow ios-fixed ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+          className={`fixed z-50 bg-gradient-to-r ${gradientClass} rounded-full ${isMobile ? 'px-2 py-1.5' : 'px-3 py-2'} flex items-center justify-center gap-1.5 shadow-lg transition-shadow ios-fixed ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
           style={{
             position: 'fixed',
             left: `${position.x}px`,
             top: `${position.y}px`,
+            width: '65px',
+            whiteSpace: 'nowrap',
             zIndex: 9998,
             userSelect: 'none',
             touchAction: 'none',
@@ -376,33 +396,41 @@ const FloatingReelButton = ({
   );
 };
 
-// Main component that renders both buttons
+// Main component that renders all 4 buttons
 const FloatingVideoCarousel = () => {
   const { t } = useLanguage();
   
-  // Calculate positions - always on the RIGHT side
+  // Calculate positions - all 4 buttons in a row on the LEFT side
+  // Using fixed equal spacing between all buttons
   const calculatePositions = () => {
     if (typeof window === 'undefined') {
-      return { tiktok: { x: 300, y: 200 }, facebook: { x: 300, y: 255 } };
+      return { 
+        tiktok: { x: 8, y: 200 }, 
+        facebook: { x: 78, y: 200 },
+        instagram: { x: 148, y: 200 },
+        twitter: { x: 218, y: 200 }
+      };
     }
     const isMobile = window.innerWidth < 768;
-    const screenWidth = window.innerWidth;
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     
     // LEFT side position - below BABYWISH logo
-    const leftPosition = isMobile ? 20 : 30;
+    const leftPosition = isMobile ? 8 : 16;
     
     // Y position - below the BABYWISH logo (accounting for iOS safe area)
-    // Moved up by 34px (0.9cm)
     const baseY = isIOS ? (isMobile ? 126 : 146) : (isMobile ? 106 : 126);
     
-    // TikTok first, Facebook second (horizontal arrangement)
-    const buttonWidth = isMobile ? 85 : 95;
-    const gap = 64; // 1.7cm distance between buttons
+    // All buttons same width (65px) + same gap (48px) = 113px step
+    // This ensures equal visual gaps between all buttons
+    const buttonWidth = 65;
+    const gap = 48;
+    const step = buttonWidth + gap;
     
     return {
       tiktok: { x: leftPosition, y: baseY },
-      facebook: { x: leftPosition + buttonWidth + gap, y: baseY }
+      facebook: { x: leftPosition + step, y: baseY },
+      instagram: { x: leftPosition + step * 2, y: baseY },
+      twitter: { x: leftPosition + step * 3, y: baseY }
     };
   };
   
@@ -442,10 +470,28 @@ const FloatingVideoCarousel = () => {
     { id: 4, url: 'https://www.facebook.com/share/r/1Efwdv5fgw/?mibextid=wwXIfr', label: '4', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/o0lfvl81_IMG_5933.jpeg' },
     { id: 5, url: 'https://www.facebook.com/share/v/1BAJnfbpAa/?mibextid=wwXIfr', label: '5', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/0frrsvhw_IMG_5934.jpeg' },
   ];
+
+  // Instagram reels - using profile link for now, can be updated with specific reel links
+  const instagramVideos = [
+    { id: 1, url: 'https://www.instagram.com/getbabywish/', label: '1', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/oxbjiq84_IMG_5930.jpeg' },
+    { id: 2, url: 'https://www.instagram.com/getbabywish/', label: '2', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/pjwbilpb_IMG_5931.jpeg' },
+    { id: 3, url: 'https://www.instagram.com/getbabywish/', label: '3', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/d9p8e2mj_IMG_5932.jpeg' },
+    { id: 4, url: 'https://www.instagram.com/getbabywish/', label: '4', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/o0lfvl81_IMG_5933.jpeg' },
+    { id: 5, url: 'https://www.instagram.com/getbabywish/', label: '5', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/0frrsvhw_IMG_5934.jpeg' },
+  ];
+
+  // X/Twitter videos - using profile link for now, can be updated with specific video links
+  const twitterVideos = [
+    { id: 1, url: 'https://x.com/getbabywish', label: '1', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/oxbjiq84_IMG_5930.jpeg' },
+    { id: 2, url: 'https://x.com/getbabywish', label: '2', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/pjwbilpb_IMG_5931.jpeg' },
+    { id: 3, url: 'https://x.com/getbabywish', label: '3', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/d9p8e2mj_IMG_5932.jpeg' },
+    { id: 4, url: 'https://x.com/getbabywish', label: '4', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/o0lfvl81_IMG_5933.jpeg' },
+    { id: 5, url: 'https://x.com/getbabywish', label: '5', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/0frrsvhw_IMG_5934.jpeg' },
+  ];
   
   return (
     <>
-      {/* TikTok Reels Button - Left side, first */}
+      {/* TikTok Reels Button - 1st */}
       <FloatingReelButton 
         type="tiktok"
         videos={tiktokVideos}
@@ -453,11 +499,27 @@ const FloatingVideoCarousel = () => {
         t={t}
       />
       
-      {/* Facebook Reels Button - Left side, next to TikTok */}
+      {/* Facebook Reels Button - 2nd */}
       <FloatingReelButton 
         type="facebook"
         videos={facebookVideos}
         initialPosition={positions.facebook}
+        t={t}
+      />
+      
+      {/* Instagram Reels Button - 3rd */}
+      <FloatingReelButton 
+        type="instagram"
+        videos={instagramVideos}
+        initialPosition={positions.instagram}
+        t={t}
+      />
+      
+      {/* X/Twitter Button - 4th */}
+      <FloatingReelButton 
+        type="twitter"
+        videos={twitterVideos}
+        initialPosition={positions.twitter}
         t={t}
       />
     </>
