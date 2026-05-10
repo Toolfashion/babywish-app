@@ -432,7 +432,7 @@ const LandingPage = () => {
                 </svg>
               </a>
               <a
-                href="mailto:getbabywish@hotmail.com"
+                href="mailto:getbabywish@protonmail.com"
                 className="text-white/60 hover:text-cyan-400 transition-colors"
                 data-testid="social-email"
               >
