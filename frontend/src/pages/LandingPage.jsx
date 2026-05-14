@@ -14,6 +14,7 @@ import DescriptionPickerWheel from '../components/DescriptionPickerWheel';
 import InteractiveQuiz from '../components/InteractiveQuiz';
 import MilestonePredictor from '../components/MilestonePredictor';
 import BabyCertificate from '../components/BabyCertificate';
+import SocialPickerWheel from '../components/SocialPickerWheel';
 
 // Rainbow effect with slogan colors 🌈
 const rainbowStyle = `
@@ -389,71 +390,40 @@ const LandingPage = () => {
             >
               {t.priceFrom}
             </motion.p>
+
+            {/* Social Picker Wheel - Between price and terms */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              style={{ marginTop: '90px' }}
+            >
+              <SocialPickerWheel />
+            </motion.div>
+
+            {/* Terms & Disclaimer - Stays between ChatWidgets */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+              className="text-center"
+              style={{ marginTop: '60px' }}
+            >
+              <p className="text-xs text-muted-foreground/50">
+                {t.footer}
+              </p>
+              <button 
+                onClick={() => navigate('/terms')}
+                className="text-xs text-purple-400 hover:text-purple-300 underline mt-1"
+              >
+                Terms & Conditions | Refund Policy
+              </button>
+            </motion.div>
           </div>
         </main>
 
-        {/* Footer */}
-        <footer className="py-8 border-t border-white/10">
-          <div className="max-w-6xl mx-auto px-4">
-            {/* Social Media Links */}
-            <div className="flex justify-center gap-6 mb-4">
-              <a
-                href="https://instagram.com/getbabywish"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/60 hover:text-pink-400 transition-colors"
-                data-testid="social-instagram"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a
-                href="https://facebook.com/babywish"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/60 hover:text-blue-400 transition-colors"
-                data-testid="social-facebook"
-              >
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a
-                href="https://x.com/getbabywish"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/60 hover:text-sky-400 transition-colors"
-                data-testid="social-twitter"
-              >
-                <Twitter className="w-5 h-5" />
-              </a>
-              <a
-                href="https://tiktok.com/@getbabywish"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/60 hover:text-white transition-colors"
-                data-testid="social-tiktok"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/>
-                </svg>
-              </a>
-              <a
-                href="mailto:getbabywish@protonmail.com"
-                className="text-white/60 hover:text-cyan-400 transition-colors"
-                data-testid="social-email"
-              >
-                <Mail className="w-5 h-5" />
-              </a>
-            </div>
-            <p className="text-xs text-muted-foreground/50 text-center">
-              {t.footer}
-            </p>
-            <button 
-              onClick={() => navigate('/terms')}
-              className="text-xs text-purple-400 hover:text-purple-300 underline mt-1 block mx-auto text-center"
-            >
-              Terms & Conditions | Refund Policy
-            </button>
-          </div>
-        </footer>
+        {/* Empty footer spacer for ChatWidgets */}
+        <footer className="py-2"></footer>
       </div>
     </div>
       
