@@ -13,6 +13,7 @@ import SloganPickerWheel from '../components/SloganPickerWheel';
 import DescriptionPickerWheel from '../components/DescriptionPickerWheel';
 import InteractiveQuiz from '../components/InteractiveQuiz';
 import MilestonePredictor from '../components/MilestonePredictor';
+import BabyCertificate from '../components/BabyCertificate';
 
 // Rainbow effect with slogan colors 🌈
 const rainbowStyle = `
@@ -66,6 +67,7 @@ const LandingPage = () => {
   // Dynamic features based on language with icons and actions
   const [showQuiz, setShowQuiz] = useState(false);
   const [showMilestone, setShowMilestone] = useState(false);
+  const [showCertificate, setShowCertificate] = useState(false);
   
   const showComingSoonMessage = () => {
     alert(t.featureComingSoon || "This feature is coming soon! Our software is being updated. 🚀");
@@ -74,7 +76,7 @@ const LandingPage = () => {
   const features = [
     { name: t.feature1, icon: "👶", action: () => setShowQuiz(true) },
     { name: t.feature2, icon: "🏥", action: () => setShowMilestone(true) },
-    { name: t.feature3, icon: "🏠", action: showComingSoonMessage },
+    { name: t.feature3, icon: "🏠", action: () => setShowCertificate(true) },
   ];
 
   return (
@@ -484,6 +486,12 @@ const LandingPage = () => {
       {showMilestone && (
         <MilestonePredictor 
           onClose={() => setShowMilestone(false)}
+        />
+      )}
+      
+      {showCertificate && (
+        <BabyCertificate 
+          onClose={() => setShowCertificate(false)}
         />
       )}
     </>
