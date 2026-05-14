@@ -10,14 +10,28 @@ const SpotifyIcon = ({ className }) => (
 );
 
 // Vangelis Track ID from user
-const VANGELIS_TRACK_ID = "3uNFRvQVEIEsQgHdZFw6Dk";
+// Multiple playlists to shuffle between
+const SPOTIFY_PLAYLISTS = [
+  '37i9dQZF1DX8tYYl2HSCud',
+  '37i9dQZF1DWX7suNVq3K4h',
+];
 
 const SpotifyMiniPlayer = ({ onClose, onMinimize, isMinimized }) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [currentPlaylistIndex, setCurrentPlaylistIndex] = useState(0);
   const dragStartPos = useRef({ x: 0, y: 0 });
   const dragStartOffset = useRef({ x: 0, y: 0 });
   const playerRef = useRef(null);
+
+  // Get random playlist on first load
+  useEffect(() => {
+    setCurrentPlaylistIndex(Math.floor(Math.random() * SPOTIFY_PLAYLISTS.length));
+  }, []);
+
+  const nextPlaylist = () => {
+    setCurrentPlaylistIndex((prev) => (prev + 1) % SPOTIFY_PLAYLISTS.length);
+  };
 
   // Initialize position - centered bottom
   useEffect(() => {
@@ -129,11 +143,11 @@ const SpotifyMiniPlayer = ({ onClose, onMinimize, isMinimized }) => {
             </div>
           </div>
 
-          {/* Spotify Embed Player - Always mounted */}
+          {/* Spotify Embed Player - Playlist mode */}
           <div className="p-2">
             <iframe
-              title="Vangelis Player"
-              src={`https://open.spotify.com/embed/track/${VANGELIS_TRACK_ID}?utm_source=generator&theme=0`}
+              title="BabyWish Music"
+              src={`https://open.spotify.com/embed/playlist/${SPOTIFY_PLAYLISTS[currentPlaylistIndex]}?utm_source=generator&theme=0`}
               width="100%"
               height="152"
               frameBorder="0"
@@ -143,11 +157,17 @@ const SpotifyMiniPlayer = ({ onClose, onMinimize, isMinimized }) => {
             />
           </div>
 
-          {/* Footer */}
-          <div className="px-3 pb-3 text-center">
+          {/* Footer with next playlist button */}
+          <div className="px-3 pb-3 flex items-center justify-between">
             <p className="text-white/40 text-[10px]">
-              🎵 Vangelis Papathanasiou
+              🎵 BabyWish Music
             </p>
+            <button
+              onClick={nextPlaylist}
+              className="text-white/50 hover:text-white text-[10px] px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              ↻ Next Playlist
+            </button>
           </div>
         </motion.div>
       </div>
