@@ -69,19 +69,14 @@ const AppFooter = () => {
         }}
       >
         <div className="flex items-center justify-center py-2 px-4 gap-3">
-          {/* Left Cupid */}
-          <div 
-            className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0"
-            style={{
-              background: 'radial-gradient(circle, rgba(64, 224, 208, 0.2) 0%, transparent 70%)',
-            }}
-          >
+          {/* Left Cupid - Brand Logo with Transparent Background */}
+          <div className="w-12 h-12 flex-shrink-0">
             <img 
-              src="/cupid-left.jpg" 
-              alt="Cupid" 
-              className="w-full h-full object-cover"
+              src="/cupid-left.png" 
+              alt="BabyWish Cupid Logo Left" 
+              className="w-full h-full object-contain"
               style={{
-                mixBlendMode: 'lighten',
+                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
               }}
             />
           </div>
@@ -115,19 +110,14 @@ const AppFooter = () => {
             </p>
           </div>
           
-          {/* Right Cupid */}
-          <div 
-            className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0"
-            style={{
-              background: 'radial-gradient(circle, rgba(64, 224, 208, 0.2) 0%, transparent 70%)',
-            }}
-          >
+          {/* Right Cupid - Brand Logo with Transparent Background */}
+          <div className="w-12 h-12 flex-shrink-0">
             <img 
-              src="/cupid-right.jpg" 
-              alt="Cupid" 
-              className="w-full h-full object-cover"
+              src="/cupid-right.png" 
+              alt="BabyWish Cupid Logo Right" 
+              className="w-full h-full object-contain"
               style={{
-                mixBlendMode: 'lighten',
+                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
               }}
             />
           </div>
