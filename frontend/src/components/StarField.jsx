@@ -1,377 +1,130 @@
-import { useEffect, useRef, useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
-const StarField = () => {
-  const containerRef = useRef(null);
-  const [isNight, setIsNight] = useState(true);
-  const [dayOfWeek, setDayOfWeek] = useState(1);
-  const [sunTimes, setSunTimes] = useState({ sunrise: '07:00', sunset: '20:30' });
+const AppFooter = () => {
+  const { language } = useLanguage();
 
-  // 6-DAY ROTATION PROGRAM (Monday-Saturday)
-  // ========================================
-  // Sunday (0) = Basic starry background (night-bg.jpg) - NO metropolis
-  // Monday (1) to Saturday (6) = Metropolis photos
-  const BACKGROUND_ENABLED = true;
-  
-  // Day backgrounds with photographer credits
-  // Monday (1) to Saturday (6) - 6 Metropolis Photos
-  // URLs point to LOCAL files in /public folder
-  const dayBackgrounds = [
-    // Index 0 - Sunday: NO PHOTO (null = use basic background)
-    null,
-    // Monday (1) - New York
-    { 
-      url: "/IMG_6219.jpeg",
-      city: "New York",
-      photographer: "Tom Fournier"
-    },
-    // Tuesday (2) - Tokyo
-    { 
-      url: "/IMG_6220.jpeg",
-      city: "Tokyo",
-      photographer: "Phil Evenden"
-    },
-    // Wednesday (3) - Paris
-    { 
-      url: "/IMG_6221.jpeg",
-      city: "Paris",
-      photographer: "Bente Justin"
-    },
-    // Thursday (4) - Moscow
-    { 
-      url: "/IMG_6222.jpeg",
-      city: "Moscow",
-      photographer: "Roman Verton"
-    },
-    // Friday (5) - New Delhi
-    { 
-      url: "/IMG_6223.jpeg",
-      city: "New Delhi",
-      photographer: "Monojit Dutta"
-    },
-    // Saturday (6) - Sydney
-    { 
-      url: "/IMG_6224.jpeg",
-      city: "Sydney",
-      photographer: "Adrian Rubiales"
-    },
-  ];
+  // Slogan translations - "Love, invincible in battle!" from Antigone by Sophocles
+  const sloganTranslations = {
+    en: "Love, invincible in battle!",
+    el: "Ἔρως ἀνίκατε μάχαν!",
+    de: "Eros, unbesiegbar im Kampf!",
+    fr: "Éros, invincible au combat!",
+    es: "¡Eros, invencible en batalla!",
+    it: "Eros, invincibile in battaglia!",
+    pt: "Eros, invencível na batalha!",
+    nl: "Eros, onoverwinnelijk in de strijd!",
+    pl: "Eros, niezwyciężony w walce!",
+    ru: "Эрос, непобедимый в битве!",
+    uk: "Ерос, непереможний у битві!",
+    zh: "爱神，战无不胜！",
+    ja: "エロス、戦いに無敵！",
+    ko: "에로스, 전투에서 무적!",
+    ar: "إيروس، الذي لا يُقهر في المعركة!",
+    hi: "इरोस, युद्ध में अजेय!",
+    tr: "Eros, savaşta yenilmez!",
+    vi: "Eros, bất khả chiến bại!",
+    fa: "اروس، شکست‌ناپذیر در نبرد!",
+    sv: "Eros, oövervinnelig i strid!",
+    sr: "Ерос, непобедив у боју!",
+    cs: "Eros, nepřemožitelný v boji!"
+  };
 
-  // Get current day's background (null for Sunday = basic background)
-  const currentBackground = dayBackgrounds[dayOfWeek];
-  
-  // Check if we should show metropolis photo (Monday-Saturday only, and during daytime)
-  const showMetropolisPhoto = !isNight && currentBackground !== null && dayOfWeek >= 1 && dayOfWeek <= 6;
+  // Artist credits translations - "From Antigone by Sophocles"
+  const creditTranslations = {
+    en: "From Antigone by Sophocles",
+    el: "Από την Αντιγόνη του Σοφοκλή",
+    de: "Aus Antigone von Sophokles",
+    fr: "D'Antigone de Sophocle",
+    es: "De Antígona de Sófocles",
+    it: "Da Antigone di Sofocle",
+    pt: "De Antígona de Sófocles",
+    nl: "Uit Antigone van Sophocles",
+    pl: "Z Antygony Sofoklesa",
+    ru: "Из Антигоны Софокла",
+    uk: "З Антігони Софокла",
+    zh: "出自索福克勒斯《安提戈涅》",
+    ja: "ソポクレス『アンティゴネー』より",
+    ko: "소포클레스의 안티고네에서",
+    ar: "من أنتيجون لسوفوكليس",
+    hi: "सोफोक्लीस की एंटीगोन से",
+    tr: "Sofokles'in Antigone'sinden",
+    vi: "Từ Antigone của Sophocles",
+    fa: "از آنتیگون اثر سوفوکل",
+    sv: "Från Antigone av Sofokles",
+    sr: "Из Антигоне Софокла",
+    cs: "Z Antigony od Sofokla"
+  };
 
-  // Fetch sunrise/sunset times based on user's location (IP-based)
-  useEffect(() => {
-    const fetchSunTimes = async () => {
-      try {
-        // First get user's location from IP
-        const geoResponse = await fetch('https://ipapi.co/json/');
-        const geoData = await geoResponse.json();
-        const { latitude, longitude } = geoData;
-        
-        if (latitude && longitude) {
-          // Get sunrise/sunset times for that location
-          const sunResponse = await fetch(
-            `https://api.sunrise-sunset.org/json?lat=${latitude}&lng=${longitude}&formatted=0`
-          );
-          const sunData = await sunResponse.json();
-          
-          if (sunData.status === 'OK') {
-            // Convert UTC times to local time
-            const sunrise = new Date(sunData.results.sunrise);
-            const sunset = new Date(sunData.results.sunset);
-            
-            setSunTimes({
-              sunrise: `${sunrise.getHours().toString().padStart(2, '0')}:${sunrise.getMinutes().toString().padStart(2, '0')}`,
-              sunset: `${sunset.getHours().toString().padStart(2, '0')}:${sunset.getMinutes().toString().padStart(2, '0')}`,
-              sunriseHour: sunrise.getHours(),
-              sunriseMinute: sunrise.getMinutes(),
-              sunsetHour: sunset.getHours(),
-              sunsetMinute: sunset.getMinutes()
-            });
-            
-            console.log(`[StarField] Location: ${geoData.city}, ${geoData.country_name}`);
-            console.log(`[StarField] Sunrise: ${sunrise.toLocaleTimeString()}, Sunset: ${sunset.toLocaleTimeString()}`);
-          }
-        }
-      } catch (error) {
-        console.log('[StarField] Using default times (07:00-20:30)', error.message);
-        // Keep default times on error
-        setSunTimes({
-          sunrise: '07:00',
-          sunset: '20:30',
-          sunriseHour: 7,
-          sunriseMinute: 0,
-          sunsetHour: 20,
-          sunsetMinute: 30
-        });
-      }
-    };
-    
-    fetchSunTimes();
-  }, []);
-
-  // Check if it's day or night based on sunrise/sunset times
-  useEffect(() => {
-    const checkDayNight = () => {
-      const now = new Date();
-      const currentHour = now.getHours();
-      const currentMinute = now.getMinutes();
-      const currentTime = currentHour * 60 + currentMinute; // Minutes since midnight
-      
-      const sunriseTime = (sunTimes.sunriseHour || 7) * 60 + (sunTimes.sunriseMinute || 0);
-      const sunsetTime = (sunTimes.sunsetHour || 20) * 60 + (sunTimes.sunsetMinute || 30);
-      
-      // It's night if before sunrise or after sunset
-      const isNightTime = currentTime < sunriseTime || currentTime >= sunsetTime;
-      setIsNight(isNightTime);
-      
-      // Set day of week (0 = Sunday, 1 = Monday, etc.)
-      setDayOfWeek(now.getDay());
-    };
-
-    checkDayNight();
-    // Check every minute for time changes
-    const interval = setInterval(checkDayNight, 60000);
-
-    return () => clearInterval(interval);
-  }, [sunTimes]);
-
-  // Create and animate stars
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    // Clear existing stars
-    container.innerHTML = '';
-
-    // Create moving stars
-    const starCount = isNight ? 150 : 30; // More stars at night, fewer during day
-    const stars = [];
-
-    for (let i = 0; i < starCount; i++) {
-      const star = document.createElement('div');
-      star.className = 'star';
-      
-      // Random initial position
-      const x = Math.random() * 100;
-      const y = Math.random() * 100;
-      
-      // Random size (bigger at night)
-      const size = isNight 
-        ? Math.random() * 3 + 1 
-        : Math.random() * 1.5 + 0.5;
-      
-      // Random speed for movement
-      const speed = Math.random() * 0.02 + 0.005;
-      const direction = Math.random() > 0.5 ? 1 : -1;
-      
-      star.style.cssText = `
-        position: absolute;
-        left: ${x}%;
-        top: ${y}%;
-        width: ${size}px;
-        height: ${size}px;
-        background: ${isNight ? 'white' : 'rgba(255, 255, 255, 0.4)'};
-        border-radius: 50%;
-        box-shadow: 0 0 ${size * 2}px ${isNight ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.2)'};
-        opacity: ${Math.random() * 0.5 + 0.5};
-        transition: opacity 0.5s ease;
-      `;
-      
-      container.appendChild(star);
-      stars.push({ 
-        element: star, 
-        x, 
-        y, 
-        speed, 
-        direction,
-        twinkleSpeed: Math.random() * 0.05 + 0.02,
-        twinklePhase: Math.random() * Math.PI * 2
-      });
-    }
-
-    // Animation loop for moving stars
-    let animationId;
-    let time = 0;
-    
-    const animate = () => {
-      time += 0.016; // ~60fps
-      
-      stars.forEach((star) => {
-        // Slow horizontal drift
-        star.x += star.speed * star.direction;
-        
-        // Wrap around screen
-        if (star.x > 102) star.x = -2;
-        if (star.x < -2) star.x = 102;
-        
-        // Gentle vertical wave motion
-        const yOffset = Math.sin(time * 0.5 + star.twinklePhase) * 0.1;
-        
-        // Twinkle effect
-        const twinkle = Math.sin(time * star.twinkleSpeed * 60 + star.twinklePhase);
-        const opacity = 0.4 + (twinkle + 1) * 0.3;
-        
-        star.element.style.left = `${star.x}%`;
-        star.element.style.top = `${star.y + yOffset}%`;
-        star.element.style.opacity = opacity;
-      });
-      
-      animationId = requestAnimationFrame(animate);
-    };
-    
-    animate();
-
-    // Cleanup
-    return () => {
-      cancelAnimationFrame(animationId);
-      container.innerHTML = '';
-    };
-  }, [isNight]);
-
-  // Night background video URL - MP4 format for better browser compatibility
-  const nightVideoUrl = "/galaxy-bg.mp4";
-
-  // Day background - changes based on day of week (Monday-Saturday only)
-  // Use 'cover' and clip bottom to hide photographer watermark in image
-  const dayBackground = showMetropolisPhoto ? {
-    backgroundImage: `url('${currentBackground.url}')`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center top',
-    backgroundRepeat: 'no-repeat',
-  } : {};
+  const slogan = sloganTranslations[language] || sloganTranslations.en;
+  const credit = creditTranslations[language] || creditTranslations.en;
 
   return (
     <>
-      {/* Background with smooth day/night transition */}
-      <div 
-        className="fixed inset-0 z-0 transition-all duration-1000"
-        style={showMetropolisPhoto ? dayBackground : {}}
+      {/* Bottom Footer Bar - Transparent */}
+      <footer 
+        className="relative w-full z-40"
+        style={{
+          paddingBottom: 'env(safe-area-inset-bottom, 5px)',
+          background: 'transparent',
+        }}
       >
-        {/* Night/Sunday Background Image - shows at night OR on Sunday */}
-        {(isNight || dayOfWeek === 0) && (
-          <div
-            className="absolute inset-0"
-            style={{ 
-              zIndex: -1,
-              backgroundImage: 'url(/IMG_6527.jpeg)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'left center',
-              backgroundRepeat: 'no-repeat'
-            }}
-          />
-        )}
-        
-        {/* Overlay - darker at night, subtle during day */}
-        <div 
-          className={`absolute inset-0 transition-all duration-1000 ${
-            (isNight || dayOfWeek === 0) ? 'bg-[#05020D]/30' : 'bg-black/20'
-          }`} 
-        />
-        
-        {/* Photographer credit - bottom left, lower position */}
-        {showMetropolisPhoto && currentBackground.photographer && (
-          <div 
-            className="absolute z-50"
-            style={{
-              bottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)',
-              left: '12px',
-              fontFamily: "'Dancing Script', cursive",
-              fontSize: '11px',
-              color: 'rgba(255, 255, 255, 0.7)',
-              textShadow: '1px 1px 3px rgba(0, 0, 0, 0.9)',
-              letterSpacing: '0.5px',
-            }}
-          >
-            📷 {currentBackground.photographer}
+        <div className="flex items-center justify-center py-2 px-4 gap-3">
+          {/* Left Cupid - Brand Logo with Transparent Background */}
+          <div className="w-12 h-12 flex-shrink-0">
+            <img 
+              src="/cupid-left.png" 
+              alt="BabyWish Cupid Logo Left" 
+              className="w-full h-full object-contain"
+              style={{
+                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+              }}
+            />
           </div>
-        )}
-        
-      </div>
-      
-      {/* Animated stars */}
-      <div 
-        ref={containerRef} 
-        className="fixed inset-0 z-10 pointer-events-none overflow-hidden"
-        aria-hidden="true"
-      />
-      
-      {/* Shooting stars (night or Sunday) */}
-      {(isNight || dayOfWeek === 0) && <ShootingStars />}
+          
+          {/* Slogan with underline and credit */}
+          <div className="flex flex-col items-center">
+            <p 
+              className="font-bold tracking-wide text-center"
+              style={{
+                fontFamily: "'Cinzel', serif",
+                fontSize: '16px',
+                color: '#40E0D0',
+                textShadow: '0 0 15px rgba(64, 224, 208, 0.6), 0 0 30px rgba(64, 224, 208, 0.3), 0 2px 4px rgba(0,0,0,0.7)',
+                borderBottom: '1px solid #40E0D0',
+                paddingBottom: '4px',
+              }}
+            >
+              {slogan}
+            </p>
+            <p 
+              className="text-center mt-1"
+              style={{
+                fontFamily: "'Cinzel', serif",
+                fontSize: '9px',
+                color: 'rgba(64, 224, 208, 0.7)',
+                textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                fontStyle: 'italic',
+              }}
+            >
+              {credit}
+            </p>
+          </div>
+          
+          {/* Right Cupid - Brand Logo with Transparent Background */}
+          <div className="w-12 h-12 flex-shrink-0">
+            <img 
+              src="/cupid-right.png" 
+              alt="BabyWish Cupid Logo Right" 
+              className="w-full h-full object-contain"
+              style={{
+                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+              }}
+            />
+          </div>
+        </div>
+      </footer>
     </>
   );
 };
 
-// Shooting stars component for extra magic at night
-const ShootingStars = () => {
-  const [shootingStars, setShootingStars] = useState([]);
-
-  useEffect(() => {
-    const createShootingStar = () => {
-      const id = Date.now();
-      const star = {
-        id,
-        startX: Math.random() * 100,
-        startY: Math.random() * 30,
-        duration: Math.random() * 1 + 0.5,
-      };
-      
-      setShootingStars(prev => [...prev, star]);
-      
-      // Remove after animation
-      setTimeout(() => {
-        setShootingStars(prev => prev.filter(s => s.id !== id));
-      }, star.duration * 1000 + 100);
-    };
-
-    // Random shooting stars every 3-8 seconds
-    const scheduleNext = () => {
-      const delay = Math.random() * 5000 + 3000;
-      return setTimeout(() => {
-        createShootingStar();
-        scheduleNext();
-      }, delay);
-    };
-
-    const timeoutId = scheduleNext();
-
-    return () => clearTimeout(timeoutId);
-  }, []);
-
-  return (
-    <div className="fixed inset-0 z-10 pointer-events-none overflow-hidden">
-      {shootingStars.map(star => (
-        <div
-          key={star.id}
-          className="absolute"
-          style={{
-            left: `${star.startX}%`,
-            top: `${star.startY}%`,
-            width: '100px',
-            height: '2px',
-            background: 'linear-gradient(90deg, transparent, white, transparent)',
-            transform: 'rotate(45deg)',
-            animation: `shootingStar ${star.duration}s linear forwards`,
-          }}
-        />
-      ))}
-      <style>{`
-        @keyframes shootingStar {
-          0% {
-            opacity: 1;
-            transform: rotate(45deg) translateX(0);
-          }
-          100% {
-            opacity: 0;
-            transform: rotate(45deg) translateX(300px);
-          }
-        }
-      `}</style>
-    </div>
-  );
-};
-
-export default StarField;
+export default AppFooter;
