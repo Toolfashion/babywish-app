@@ -80,27 +80,52 @@ async def debug_chat_status():
 # Download endpoint for code files
 @api_router.get("/download/{filename}")
 async def download_file(filename: str):
-    """Serve code files and images for download"""
+    """Serve ALL files for download - forces download instead of preview"""
+    import os
+    from fastapi.responses import FileResponse
+    file_path = f"/app/downloads/{filename}"
+    if os.path.exists(file_path):
+        # Determine media type
+        media_types = {
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.gif': 'image/gif',
+            '.mp4': 'video/mp4',
+            '.mov': 'video/quicktime',
+            '.txt': 'text/plain',
+            '.js': 'application/javascript',
+            '.jsx': 'application/javascript',
+            '.py': 'text/x-python',
+            '.json': 'application/json',
+            '.css': 'text/css',
+            '.html': 'text/html',
+        }
+        ext = '.' + filename.split('.')[-1].lower()
+        media_type = media_types.get(ext, 'application/octet-stream')
+        
+        # Force download with Content-Disposition: attachment for ALL files
+        return FileResponse(
+            file_path, 
+            media_type=media_type,
+            filename=filename,
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    return JSONResponse({"error": "File not found"}, status_code=404)
+
+@api_router.get("/view/{filename}")
+async def view_file(filename: str):
+    """View file content in browser for easy copy-paste"""
     import os
     file_path = f"/app/downloads/{filename}"
     if os.path.exists(file_path):
-        # Check if it's an image file
-        if filename.endswith(('.jpg', '.jpeg', '.png', '.gif', '.mp4', '.mov')):
-            from fastapi.responses import FileResponse
-            media_types = {
-                '.jpg': 'image/jpeg',
-                '.jpeg': 'image/jpeg',
-                '.png': 'image/png',
-                '.gif': 'image/gif',
-                '.mp4': 'video/mp4',
-                '.mov': 'video/quicktime'
-            }
-            ext = '.' + filename.split('.')[-1].lower()
-            return FileResponse(file_path, media_type=media_types.get(ext, 'application/octet-stream'))
-        else:
-            with open(file_path, 'r') as f:
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
-            return PlainTextResponse(content, media_type="text/plain")
+            # Return as plain text that can be copied
+            return PlainTextResponse(content, media_type="text/plain; charset=utf-8")
+        except:
+            return JSONResponse({"error": "Cannot read file as text"}, status_code=400)
     return JSONResponse({"error": "File not found"}, status_code=404)
 
 
@@ -3044,6 +3069,124 @@ Make this prediction feel like destiny - like these parents were MEANT to have t
     except Exception as e:
         logging.error(f"Quiz generation error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# ===================== MILESTONE PREDICTOR =====================
+# AI-powered pregnancy milestone information
+
+class MilestoneRequest(BaseModel):
+    week: int
+    zodiac: str
+    zodiacName: str
+    language: str = "en"
+    fruitName: str = ""
+
+@api_router.post("/milestone/generate")
+async def generate_milestone(request: MilestoneRequest):
+    """Generate fun pregnancy milestone information using Mistral AI"""
+    try:
+        week = request.week
+        zodiac_name = request.zodiacName
+        fruit_name = request.fruitName
+        lang = request.language
+        
+        # Language-specific prompt
+        if lang == 'el':
+            system_prompt = """Είσαι ένας fun και chic βοηθός εγκυμοσύνης για την εφαρμογή BabyWish. 
+Δίνεις πληροφορίες με ζεστό, ενθαρρυντικό και διασκεδαστικό τρόπο.
+Οι απαντήσεις σου πρέπει να είναι ΜΟΝΟ στα Ελληνικά.
+ΣΗΜΑΝΤΙΚΟ: Απάντησε ΑΠΟΚΛΕΙΣΤΙΚΑ σε μορφή JSON χωρίς καμία άλλη επεξήγηση."""
+
+            user_prompt = f"""Η χρήστρια είναι στην εβδομάδα {week} της εγκυμοσύνης της.
+Το μωρό έχει το μέγεθος περίπου ενός/μιας {fruit_name}.
+Το πιθανό ζώδιο του μωρού είναι {zodiac_name}.
+
+Δημιούργησε ένα JSON με αυτά τα πεδία:
+{{
+  "developing": "2-3 προτάσεις για το τι αναπτύσσεται στο μωρό αυτή την εβδομάδα (π.χ. όργανα, αισθήσεις, κινήσεις). Να είναι συναρπαστικό και θετικό!",
+  "funFact": "Ένα ενδιαφέρον/αστείο fun fact για αυτή την εβδομάδα. Π.χ. 'Το μωρό σου μπορεί πλέον να ακούσει τη φωνή σου!' ή 'Αν μιλήσεις στην κοιλιά σου, το μωρό θα αναγνωρίσει τη φωνή σου μετά τη γέννα!'",
+  "zodiacTip": "Μια διασκεδαστική σύνδεση με το ζώδιο {zodiac_name}. Π.χ. 'Ως {zodiac_name}, το μωρό σου ίσως δείξει νωρίς την αγάπη του για...' Να είναι θετικό και ελαφρύ!"
+}}"""
+        else:
+            system_prompt = """You are a fun and chic pregnancy assistant for the BabyWish app.
+You provide information in a warm, encouraging, and entertaining way.
+Your responses must be ONLY in English.
+IMPORTANT: Respond EXCLUSIVELY in JSON format with no other explanation."""
+
+            user_prompt = f"""The user is in week {week} of their pregnancy.
+The baby is approximately the size of a {fruit_name}.
+The probable zodiac sign of the baby is {zodiac_name}.
+
+Create a JSON with these fields:
+{{
+  "developing": "2-3 sentences about what's developing in the baby this week (e.g., organs, senses, movements). Make it exciting and positive!",
+  "funFact": "An interesting/fun fact about this week. E.g., 'Your baby can now hear your voice!' or 'If you talk to your belly, your baby will recognize your voice after birth!'",
+  "zodiacTip": "A fun connection to the {zodiac_name} zodiac. E.g., 'As a {zodiac_name}, your baby might show early signs of loving...' Keep it positive and light!"
+}}"""
+
+        mistral_key = os.environ.get('MISTRAL_API_KEY')
+        
+        if mistral_key:
+            try:
+                mistral_client = Mistral(api_key=mistral_key.strip())
+                
+                response = await asyncio.get_event_loop().run_in_executor(
+                    None,
+                    lambda: mistral_client.chat.complete(
+                        model="mistral-small-latest",
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        temperature=0.8,
+                        max_tokens=500,
+                    )
+                )
+                
+                ai_response = response.choices[0].message.content.strip()
+                logging.info(f"Milestone AI response: {ai_response[:200]}...")
+                
+                # Parse JSON from response
+                import re
+                json_match = re.search(r'\{[\s\S]*\}', ai_response)
+                if json_match:
+                    result = json.loads(json_match.group())
+                    return {
+                        "success": True,
+                        "developing": result.get("developing", ""),
+                        "funFact": result.get("funFact", ""),
+                        "zodiacTip": result.get("zodiacTip", "")
+                    }
+                else:
+                    raise ValueError("No JSON found in response")
+                    
+            except Exception as mistral_error:
+                logging.error(f"Mistral API error in milestone: {mistral_error}")
+                # Return fallback
+                return get_milestone_fallback(week, zodiac_name, lang)
+        else:
+            # No API key - return fallback
+            return get_milestone_fallback(week, zodiac_name, lang)
+            
+    except Exception as e:
+        logging.error(f"Milestone generation error: {e}")
+        return get_milestone_fallback(request.week, request.zodiacName, request.language)
+
+def get_milestone_fallback(week: int, zodiac_name: str, lang: str):
+    """Fallback milestone data when AI is unavailable"""
+    if lang == 'el':
+        return {
+            "success": True,
+            "developing": f"Στην εβδομάδα {week}, το μωρό σου αναπτύσσεται με εκπληκτικούς ρυθμούς! Τα ζωτικά όργανα ωριμάζουν και οι αισθήσεις γίνονται πιο οξείες κάθε μέρα.",
+            "funFact": "Ήξερες ότι το μωρό σου μπορεί να αναγνωρίσει τη φωνή σου; Μίλα του καθημερινά!",
+            "zodiacTip": f"Ως {zodiac_name}, το μωρό σου θα έχει μοναδικά χαρακτηριστικά που θα σε συγκινήσουν!"
+        }
+    else:
+        return {
+            "success": True,
+            "developing": f"At week {week}, your baby is developing at an amazing pace! Vital organs are maturing and senses are becoming sharper every day.",
+            "funFact": "Did you know your baby can recognize your voice? Talk to them daily!",
+            "zodiacTip": f"As a {zodiac_name}, your baby will have unique traits that will touch your heart!"
+        }
 
 # ===================== AI CHAT WIDGET =====================
 # Using Mistral AI SDK (works on Render without special dependencies)
