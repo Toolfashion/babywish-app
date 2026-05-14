@@ -3188,6 +3188,137 @@ def get_milestone_fallback(week: int, zodiac_name: str, lang: str):
             "zodiacTip": f"As a {zodiac_name}, your baby will have unique traits that will touch your heart!"
         }
 
+# ===================== BABY CERTIFICATE =====================
+# AI-powered pregnancy journey certificate
+
+class CertificateRequest(BaseModel):
+    momName: str
+    babyNickname: str
+    week: int
+    gender: str = "surprise"
+    zodiac: str
+    zodiacName: str
+    language: str = "en"
+    # PRO fields for future physical delivery
+    email: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    postalCode: Optional[str] = None
+    country: Optional[str] = None
+
+@api_router.post("/certificate/generate")
+async def generate_certificate(request: CertificateRequest):
+    """Generate AI-powered baby journey certificate"""
+    try:
+        lang = request.language
+        
+        # Store certificate data in MongoDB for future PRO delivery
+        certificate_data = {
+            "momName": request.momName,
+            "babyNickname": request.babyNickname,
+            "week": request.week,
+            "gender": request.gender,
+            "zodiac": request.zodiac,
+            "zodiacName": request.zodiacName,
+            "language": lang,
+            "createdAt": datetime.utcnow(),
+            # PRO fields (for future physical mail)
+            "email": request.email,
+            "address": request.address,
+            "city": request.city,
+            "postalCode": request.postalCode,
+            "country": request.country,
+            "isPro": False,
+            "physicalDeliveryStatus": None,
+        }
+        
+        # Save to MongoDB
+        try:
+            certificates_collection = db["certificates"]
+            certificates_collection.insert_one(certificate_data)
+        except Exception as db_error:
+            logging.warning(f"Could not save certificate to DB: {db_error}")
+        
+        # Generate AI message
+        if lang == 'el':
+            system_prompt = """Είσαι ένας ζεστός, συναισθηματικός βοηθός που γράφει μηνύματα για πιστοποιητικά εγκυμοσύνης.
+Γράψε ένα σύντομο, τρυφερό μήνυμα (1-2 προτάσεις) για τη μαμά.
+Απάντησε ΜΟΝΟ σε JSON: {"message": "το μήνυμά σου", "specialTrait": "ένα ιδιαίτερο χαρακτηριστικό του μωρού"}"""
+            
+            user_prompt = f"""Η {request.momName} είναι στην εβδομάδα {request.week} της εγκυμοσύνης της.
+Το μωρό της (υποκοριστικό: {request.babyNickname}) θα είναι {request.zodiacName}.
+Φύλο: {request.gender}
+
+Γράψε ένα τρυφερό, ενθαρρυντικό μήνυμα για το πιστοποιητικό της."""
+        else:
+            system_prompt = """You are a warm, emotional assistant who writes messages for pregnancy certificates.
+Write a short, tender message (1-2 sentences) for the mom.
+Reply ONLY in JSON: {"message": "your message", "specialTrait": "a special trait of the baby"}"""
+            
+            user_prompt = f"""{request.momName} is in week {request.week} of her pregnancy.
+Her baby (nickname: {request.babyNickname}) will be a {request.zodiacName}.
+Gender: {request.gender}
+
+Write a tender, encouraging message for her certificate."""
+
+        mistral_key = os.environ.get('MISTRAL_API_KEY')
+        
+        if mistral_key:
+            try:
+                mistral_client = Mistral(api_key=mistral_key.strip())
+                
+                response = await asyncio.get_event_loop().run_in_executor(
+                    None,
+                    lambda: mistral_client.chat.complete(
+                        model="mistral-small-latest",
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        temperature=0.9,
+                        max_tokens=200,
+                    )
+                )
+                
+                ai_response = response.choices[0].message.content.strip()
+                logging.info(f"Certificate AI response: {ai_response[:100]}...")
+                
+                # Parse JSON
+                import re
+                json_match = re.search(r'\{[\s\S]*\}', ai_response)
+                if json_match:
+                    result = json.loads(json_match.group())
+                    return {
+                        "success": True,
+                        "message": result.get("message", ""),
+                        "specialTrait": result.get("specialTrait", ""),
+                    }
+                    
+            except Exception as mistral_error:
+                logging.error(f"Mistral API error in certificate: {mistral_error}")
+        
+        # Fallback messages
+        if lang == 'el':
+            return {
+                "success": True,
+                "message": f"Η αγάπη σας μεγαλώνει μαζί με το μωρό σας! Συνεχίστε αυτό το υπέροχο ταξίδι.",
+                "specialTrait": f"Γεμάτο με την ενέργεια του {request.zodiacName}",
+            }
+        else:
+            return {
+                "success": True,
+                "message": f"Your love grows with your baby! Keep going on this beautiful journey.",
+                "specialTrait": f"Full of {request.zodiacName} energy",
+            }
+            
+    except Exception as e:
+        logging.error(f"Certificate generation error: {e}")
+        return {
+            "success": False,
+            "message": "Keep going on your journey!",
+            "specialTrait": "Full of love",
+        }
+
 # ===================== AI CHAT WIDGET =====================
 # Using Mistral AI SDK (works on Render without special dependencies)
 from mistralai import Mistral
