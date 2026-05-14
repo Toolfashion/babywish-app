@@ -67,23 +67,22 @@ const SocialPickerWheel = () => {
 
   const handleItemClick = (item, index) => {
     if (item.isSpotify) {
-      if (isMinimized) {
-        setIsMinimized(false);
-        setShowSpotifyPlayer(true);
-      } else {
-        setShowSpotifyPlayer(true);
-      }
+      // Always show the player when clicking Spotify icon
+      setIsMinimized(false);
+      setShowSpotifyPlayer(true);
     } else if (item.url) {
       window.open(item.url, '_blank', 'noopener,noreferrer');
     }
   };
 
   const handleMinimize = () => {
+    // Keep player mounted but hidden - music continues
     setIsMinimized(true);
-    setShowSpotifyPlayer(false);
+    // Don't set showSpotifyPlayer to false - keep it true so iframe stays mounted
   };
 
   const handleClose = () => {
+    // Fully close - stops music
     setIsMinimized(false);
     setShowSpotifyPlayer(false);
   };
