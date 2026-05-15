@@ -3530,6 +3530,80 @@ async def chat_with_assistant(chat_message: ChatMessage):
         logging.error(f"Chat error: {e}")
         raise HTTPException(status_code=500, detail="Failed to process message")
 
+# ===================== TEXT-TO-SPEECH (TTS) WITH ELEVENLABS =====================
+
+from elevenlabs import ElevenLabs
+from elevenlabs.types import VoiceSettings
+import base64
+
+# ElevenLabs Configuration
+ELEVENLABS_API_KEY = os.environ.get('ELEVENLABS_API_KEY')
+ELEVENLABS_VOICE_FEMALE = os.environ.get('ELEVENLABS_VOICE_FEMALE', 'gc5LArFpEOmYx9nYmK9l')  # MindJerry's
+ELEVENLABS_VOICE_MALE = os.environ.get('ELEVENLABS_VOICE_MALE', 'C9fbwSpEaejywLWx722Z')  # MindJerry
+
+class TTSRequest(BaseModel):
+    text: str
+    gender: str = "female"  # "male" for MindJerry, "female" for MindJerry's
+    language: str = "el"
+
+class TTSResponse(BaseModel):
+    audio_base64: str
+    text: str
+    voice_id: str
+
+@api_router.post("/tts/generate", response_model=TTSResponse)
+async def generate_tts(request: TTSRequest):
+    """Generate text-to-speech audio using ElevenLabs Multilingual v2"""
+    try:
+        if not ELEVENLABS_API_KEY:
+            raise HTTPException(status_code=500, detail="ElevenLabs API key not configured")
+        
+        # Select voice based on gender
+        voice_id = ELEVENLABS_VOICE_FEMALE if request.gender == "female" else ELEVENLABS_VOICE_MALE
+        
+        logging.info(f"TTS Request - Gender: {request.gender}, Voice: {voice_id}, Text length: {len(request.text)}")
+        
+        # Initialize ElevenLabs client
+        client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
+        
+        # Voice settings for warm, trustworthy tone
+        # Stability: 0.6 (more stable = more serious)
+        # Similarity boost: 0.75 
+        # Style: 0.45 (adds warmth)
+        
+        # Generate audio
+        audio_generator = client.text_to_speech.convert(
+            text=request.text,
+            voice_id=voice_id,
+            model_id="eleven_multilingual_v2",
+            voice_settings=VoiceSettings(
+                stability=0.6,
+                similarity_boost=0.75,
+                style=0.45,
+                use_speaker_boost=True
+            )
+        )
+        
+        # Collect audio data
+        audio_data = b""
+        for chunk in audio_generator:
+            audio_data += chunk
+        
+        # Convert to base64
+        audio_b64 = base64.b64encode(audio_data).decode()
+        
+        logging.info(f"TTS generated successfully - Audio size: {len(audio_data)} bytes")
+        
+        return TTSResponse(
+            audio_base64=audio_b64,
+            text=request.text,
+            voice_id=voice_id
+        )
+        
+    except Exception as e:
+        logging.error(f"TTS Error: {type(e).__name__}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"TTS generation failed: {str(e)[:100]}")
+
 # ===================== BEST TIMING AI =====================
 
 MONTH_NAMES = {
