@@ -3558,29 +3558,29 @@ async def generate_tts(request: TTSRequest):
         if not ELEVENLABS_API_KEY:
             raise HTTPException(status_code=500, detail="ElevenLabs API key not configured")
         
+        # Limit text length for faster response (max ~500 chars)
+        text_to_speak = request.text[:500] + "..." if len(request.text) > 500 else request.text
+        
         # Select voice based on gender
         voice_id = ELEVENLABS_VOICE_FEMALE if request.gender == "female" else ELEVENLABS_VOICE_MALE
         
-        logging.info(f"TTS Request - Gender: {request.gender}, Voice: {voice_id}, Text length: {len(request.text)}")
+        logging.info(f"TTS Request - Gender: {request.gender}, Voice: {voice_id}, Text length: {len(text_to_speak)}")
         
         # Initialize ElevenLabs client
         client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
         
-        # Voice settings for warm, trustworthy tone
-        # Stability: 0.6 (more stable = more serious)
-        # Similarity boost: 0.75 
-        # Style: 0.45 (adds warmth)
-        
+        # Voice settings optimized for speed
+        # Lower quality settings = faster generation
         # Generate audio
         audio_generator = client.text_to_speech.convert(
-            text=request.text,
+            text=text_to_speak,
             voice_id=voice_id,
             model_id="eleven_multilingual_v2",
             voice_settings=VoiceSettings(
-                stability=0.6,
-                similarity_boost=0.75,
-                style=0.45,
-                use_speaker_boost=True
+                stability=0.5,  # Slightly lower for speed
+                similarity_boost=0.7,
+                style=0.3,  # Lower style = faster
+                use_speaker_boost=False  # Disable for speed
             )
         )
         
@@ -3596,7 +3596,7 @@ async def generate_tts(request: TTSRequest):
         
         return TTSResponse(
             audio_base64=audio_b64,
-            text=request.text,
+            text=text_to_speak,
             voice_id=voice_id
         )
         
