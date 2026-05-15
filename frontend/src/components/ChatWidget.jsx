@@ -126,7 +126,10 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
   // TTS Audio State
   const [currentlyPlayingIndex, setCurrentlyPlayingIndex] = useState(null);
   const [isLoadingTTS, setIsLoadingTTS] = useState(null); // Index of message loading TTS
+  const [autoPlayEnabled, setAutoPlayEnabled] = useState(true); // Auto-play TTS on new messages
+  const [userHasInteracted, setUserHasInteracted] = useState(false); // Track user interaction for autoplay
   const audioRef = useRef(null);
+  const pendingAutoPlayRef = useRef(null); // Track pending auto-play message
   
   // iOS video autoplay fix - try to play videos on any user interaction
   useEffect(() => {
@@ -331,6 +334,9 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
   const handleSendMessage = async (text) => {
     if (!text.trim() || isLoading) return;
 
+    // Mark user interaction for autoplay permission
+    setUserHasInteracted(true);
+
     const userMessage = { type: 'user', text: text.trim() };
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
@@ -357,10 +363,21 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
       const data = await response.json();
       setSessionId(data.session_id);
       
+      // Calculate the new message index
+      const newMessageIndex = messages.length + 1; // +1 because user message was just added
+      
       setMessages(prev => [...prev, {
         type: 'assistant',
         text: data.response
       }]);
+      
+      // Auto-play TTS for the new message if enabled and user has interacted
+      if (autoPlayEnabled && userHasInteracted && data.response) {
+        // Small delay to ensure message is rendered
+        setTimeout(() => {
+          playTTS(data.response, newMessageIndex, true); // true = isAutoPlay
+        }, 300);
+      }
     } catch (error) {
       console.error('Chat error:', error);
       setMessages(prev => [...prev, {
@@ -379,8 +396,8 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
     }
   };
 
-  // TTS Audio Playback Function
-  const playTTS = useCallback(async (messageText, messageIndex) => {
+  // TTS Audio Playback Function - Supports streaming for faster start
+  const playTTS = useCallback(async (messageText, messageIndex, isAutoPlay = false) => {
     // If already playing this message, stop it
     if (currentlyPlayingIndex === messageIndex) {
       if (audioRef.current) {
@@ -400,11 +417,18 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
     setIsLoadingTTS(messageIndex);
     
     try {
+      // For long texts, use only first ~200 chars for faster TTS
+      // This gives instant response while keeping it meaningful
+      const maxChars = 500;
+      const textToSpeak = messageText.length > maxChars 
+        ? messageText.substring(0, maxChars) + '...'
+        : messageText;
+      
       const response = await fetch(`${API_URL}/api/tts/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          text: messageText,
+          text: textToSpeak,
           gender: gender,
           language: language || 'el'
         })
@@ -765,13 +789,29 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
                 </div>
               </div>
               
-              <button
-                onClick={() => setIsOpen(false)}
-                className="relative z-10 text-white/80 hover:text-white transition-colors bg-white/10 rounded-full p-2 hover:bg-white/20"
-                data-testid="chat-close-btn"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                {/* Auto-play Toggle */}
+                <button
+                  onClick={() => setAutoPlayEnabled(!autoPlayEnabled)}
+                  className={`relative z-10 transition-colors rounded-full p-2 ${
+                    autoPlayEnabled 
+                      ? 'text-cyan-400 bg-cyan-500/20 hover:bg-cyan-500/30' 
+                      : 'text-white/50 bg-white/10 hover:bg-white/20'
+                  }`}
+                  title={autoPlayEnabled ? 'Αυτόματη αναπαραγωγή: ON' : 'Αυτόματη αναπαραγωγή: OFF'}
+                  data-testid="auto-play-toggle"
+                >
+                  <Volume2 className="w-4 h-4" />
+                </button>
+                
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="relative z-10 text-white/80 hover:text-white transition-colors bg-white/10 rounded-full p-2 hover:bg-white/20"
+                  data-testid="chat-close-btn"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Messages */}
