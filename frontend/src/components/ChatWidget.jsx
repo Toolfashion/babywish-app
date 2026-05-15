@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Loader2 } from 'lucide-react';
+import { X, Send, Loader2, Volume2, VolumeX, Loader } from 'lucide-react';
 import { Button } from './ui/button';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -122,6 +122,11 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
   const videoRef1 = useRef(null);
   const videoRef2 = useRef(null);
   const videoRef3 = useRef(null);
+  
+  // TTS Audio State
+  const [currentlyPlayingIndex, setCurrentlyPlayingIndex] = useState(null);
+  const [isLoadingTTS, setIsLoadingTTS] = useState(null); // Index of message loading TTS
+  const audioRef = useRef(null);
   
   // iOS video autoplay fix - try to play videos on any user interaction
   useEffect(() => {
@@ -373,6 +378,95 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
       handleSendMessage(inputValue);
     }
   };
+
+  // TTS Audio Playback Function
+  const playTTS = useCallback(async (messageText, messageIndex) => {
+    // If already playing this message, stop it
+    if (currentlyPlayingIndex === messageIndex) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      setCurrentlyPlayingIndex(null);
+      return;
+    }
+    
+    // Stop any currently playing audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    
+    setIsLoadingTTS(messageIndex);
+    
+    try {
+      const response = await fetch(`${API_URL}/api/tts/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: messageText,
+          gender: gender,
+          language: language || 'el'
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('TTS generation failed');
+      }
+      
+      const data = await response.json();
+      
+      // Create audio from base64
+      const audioBlob = new Blob(
+        [Uint8Array.from(atob(data.audio_base64), c => c.charCodeAt(0))],
+        { type: 'audio/mpeg' }
+      );
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+      
+      audio.onended = () => {
+        setCurrentlyPlayingIndex(null);
+        URL.revokeObjectURL(audioUrl);
+        audioRef.current = null;
+      };
+      
+      audio.onerror = () => {
+        setCurrentlyPlayingIndex(null);
+        URL.revokeObjectURL(audioUrl);
+        audioRef.current = null;
+      };
+      
+      setCurrentlyPlayingIndex(messageIndex);
+      setIsLoadingTTS(null);
+      await audio.play();
+      
+    } catch (error) {
+      console.error('TTS Error:', error);
+      setIsLoadingTTS(null);
+      setCurrentlyPlayingIndex(null);
+    }
+  }, [currentlyPlayingIndex, gender, language]);
+
+  // Cleanup audio on unmount or chat close
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  // Stop audio when chat closes
+  useEffect(() => {
+    if (!isOpen && audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+      setCurrentlyPlayingIndex(null);
+    }
+  }, [isOpen]);
 
   // Calculate circle dash offset for loading animation
   const circumference = 2 * Math.PI * 45;
@@ -714,6 +808,36 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
                     }`}
                   >
                     <p className="text-sm leading-relaxed">{msg.text}</p>
+                    {/* TTS Audio Button - Only for assistant messages */}
+                    {msg.type === 'assistant' && (
+                      <button
+                        onClick={() => playTTS(msg.text, index)}
+                        disabled={isLoadingTTS === index}
+                        className={`mt-2 flex items-center gap-1.5 text-xs transition-all ${
+                          currentlyPlayingIndex === index 
+                            ? 'text-cyan-400' 
+                            : 'text-purple-300/70 hover:text-purple-200'
+                        }`}
+                        data-testid={`tts-btn-${index}`}
+                      >
+                        {isLoadingTTS === index ? (
+                          <>
+                            <Loader className="w-3.5 h-3.5 animate-spin" />
+                            <span>Φόρτωση...</span>
+                          </>
+                        ) : currentlyPlayingIndex === index ? (
+                          <>
+                            <VolumeX className="w-3.5 h-3.5" />
+                            <span>Διακοπή</span>
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="w-3.5 h-3.5" />
+                            <span>Ακούστε</span>
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </motion.div>
               ))}
