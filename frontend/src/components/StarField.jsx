@@ -42,11 +42,11 @@ const StarField = () => {
       city: "Moscow",
       photographer: "Roman Verton"
     },
-    // Friday (5) - New Delhi
+    // Friday (5) - New Delhi (watermark already on photo)
     { 
       url: "/IMG_6223.jpeg",
       city: "New Delhi",
-      photographer: "Monojit Dutta"
+      photographer: null  // Already has watermark on the image
     },
     // Saturday (6) - Sydney
     { 
