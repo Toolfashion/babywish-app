@@ -10,10 +10,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 const GALAXY_URL = "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/se8axh3p_IMG_6186.jpeg";
 
 // Video background is now /datasphere-bg.mp4 in public folder
-
-// Angel images - line drawings (kept for future use)
-const ANGEL_BOY_URL = "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/nva1ylbn_IMG_5956.jpeg";
-const ANGEL_GIRL_URL = "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/udsslgan_IMG_5955.jpeg";
+// Old angel images removed - using datasphere video only
 
 // ============================================
 // GENDER-SPECIFIC WELCOME MESSAGES
@@ -678,9 +675,18 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
               <span className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 ${indicatorColor} rounded-full border border-black animate-pulse`} />
             </div>
             
-            {/* Tooltip on hover */}
-            <div className={`absolute ${side === 'left' ? 'left-full ml-3' : 'right-full mr-3'} top-1/2 -translate-y-1/2 text-white px-3 py-2 rounded-xl shadow-lg text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity font-bold`}
-              style={{ background: gender === 'male' ? 'linear-gradient(to right, #0891b2, #0ea5e9)' : 'linear-gradient(to right, #db2777, #ec4899)' }}
+            {/* Tooltip on hover with brain background */}
+            <div className={`absolute ${side === 'left' ? 'left-full ml-3' : 'right-full mr-3'} top-1/2 -translate-y-1/2 text-white px-4 py-2.5 rounded-xl shadow-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity overflow-hidden`}
+              style={{ 
+                backgroundImage: gender === 'male' 
+                  ? 'url(/brain-blue.jpg)'
+                  : 'url(/brain-pink.jpg)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                fontWeight: '800',
+                textShadow: '2px 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.8)',
+                letterSpacing: '0.5px'
+              }}
             >
               {widgetName} {gender === 'male' ? '👨' : '👩'}
             </div>
