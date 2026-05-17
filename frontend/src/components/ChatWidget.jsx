@@ -805,48 +805,15 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
                   </div>
                 </div>
                 
-                {/* Name and Mini Datasphere with Angel */}
-                <div className="flex items-center gap-3">
-                  {/* Mini Datasphere next to name */}
-                  <div className="relative w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
-                    <div 
-                      className="absolute inset-0 rounded-full"
-                      style={{ background: SPHERE_GRADIENT }}
-                    />
-                    <video
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="absolute inset-0 w-full h-full object-cover"
-                      style={{ transform: 'scale(2)' }}
-                    >
-                      <source src="/datasphere-bg.mp4" type="video/mp4" />
-                    </video>
-                    {/* Mini Blinking Angel */}
-                    <motion.img
-                      src={gender === 'female' ? ANGEL_FEMALE : ANGEL_MALE}
-                      alt=""
-                      className="absolute inset-0 w-full h-full object-contain p-1"
-                      animate={{ opacity: [0, 1, 1, 0] }}
-                      transition={{
-                        duration: 18,
-                        times: [0, 0.5, 0.5, 1],
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                    />
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                      <span style={{ textTransform: 'none', fontVariant: 'normal' }}>{widgetName}</span>
-                      <span className="text-xs bg-gradient-to-r from-cyan-400 to-purple-500 px-2 py-0.5 rounded-full">
-                        LIVE
-                      </span>
-                    </h3>
-                    <p className="text-cyan-300/70 text-xs">Family Psychology AI</p>
-                  </div>
+                {/* Name only - datasphere moved to message area */}
+                <div>
+                  <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                    <span style={{ textTransform: 'none', fontVariant: 'normal' }}>{widgetName}</span>
+                    <span className="text-xs bg-gradient-to-r from-cyan-400 to-purple-500 px-2 py-0.5 rounded-full">
+                      LIVE
+                    </span>
+                  </h3>
+                  <p className="text-cyan-300/70 text-xs">Family Psychology AI</p>
                 </div>
               </div>
               
@@ -888,7 +855,12 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
                     <div 
                       className="w-8 h-8 rounded-full flex items-center justify-center mr-2 flex-shrink-0 overflow-hidden relative"
                     >
-                      {/* Mini video background only */}
+                      {/* Gradient fallback */}
+                      <div 
+                        className="absolute inset-0 rounded-full"
+                        style={{ background: SPHERE_GRADIENT }}
+                      />
+                      {/* Mini video background */}
                       <video
                         autoPlay
                         loop
@@ -899,6 +871,19 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
                       >
                         <source src="/datasphere-bg.mp4" type="video/mp4" />
                       </video>
+                      {/* Blinking Angel in message avatar */}
+                      <motion.img
+                        src={gender === 'female' ? ANGEL_FEMALE : ANGEL_MALE}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-contain p-0.5 z-10"
+                        animate={{ opacity: [0, 1, 1, 0] }}
+                        transition={{
+                          duration: 18,
+                          times: [0, 0.5, 0.5, 1],
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                      />
                     </div>
                   )}
                   <div
