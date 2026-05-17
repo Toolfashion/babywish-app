@@ -42,11 +42,11 @@ const StarField = () => {
       city: "Moscow",
       photographer: "Roman Verton"
     },
-    // Friday (5) - New Delhi (watermark already on photo)
+    // Friday (5) - New Delhi
     { 
       url: "/IMG_6223.jpeg",
       city: "New Delhi",
-      photographer: null  // Already has watermark on the image
+      photographer: "Monojit Dutta"
     },
     // Saturday (6) - Sydney
     { 
@@ -232,8 +232,8 @@ const StarField = () => {
     };
   }, [isNight]);
 
-  // Night background video URL - MP4 format for better browser compatibility
-  const nightVideoUrl = "/galaxy-bg.mp4";
+  // Night background video URL - using datasphere video
+  const nightVideoUrl = "/datasphere-bg.mp4";
 
   // Day background - changes based on day of week (Monday-Saturday only)
   // Use 'contain' to show full image without distortion
@@ -272,12 +272,12 @@ const StarField = () => {
           }`} 
         />
         
-        {/* Photographer credit - bottom left, lower position */}
+        {/* Photographer credit - bottom left, above mindjerry's chat widget */}
         {showMetropolisPhoto && currentBackground.photographer && (
           <div 
             className="absolute z-50"
             style={{
-              bottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)',
+              bottom: 'calc(env(safe-area-inset-bottom, 0px) + 85px)',
               left: '12px',
               fontFamily: "'Dancing Script', cursive",
               fontSize: '11px',
