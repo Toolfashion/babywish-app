@@ -6,11 +6,14 @@ import { useLanguage } from '../context/LanguageContext';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-// Galaxy/Milky Way background for night theme
-const GALAXY_URL = "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/se8axh3p_IMG_6186.jpeg";
+// Fallback gradient for sphere backgrounds (no external images)
+const SPHERE_GRADIENT = "linear-gradient(135deg, #1a0a2e 0%, #16213e 50%, #0f3460 100%)";
+
+// Angel images for chat widget avatars (transparent background, blinking effect)
+const ANGEL_FEMALE = "/angel-female-transparent.png"; // mindjerry's
+const ANGEL_MALE = "/angel-male-transparent.png";     // mindjerry
 
 // Video background is now /datasphere-bg.mp4 in public folder
-// Old angel images removed - using datasphere video only
 
 // ============================================
 // GENDER-SPECIFIC WELCOME MESSAGES
@@ -556,10 +559,10 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
               <div 
                 className="absolute inset-0 rounded-full overflow-hidden"
               >
-                {/* Fallback background for iOS */}
+                {/* Fallback gradient background for iOS */}
                 <div 
-                  className="absolute inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-cyan-900"
-                  style={{ background: `url(${GALAXY_URL}) center/cover` }}
+                  className="absolute inset-0"
+                  style={{ background: SPHERE_GRADIENT }}
                 />
                 <video
                   ref={videoRef1}
@@ -619,10 +622,10 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
               <div 
                 className="absolute inset-1 rounded-full flex items-center justify-center overflow-hidden"
               >
-                {/* Fallback background for iOS */}
+                {/* Fallback gradient background for iOS */}
                 <div 
-                  className="absolute inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-cyan-900 rounded-full"
-                  style={{ background: `url(${GALAXY_URL}) center/cover` }}
+                  className="absolute inset-0 rounded-full"
+                  style={{ background: SPHERE_GRADIENT }}
                 />
                 {/* Data Sphere Video Background */}
                 <video
@@ -718,18 +721,18 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
             }}
             data-testid="chat-widget-window"
           >
-            {/* Header with Galaxy/Milky Way */}
+            {/* Header with cosmic gradient */}
             <div 
               className="relative p-4 flex items-center justify-between overflow-hidden"
               style={{
-                background: `linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(30,20,50,0.85) 100%), url(${GALAXY_URL}) center/cover`,
+                background: `linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(30,20,50,0.85) 100%), ${SPHERE_GRADIENT}`,
               }}
             >
-              {/* Animated galaxy overlay */}
+              {/* Animated cosmic overlay */}
               <div 
                 className="absolute inset-0 opacity-40"
                 style={{
-                  background: `url(${GALAXY_URL}) center/cover`,
+                  background: SPHERE_GRADIENT,
                   animation: 'dataSphereRotate 60s linear infinite'
                 }}
               />
@@ -755,14 +758,14 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
                       </linearGradient>
                     </defs>
                   </svg>
-                  {/* Sphere video background only - no angels */}
+                  {/* Sphere video background with blinking angel */}
                   <div 
                     className="absolute inset-0 rounded-full flex items-center justify-center overflow-hidden"
                   >
-                    {/* Fallback background for iOS */}
+                    {/* Fallback gradient background for iOS */}
                     <div 
-                      className="absolute inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-cyan-900 rounded-full"
-                      style={{ background: `url(${GALAXY_URL}) center/cover` }}
+                      className="absolute inset-0 rounded-full"
+                      style={{ background: SPHERE_GRADIENT }}
                     />
                     {/* Data Sphere Video Background */}
                     <video
@@ -781,17 +784,69 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
                     >
                       <source src="/datasphere-bg.mp4" type="video/mp4" />
                     </video>
+                    {/* Blinking Angel Overlay - 9 seconds on, 9 seconds off */}
+                    <motion.img
+                      src={gender === 'female' ? ANGEL_FEMALE : ANGEL_MALE}
+                      alt="Angel"
+                      className="absolute w-10 h-10 object-contain z-10"
+                      style={{ 
+                        filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.4))'
+                      }}
+                      animate={{
+                        opacity: [0, 1, 1, 0],
+                      }}
+                      transition={{
+                        duration: 18,
+                        times: [0, 0.5, 0.5, 1],
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
                   </div>
                 </div>
                 
-                <div>
-                  <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                    <span style={{ textTransform: 'none', fontVariant: 'normal' }}>{widgetName}</span>
-                    <span className="text-xs bg-gradient-to-r from-cyan-400 to-purple-500 px-2 py-0.5 rounded-full">
-                      LIVE
-                    </span>
-                  </h3>
-                  <p className="text-cyan-300/70 text-xs">Family Psychology AI</p>
+                {/* Name and Mini Datasphere with Angel */}
+                <div className="flex items-center gap-3">
+                  {/* Mini Datasphere next to name */}
+                  <div className="relative w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                    <div 
+                      className="absolute inset-0 rounded-full"
+                      style={{ background: SPHERE_GRADIENT }}
+                    />
+                    <video
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="absolute inset-0 w-full h-full object-cover"
+                      style={{ transform: 'scale(2)' }}
+                    >
+                      <source src="/datasphere-bg.mp4" type="video/mp4" />
+                    </video>
+                    {/* Mini Blinking Angel */}
+                    <motion.img
+                      src={gender === 'female' ? ANGEL_FEMALE : ANGEL_MALE}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-contain p-1"
+                      animate={{ opacity: [0, 1, 1, 0] }}
+                      transition={{
+                        duration: 18,
+                        times: [0, 0.5, 0.5, 1],
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                      <span style={{ textTransform: 'none', fontVariant: 'normal' }}>{widgetName}</span>
+                      <span className="text-xs bg-gradient-to-r from-cyan-400 to-purple-500 px-2 py-0.5 rounded-full">
+                        LIVE
+                      </span>
+                    </h3>
+                    <p className="text-cyan-300/70 text-xs">Family Psychology AI</p>
+                  </div>
                 </div>
               </div>
               
