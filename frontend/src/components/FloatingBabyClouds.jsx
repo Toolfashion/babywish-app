@@ -1,81 +1,87 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
-// Unique baby images
+// New baby photos from user
 const BABY_PHOTOS = [
-  { url: "https://images.unsplash.com/photo-1519689680058-324335c77eba?w=200&h=200&fit=crop&crop=face", gender: 'boy' },
-  { url: "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=200&h=200&fit=crop&crop=face", gender: 'girl' },
-  { url: "https://images.unsplash.com/photo-1544126592-807ade215a0b?w=200&h=200&fit=crop&crop=face", gender: 'boy' },
-  { url: "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=200&h=200&fit=crop&crop=face", gender: 'girl' },
-  { url: "https://images.unsplash.com/photo-1596463531892-a29c2a78ef69?w=200&h=200&fit=crop&crop=face", gender: 'boy' },
-  { url: "https://images.unsplash.com/photo-1522771930-78848d9293e8?w=200&h=200&fit=crop&crop=face", gender: 'girl' },
+  { url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/3wc4f2v5_IMG_6408.jpeg", gender: 'boy' },   // Astronaut baby on moon
+  { url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/l835rh2c_IMG_6405.jpeg", gender: 'boy' },   // Baby with unicorn
+  { url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/il33j90y_IMG_6407.jpeg", gender: 'boy' },   // Orange astronaut baby
+  { url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/h26cwxbd_IMG_6402.jpeg", gender: 'girl' },  // Mermaid baby
+  { url: "https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/heo94sy5_IMG_6401.jpeg", gender: 'girl' },  // Angel baby sleeping
 ];
 
-// Alternating positions
+// Alternating positions - more spread out
 const POSITIONS = [
-  { left: '8%' },
-  { right: '8%' },
-  { left: '15%' },
-  { right: '15%' },
   { left: '5%' },
   { right: '5%' },
-  { left: '20%' },
-  { right: '20%' },
+  { left: '15%' },
+  { right: '15%' },
+  { left: '25%' },
+  { right: '25%' },
   { left: '10%' },
   { right: '10%' },
+  { left: '20%' },
+  { right: '20%' },
+  { left: '8%' },
+  { right: '8%' },
+  { left: '30%' },
+  { right: '30%' },
 ];
 
-// Cloud sequence with direction and fade point
-// fadeAt: 'full' = goes all the way, '75' = fades at 75% of journey
+// Cloud sequence with direction - all fall to middle of screen (50%)
+// Mix of clouds with and without photos
 const CLOUD_SEQUENCE = [
-  { hasPhoto: false, gender: 'boy', direction: 'down', fadeAt: 'full' },   // Goes all the way DOWN
-  { hasPhoto: false, gender: 'girl', direction: 'down', fadeAt: '75' },    // Fades at 75%
-  { hasPhoto: true, photoIndex: 0, direction: 'down', fadeAt: 'full' },    // Photo goes all the way DOWN
-  { hasPhoto: false, gender: 'boy', direction: 'down', fadeAt: 'full' },   // Goes all the way DOWN
-  { hasPhoto: false, gender: 'girl', direction: 'down', fadeAt: '75' },    // Fades at 75%
-  { hasPhoto: false, gender: 'boy', direction: 'down', fadeAt: '75' },     // Fades at 75%
-  { hasPhoto: true, photoIndex: 1, direction: 'down', fadeAt: 'full' },    // Photo goes all the way DOWN
-  { hasPhoto: false, gender: 'girl', direction: 'down', fadeAt: 'full' },  // Goes all the way DOWN
-  { hasPhoto: false, gender: 'boy', direction: 'down', fadeAt: '75' },     // Fades at 75%
-  { hasPhoto: true, photoIndex: 2, direction: 'down', fadeAt: 'full' },    // Photo goes all the way DOWN
+  { hasPhoto: false, gender: 'boy' },      // No photo - just cloud
+  { hasPhoto: true, photoIndex: 0 },       // Photo: Astronaut baby
+  { hasPhoto: false, gender: 'girl' },     // No photo
+  { hasPhoto: false, gender: 'boy' },      // No photo
+  { hasPhoto: true, photoIndex: 1 },       // Photo: Unicorn baby
+  { hasPhoto: false, gender: 'girl' },     // No photo
+  { hasPhoto: true, photoIndex: 2 },       // Photo: Orange astronaut
+  { hasPhoto: false, gender: 'boy' },      // No photo
+  { hasPhoto: false, gender: 'girl' },     // No photo
+  { hasPhoto: true, photoIndex: 3 },       // Photo: Mermaid baby
+  { hasPhoto: false, gender: 'boy' },      // No photo
+  { hasPhoto: false, gender: 'girl' },     // No photo
+  { hasPhoto: true, photoIndex: 4 },       // Photo: Angel baby
+  { hasPhoto: false, gender: 'boy' },      // No photo
 ];
 
-const CloudBaby = ({ hasPhoto, imageUrl, gender, position, fadeAt }) => {
+const CloudBaby = ({ hasPhoto, imageUrl, gender, position }) => {
   const isBoy = gender === 'boy';
   const cloudColor = isBoy ? 'rgba(147, 197, 253, 0.6)' : 'rgba(251, 207, 232, 0.6)';
   const cloudColorLight = isBoy ? 'rgba(191, 219, 254, 0.4)' : 'rgba(252, 231, 243, 0.4)';
   const borderColor = isBoy ? 'rgba(147, 197, 253, 0.6)' : 'rgba(251, 182, 206, 0.6)';
   const gradientId = `cloud-gradient-${Date.now()}-${Math.random()}`;
 
-  // Calculate end position: full = 110% (off screen), 75 = 75% down
-  const endPosition = fadeAt === 'full' ? '110%' : '75%';
-  const duration = fadeAt === 'full' ? 20 : 15;
+  // Fall to middle of screen (50vh) - slower animation (30-40 seconds)
+  const duration = 30 + Math.random() * 10; // 30-40 seconds (very slow)
 
   return (
     <motion.div
       className="absolute"
       style={{ ...position }}
-      initial={{ top: '-100px', opacity: 0 }}
-      animate={{ top: endPosition, opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 0.5 } }}
+      initial={{ top: '-120px', opacity: 0 }}
+      animate={{ top: '50vh', opacity: 1 }}
+      exit={{ opacity: 0, transition: { duration: 1 } }}
       transition={{
         top: { duration: duration, ease: "linear" },
-        opacity: { duration: 0.5 },
+        opacity: { duration: 1 },
       }}
     >
-      {/* Blinking animation */}
+      {/* Blinking animation - slower */}
       <motion.div
-        animate={{ opacity: [1, 0.3, 1, 0.3, 1, 0.3, 1] }}
+        animate={{ opacity: [1, 0.4, 1, 0.4, 1] }}
         transition={{
-          duration: 6,
+          duration: 8,
           repeat: Infinity,
           ease: "easeInOut",
         }}
       >
         {/* Gentle horizontal sway */}
         <motion.div
-          animate={{ x: [0, 5, -5, 3, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          animate={{ x: [0, 8, -8, 4, 0] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         >
           <div className="relative flex items-center justify-center">
             {/* Cloud */}
@@ -139,7 +145,7 @@ const CloudBaby = ({ hasPhoto, imageUrl, gender, position, fadeAt }) => {
                       border: '1px solid rgba(255,255,255,0.7)',
                     }}
                   >
-                    {isBoy ? '♂' : '♀'}
+                    {isBoy ? '' : ''}
                   </div>
                 </>
               ) : (
@@ -178,33 +184,49 @@ const CloudBaby = ({ hasPhoto, imageUrl, gender, position, fadeAt }) => {
 };
 
 const FloatingBabyClouds = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [showCloud, setShowCloud] = useState(true);
+  const [clouds, setClouds] = useState([]);
+  const [cloudIdCounter, setCloudIdCounter] = useState(0);
 
+  // Spawn new clouds at intervals
   useEffect(() => {
-    const interval = setInterval(() => {
-      setShowCloud(false);
-      
-      setTimeout(() => {
-        setCurrentIndex(prev => (prev + 1) % CLOUD_SEQUENCE.length);
-        setShowCloud(true);
-      }, 500);
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, []);
+    // Initial clouds
+    const initialClouds = [];
+    for (let i = 0; i < 3; i++) {
+      initialClouds.push({
+        id: i,
+        ...CLOUD_SEQUENCE[i % CLOUD_SEQUENCE.length],
+        position: POSITIONS[i % POSITIONS.length],
+      });
+    }
+    setClouds(initialClouds);
+    setCloudIdCounter(3);
 
-  const cloudData = CLOUD_SEQUENCE[currentIndex];
-  const position = POSITIONS[currentIndex % POSITIONS.length];
-  
-  let imageUrl = null;
-  let gender = cloudData.gender || 'boy';
-  
-  if (cloudData.hasPhoto) {
-    const photo = BABY_PHOTOS[cloudData.photoIndex];
-    imageUrl = photo.url;
-    gender = photo.gender;
-  }
+    // Spawn new clouds every 6-8 seconds (slower)
+    const spawnInterval = setInterval(() => {
+      setCloudIdCounter(prev => {
+        const newId = prev + 1;
+        const cloudData = CLOUD_SEQUENCE[newId % CLOUD_SEQUENCE.length];
+        const position = POSITIONS[newId % POSITIONS.length];
+        
+        setClouds(currentClouds => {
+          // Keep max 6 clouds on screen
+          const newClouds = currentClouds.length >= 6 
+            ? currentClouds.slice(1) 
+            : currentClouds;
+          
+          return [...newClouds, {
+            id: newId,
+            ...cloudData,
+            position,
+          }];
+        });
+        
+        return newId;
+      });
+    }, 7000); // New cloud every 7 seconds
+
+    return () => clearInterval(spawnInterval);
+  }, []);
 
   return (
     <div 
@@ -212,20 +234,30 @@ const FloatingBabyClouds = () => {
       style={{ zIndex: 15 }}
       data-testid="floating-baby-clouds"
     >
-      <AnimatePresence mode="wait">
-        {showCloud && (
-          <CloudBaby
-            key={currentIndex}
-            hasPhoto={cloudData.hasPhoto}
-            imageUrl={imageUrl}
-            gender={gender}
-            position={position}
-            fadeAt={cloudData.fadeAt}
-          />
-        )}
+      <AnimatePresence>
+        {clouds.map((cloud) => {
+          let imageUrl = null;
+          let gender = cloud.gender || 'boy';
+          
+          if (cloud.hasPhoto && cloud.photoIndex !== undefined) {
+            const photo = BABY_PHOTOS[cloud.photoIndex];
+            imageUrl = photo.url;
+            gender = photo.gender;
+          }
+
+          return (
+            <CloudBaby
+              key={cloud.id}
+              hasPhoto={cloud.hasPhoto}
+              imageUrl={imageUrl}
+              gender={gender}
+              position={cloud.position}
+            />
+          );
+        })}
       </AnimatePresence>
     </div>
   );
 };
 
-export default FloatingBabyClouds
+export default FloatingBabyClouds;
