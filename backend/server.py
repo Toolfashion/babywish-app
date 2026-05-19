@@ -3742,6 +3742,150 @@ async def calculate_best_timing(request: BestTimingRequest):
 # Include the router in the main app
 app.include_router(api_router)
 
+# ============================================
+# FILE VIEW ENDPOINT FOR DEPLOYMENT (V2)
+# ============================================
+from fastapi.responses import PlainTextResponse
+import time
+
+@app.get("/api/viewfile/{filename}")
+async def view_file_v2(filename: str):
+    """Serve frontend files as plain text for easy copy-paste deployment"""
+    file_mappings = {
+        "ChatWidget.txt": "/app/frontend/src/components/ChatWidget.jsx",
+        "ChatWidget.jsx": "/app/frontend/src/components/ChatWidget.jsx",
+        "StarField.txt": "/app/frontend/src/components/StarField.jsx",
+        "StarField.jsx": "/app/frontend/src/components/StarField.jsx",
+        "LandingPage.txt": "/app/frontend/src/pages/LandingPage.jsx",
+        "LandingPage.jsx": "/app/frontend/src/pages/LandingPage.jsx",
+        "FloatingVideoCarousel.txt": "/app/frontend/src/components/FloatingVideoCarousel.jsx",
+        "FloatingVideoCarousel.jsx": "/app/frontend/src/components/FloatingVideoCarousel.jsx",
+        "FloatingBabyClouds.txt": "/app/frontend/src/components/FloatingBabyClouds.jsx",
+        "FloatingBabyClouds.jsx": "/app/frontend/src/components/FloatingBabyClouds.jsx",
+        "server.txt": "/app/backend/server.py",
+        "server.py": "/app/backend/server.py",
+    }
+    
+    filepath = file_mappings.get(filename)
+    if not filepath:
+        raise HTTPException(status_code=404, detail=f"File not found: {filename}")
+    
+    try:
+        # Force fresh read - no caching
+        with open(filepath, "r", encoding="utf-8") as f:
+            content = f.read()
+        return PlainTextResponse(content=content, media_type="text/plain; charset=utf-8")
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail=f"File not found on server: {filename}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Serve images from public folder
+
+@app.get("/api/assets/{filename}")
+async def download_asset(filename: str):
+    """Serve image files for download"""
+    import os
+    allowed_files = {
+        "angel-female-transparent.png": "/app/frontend/public/angel-female-transparent.png",
+        "angel-male-transparent.png": "/app/frontend/public/angel-male-transparent.png",
+        "brain-pink.jpg": "/app/frontend/public/brain-pink.jpg",
+        "brain-blue.jpg": "/app/frontend/public/brain-blue.jpg",
+    }
+    filepath = allowed_files.get(filename)
+    if not filepath or not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail=f"File not found: {filename}")
+    return FileResponse(filepath, media_type="image/png", filename=filename)
+
+# ============================================
+# PRERENDER.IO MIDDLEWARE FOR SEO
+# ============================================
+# This middleware detects search engine bots and serves
+# pre-rendered HTML from prerender.io for better SEO indexing
+
+PRERENDER_TOKEN = os.environ.get('PRERENDER_TOKEN', '')
+PRERENDER_SERVICE_URL = "https://service.prerender.io"
+
+# List of bot user agents to detect
+BOT_USER_AGENTS = [
+    "googlebot", "google-inspectiontool", "adsbot-google",
+    "bingbot", "msnbot", "yandex", "baiduspider",
+    "duckduckbot", "slurp", "ia_archiver",
+    "twitterbot", "facebookexternalhit", "linkedinbot",
+    "slackbot", "discordbot", "embedly", "pinterestbot",
+    "telegrambot", "whatsapp", "applebot"
+]
+
+# Paths to exclude from prerendering (API routes, assets, etc.)
+PRERENDER_EXCLUDE_PATHS = [
+    "/api/", "/static/", "/assets/", "/_next/",
+    ".js", ".css", ".xml", ".json", ".ico", ".png", ".jpg", ".jpeg", ".gif", ".svg",
+    ".woff", ".woff2", ".ttf", ".mp4", ".mp3", ".webp"
+]
+
+def is_bot(user_agent: str) -> bool:
+    """Check if the request is from a search engine bot"""
+    if not user_agent:
+        return False
+    ua = user_agent.lower()
+    return any(bot in ua for bot in BOT_USER_AGENTS)
+
+def should_prerender(path: str) -> bool:
+    """Check if the path should be prerendered"""
+    path_lower = path.lower()
+    return not any(excluded in path_lower for excluded in PRERENDER_EXCLUDE_PATHS)
+
+@app.middleware("http")
+async def prerender_middleware(request: Request, call_next):
+    """
+    Middleware to serve pre-rendered pages to search engine bots.
+    This helps with SEO for Single Page Applications (SPAs).
+    """
+    # Skip if no prerender token configured
+    if not PRERENDER_TOKEN:
+        return await call_next(request)
+    
+    user_agent = request.headers.get("user-agent", "")
+    path = request.url.path
+    
+    # Only prerender for bots on eligible paths
+    if is_bot(user_agent) and should_prerender(path):
+        try:
+            # Construct the full URL to prerender
+            full_url = str(request.url)
+            
+            # Replace preview URL with production URL for prerendering
+            if "preview.emergentagent.com" in full_url:
+                full_url = full_url.replace(
+                    request.url.netloc, 
+                    "getbabywish.com"
+                ).replace("http://", "https://")
+            
+            prerender_url = f"{PRERENDER_SERVICE_URL}/{full_url}"
+            
+            headers = {
+                "X-Prerender-Token": PRERENDER_TOKEN,
+                "User-Agent": user_agent,
+            }
+            
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                prerender_response = await client.get(prerender_url, headers=headers)
+                
+                if prerender_response.status_code == 200:
+                    logger.info(f"Prerender served for bot: {user_agent[:50]}... on {path}")
+                    return Response(
+                        content=prerender_response.content,
+                        status_code=200,
+                        media_type="text/html; charset=utf-8",
+                    )
+                else:
+                    logger.warning(f"Prerender failed ({prerender_response.status_code}) for {path}")
+        except Exception as e:
+            logger.error(f"Prerender error: {str(e)}")
+    
+    # Continue with normal request handling
+    return await call_next(request)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
