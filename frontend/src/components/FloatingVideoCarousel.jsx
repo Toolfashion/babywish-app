@@ -1,684 +1,544 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { useAuth } from '../context/AuthContext';
+import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Play } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { Button } from '../components/ui/button';
-import { Star, Moon, Sparkles, ArrowRight, Instagram, Facebook, Twitter, Gift, Video, MessageSquare, Mail, X } from 'lucide-react';
-import StarField from '../components/StarField';
-import HandsWithEarth from '../components/HandsWithEarth';
-import LanguageSelector from '../components/LanguageSelector';
-import FloatingBabyClouds from '../components/FloatingBabyClouds';
-import SloganPickerWheel from '../components/SloganPickerWheel';
-import DescriptionPickerWheel from '../components/DescriptionPickerWheel';
-import InteractiveQuiz from '../components/InteractiveQuiz';
-import MilestonePredictor from '../components/MilestonePredictor';
-import BabyCertificate from '../components/BabyCertificate';
-import SocialPickerWheel from '../components/SocialPickerWheel';
 
-// Rainbow effect with slogan colors 🌈
-const rainbowStyle = `
-  @keyframes shimmer {
-    0% { background-position: -400% center; }
-    100% { background-position: 400% center; }
-  }
-  .shimmer-text {
-    background: linear-gradient(
-      90deg,
-      #f472b6 0%,
-      #c084fc 17%,
-      #60a5fa 34%,
-      #22d3ee 50%,
-      #2dd4bf 67%,
-      #fbbf24 84%,
-      #f472b6 100%
-    );
-    background-size: 400% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-    animation: shimmer 36s linear infinite;
-  }
-`;
+// TikTok Icon Component
+const TikTokIcon = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/>
+  </svg>
+);
 
-const LandingPage = () => {
-  const navigate = useNavigate();
-  const { isAuthenticated, loading } = useAuth();
-  const { t, language } = useLanguage();
-  const [showPromoForm, setShowPromoForm] = useState(false);
-  const [promoFormData, setPromoFormData] = useState({
-    email: '',
-    offerType: 'launch50',
-    videoLinks: '',
-    reviewLink: '',
-    socialPlatform: 'tiktok'
-  });
-  const [promoSubmitting, setPromoSubmitting] = useState(false);
-  const [promoSuccess, setPromoSuccess] = useState(false);
+// Facebook Icon Component
+const FacebookIcon = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+  </svg>
+);
 
-  const handleGetStarted = () => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    } else {
-      navigate('/start'); // Quick 3-step flow
+// Instagram Icon Component
+const InstagramIcon = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+  </svg>
+);
+
+// X (Twitter) Icon Component
+const XIcon = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+  </svg>
+);
+
+// YouTube Icon Component
+const YouTubeIcon = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+  </svg>
+);
+
+// Single Floating Button Component
+const FloatingReelButton = ({ 
+  type, // 'tiktok', 'facebook', 'instagram', or 'twitter'
+  videos,
+  initialPosition,
+  t
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isWheelDragging, setIsWheelDragging] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Check if mobile on mount
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  // Position state - using left positioning
+  const [position, setPosition] = useState(initialPosition);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+  const dragStartOffset = useRef({ x: 0, y: 0 });
+  const hasMoved = useRef(false);
+  
+  const wheelRef = useRef(null);
+  const startY = useRef(0);
+  const startIndex = useRef(0);
+
+  const ITEM_HEIGHT = 70;
+  const VISIBLE_ITEMS = 5;
+
+  const isTikTok = type === 'tiktok';
+  const isFacebook = type === 'facebook';
+  const isInstagram = type === 'instagram';
+  const isTwitter = type === 'twitter';
+  const isYouTube = type === 'youtube';
+  
+  const label = isTikTok ? 'Reels.' : isFacebook ? 'Faceb.' : isInstagram ? 'Insta.' : isYouTube ? 'YouTb.' : 'X-Twi.';
+  const Icon = isTikTok ? TikTokIcon : isFacebook ? FacebookIcon : isInstagram ? InstagramIcon : isYouTube ? YouTubeIcon : XIcon;
+  // Same gradient for all buttons
+  const gradientClass = 'from-cyan-600 to-purple-600';
+
+  // Wheel scroll handler for the picker
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 1 : -1;
+    setSelectedIndex(prev => {
+      const newIndex = prev + delta;
+      if (newIndex < 0) return 0;
+      if (newIndex >= videos.length) return videos.length - 1;
+      return newIndex;
+    });
+  };
+
+  // Wheel/picker drag handlers (for scrolling through videos)
+  const handleWheelDragStart = (e) => {
+    setIsWheelDragging(true);
+    startY.current = e.touches ? e.touches[0].clientY : e.clientY;
+    startIndex.current = selectedIndex;
+  };
+
+  const handleWheelDragMove = (e) => {
+    if (!isWheelDragging) return;
+    const currentY = e.touches ? e.touches[0].clientY : e.clientY;
+    const diff = startY.current - currentY;
+    const indexDiff = Math.round(diff / ITEM_HEIGHT);
+    let newIndex = startIndex.current + indexDiff;
+    newIndex = Math.max(0, Math.min(videos.length - 1, newIndex));
+    setSelectedIndex(newIndex);
+  };
+
+  const handleWheelDragEnd = () => {
+    setIsWheelDragging(false);
+  };
+
+  // Button drag handlers (for moving the closed button around the screen)
+  const handleButtonDragStart = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+    hasMoved.current = false;
+    
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    
+    dragStartPos.current = { x: clientX, y: clientY };
+    dragStartOffset.current = { x: position.x, y: position.y };
+  };
+
+  const handleButtonDragMove = (e) => {
+    if (!isDragging) return;
+    
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    
+    const deltaX = clientX - dragStartPos.current.x;
+    const deltaY = clientY - dragStartPos.current.y;
+    
+    // Check if we've moved enough to consider it a drag (increased threshold)
+    if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+      hasMoved.current = true;
+    }
+    
+    // Only move if we've actually dragged
+    if (hasMoved.current) {
+      // Calculate new position using left positioning
+      const newX = Math.max(16, Math.min(window.innerWidth - 120, dragStartOffset.current.x + deltaX));
+      const newY = Math.max(80, Math.min(window.innerHeight - 80, dragStartOffset.current.y + deltaY));
+      
+      setPosition({ x: newX, y: newY });
     }
   };
 
-  // Dynamic features based on language with icons and actions
-  const [showQuiz, setShowQuiz] = useState(false);
-  const [showMilestone, setShowMilestone] = useState(false);
-  const [showCertificate, setShowCertificate] = useState(false);
-  
-  const showComingSoonMessage = () => {
-    alert(t.featureComingSoon || "This feature is coming soon! Our software is being updated. 🚀");
+  const handleButtonDragEnd = (e) => {
+    // If we didn't move, trigger click to open
+    if (!hasMoved.current && isDragging) {
+      setIsOpen(true);
+    }
+    setIsDragging(false);
   };
 
-  const features = [
-    { name: t.feature1, icon: "👶", action: () => setShowQuiz(true) },
-    { name: t.feature2, icon: "🏥", action: () => setShowMilestone(true) },
-    { name: t.feature3, icon: "🏠", action: () => setShowCertificate(true) },
-  ];
+  const handleButtonClick = (e) => {
+    // This is a fallback for when drag handlers don't fire
+    if (!isDragging && !hasMoved.current) {
+      setIsOpen(true);
+    }
+  };
+
+  // Global mouse/touch move and up handlers
+  useEffect(() => {
+    if (isDragging) {
+      const handleGlobalMove = (e) => handleButtonDragMove(e);
+      const handleGlobalEnd = () => handleButtonDragEnd();
+      
+      window.addEventListener('mousemove', handleGlobalMove);
+      window.addEventListener('mouseup', handleGlobalEnd);
+      window.addEventListener('touchmove', handleGlobalMove, { passive: false });
+      window.addEventListener('touchend', handleGlobalEnd);
+      
+      return () => {
+        window.removeEventListener('mousemove', handleGlobalMove);
+        window.removeEventListener('mouseup', handleGlobalEnd);
+        window.removeEventListener('touchmove', handleGlobalMove);
+        window.removeEventListener('touchend', handleGlobalEnd);
+      };
+    }
+  }, [isDragging, position]);
+
+  // Auto-rotate through videos when open
+  useEffect(() => {
+    if (isOpen && !isWheelDragging) {
+      const interval = setInterval(() => {
+        setSelectedIndex(prev => (prev + 1) % videos.length);
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [isOpen, isWheelDragging, videos.length]);
+
+  const getItemStyle = (index) => {
+    const diff = index - selectedIndex;
+    const absD = Math.abs(diff);
+    
+    const rotateX = diff * 30;
+    const translateZ = absD * -30;
+    const translateY = diff * ITEM_HEIGHT * 0.5;
+    const opacity = Math.max(0, 1 - absD * 0.4);
+    const scale = Math.max(0.6, 1 - absD * 0.2);
+    
+    return {
+      transform: `perspective(400px) rotateX(${rotateX}deg) translateZ(${translateZ}px) translateY(${translateY}px) scale(${scale})`,
+      opacity,
+      zIndex: 10 - absD,
+    };
+  };
+
+  if (!isVisible) return null;
 
   return (
-    <>
-    <div className="min-h-screen relative overflow-hidden" data-testid="landing-page">
-      {/* Inject rainbow animation CSS */}
-      <style>{rainbowStyle}</style>
-      <StarField />
-      <FloatingBabyClouds />
-      
-      <div className="relative z-20 min-h-screen flex flex-col">
-        {/* Promo Banner - Special Offers */}
-        <div
-          className="relative px-4 py-1 overflow-hidden"
+    <AnimatePresence>
+      {!isOpen ? (
+        // Closed state - Circular icon button (social media style)
+        <motion.div
+          key={`closed-${type}`}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ 
+            opacity: 1, 
+            scale: isDragging ? 1.1 : 1,
+            boxShadow: isDragging ? '0 0 30px rgba(34, 211, 238, 0.5)' : '0 0 15px rgba(34, 211, 238, 0.3)'
+          }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          className={`fixed z-50 bg-gradient-to-r ${gradientClass} rounded-full flex items-center justify-center shadow-lg transition-shadow ios-fixed ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+          style={{
+            position: 'fixed',
+            left: `${position.x}px`,
+            top: `${position.y}px`,
+            width: '44px',
+            height: '44px',
+            zIndex: 9998,
+            userSelect: 'none',
+            touchAction: 'none',
+            WebkitTransform: 'translate3d(0,0,0)',
+            transform: 'translate3d(0,0,0)',
+            WebkitBackfaceVisibility: 'hidden',
+            backfaceVisibility: 'hidden',
+            WebkitPerspective: 1000,
+            perspective: 1000,
+            willChange: 'transform'
+          }}
+          onMouseDown={handleButtonDragStart}
+          onTouchStart={handleButtonDragStart}
+          onClick={handleButtonClick}
         >
-          {/* Static Gradient Background - no animation conflict */}
-          <div className="absolute inset-0 overflow-hidden">
+          <Icon className="w-5 h-5 text-white pointer-events-none" />
+        </motion.div>
+      ) : (
+        // Open state - Carousel at dragged position
+        <motion.div
+          key={`open-${type}`}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          className="fixed z-50 rounded-3xl shadow-2xl border border-white/20 overflow-hidden ios-fixed"
+          style={{
+            position: 'fixed',
+            left: `${Math.min(position.x, window.innerWidth - 160)}px`,
+            top: `${Math.min(position.y, window.innerHeight - 450)}px`,
+            width: '140px',
+            zIndex: 9998,
+            background: 'rgba(0, 0, 0, 0.85)',
+            boxShadow: '0 0 40px rgba(34, 211, 238, 0.2), 0 0 80px rgba(168, 85, 247, 0.1)',
+            WebkitTransform: 'translate3d(0,0,0)',
+            transform: 'translate3d(0,0,0)',
+            WebkitBackfaceVisibility: 'hidden',
+            backfaceVisibility: 'hidden',
+            WebkitPerspective: 1000,
+            perspective: 1000,
+            willChange: 'transform'
+          }}
+        >
+          {/* Header */}
+          <div className={`bg-gradient-to-r ${gradientClass} px-3 py-1.5 flex items-center justify-between`}>
+            <span className="text-white text-xs font-bold flex items-center gap-1">
+              <Icon className="w-3 h-3" />
+              {label}
+            </span>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="text-cyan-200 hover:text-white bg-white/20 hover:bg-white/30 rounded-full p-0.5 transition-colors"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+
+          {/* iOS Picker Wheel with Thumbnails */}
+          <div className="relative">
             <div 
-              style={{
-                position: 'absolute',
-                inset: 0,
-                background: `linear-gradient(90deg, 
-                  rgba(255,100,150,0.5), 
-                  rgba(200,150,255,0.5), 
-                  rgba(120,200,255,0.5), 
-                  rgba(255,100,150,0.5)
-                )`,
-                backgroundSize: '200% 100%',
-              }}
-            />
-          </div>
-
-          {/* Content - Promo Offers - Compact 2 Lines */}
-          <div className="relative z-10 max-w-5xl mx-auto flex flex-col items-center gap-1 py-1 px-3">
-            {/* Line 1 - Launch 50% */}
-            <div className="flex items-center gap-2 flex-wrap justify-center">
-              <span className="text-sm">🎁</span>
-              <span className="font-bold text-xs text-yellow-300 drop-shadow-lg">Launch 50%</span>
-              <span className="text-xs text-white/80">5 videos + review</span>
-              <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">0/9</span>
-            </div>
-            
-            {/* Line 2 - Free Pass 100% - SOLD OUT */}
-            <div className="flex items-center gap-2 flex-wrap justify-center opacity-60">
-              <span className="text-sm">🌟</span>
-              <span className="font-bold text-xs text-green-300 drop-shadow-lg line-through">Free Pass 100%</span>
-              <span className="text-xs text-white/80">9 videos + review</span>
-              <span className="text-[10px] bg-gray-500 text-white px-1.5 py-0.5 rounded-full">0/3</span>
-              <span className="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded-full font-bold">SOLD OUT</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Header */}
-        <header className="py-6 px-4">
-          <div className="max-w-6xl mx-auto flex items-center justify-between">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-1.5"
+              ref={wheelRef}
+              className="relative overflow-hidden cursor-ns-resize"
+              style={{ height: `${ITEM_HEIGHT * VISIBLE_ITEMS}px` }}
+              onWheel={handleWheel}
+              onMouseDown={handleWheelDragStart}
+              onMouseMove={handleWheelDragMove}
+              onMouseUp={handleWheelDragEnd}
+              onMouseLeave={handleWheelDragEnd}
+              onTouchStart={handleWheelDragStart}
+              onTouchMove={handleWheelDragMove}
+              onTouchEnd={handleWheelDragEnd}
             >
-              <Star className="w-5 h-5 text-amber-400 animate-pulse-slow" />
-              <h1 className="text-lg md:text-xl font-bold shimmer-text" data-testid="app-title">
-                {t.appTitle}
-              </h1>
-              {/* Beta Badge */}
-              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-black rounded-full animate-pulse">
-                BETA
-              </span>
-              <Moon className="w-5 h-5 text-purple-400 animate-pulse-slow" />
-            </motion.div>
+              {/* Gradient overlays */}
+              <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/40 to-transparent z-20 pointer-events-none" />
+              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/40 to-transparent z-20 pointer-events-none" />
+              
+              {/* Selection highlight */}
+              <div 
+                className="absolute inset-x-3 z-10 pointer-events-none rounded-xl border-2 border-cyan-400/70 bg-cyan-400/5"
+                style={{
+                  top: `${ITEM_HEIGHT * Math.floor(VISIBLE_ITEMS / 2)}px`,
+                  height: `${ITEM_HEIGHT}px`
+                }}
+              />
 
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-2 sm:gap-4"
-            >
-              <Button
-                data-testid="horoscope-nav-btn"
-                onClick={() => navigate('/horoscope')}
-                variant="ghost"
-                className="text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 hidden sm:inline-flex"
+              {/* Thumbnail Items */}
+              <div 
+                className="absolute inset-0 flex flex-col items-center"
+                style={{ paddingTop: `${ITEM_HEIGHT * Math.floor(VISIBLE_ITEMS / 2)}px` }}
               >
-                🔮 {t.dailyHoroscope || "Horoscope"}
-              </Button>
-              
-              <Button
-                data-testid="best-timing-nav-btn"
-                onClick={() => navigate('/best-timing')}
-                variant="ghost"
-                className="text-purple-400 hover:text-purple-300 hover:bg-purple-400/10 hidden sm:inline-flex"
-              >
-                ⏰ Best Timing
-              </Button>
-              
-              <Button
-                data-testid="gender-reveal-nav-btn"
-                onClick={() => navigate('/gender-reveal')}
-                variant="ghost"
-                className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10 hidden sm:inline-flex"
-              >
-                🎉 Share
-              </Button>
-              
-              <LanguageSelector />
-              
-              {!loading && (
-                isAuthenticated ? (
-                  <Button
-                    data-testid="dashboard-btn"
-                    onClick={() => navigate('/dashboard')}
-                    variant="outline"
-                    className="border-white/20 hover:bg-white/10"
+                {videos.map((video, index) => (
+                  <a
+                    key={video.id}
+                    href={video.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute w-full px-3 transition-all duration-150"
+                    style={{
+                      height: `${ITEM_HEIGHT}px`,
+                      top: '50%',
+                      marginTop: `-${ITEM_HEIGHT / 2}px`,
+                      ...getItemStyle(index)
+                    }}
+                    onClick={(e) => {
+                      if (index !== selectedIndex) {
+                        e.preventDefault();
+                        setSelectedIndex(index);
+                      }
+                    }}
                   >
-                    {t.dashboard}
-                  </Button>
-                ) : (
-                  <>
-                    <Button
-                      data-testid="login-nav-btn"
-                      onClick={() => navigate('/login')}
-                      variant="ghost"
-                      className="text-muted-foreground hover:text-white hidden sm:inline-flex"
+                    {/* Thumbnail Card */}
+                    <div 
+                      className={`relative w-full h-full rounded-lg overflow-hidden ${
+                        index === selectedIndex ? 'ring-2 ring-cyan-400 shadow-cyan-500/30 shadow-lg' : ''
+                      }`}
+                      style={{
+                        background: video.thumbnail ? `url(${video.thumbnail}) center/cover` : 'linear-gradient(135deg, #06b6d4, #8b5cf6)'
+                      }}
                     >
-                      {t.login}
-                    </Button>
-                    <Button
-                      data-testid="register-nav-btn"
-                      onClick={() => navigate('/register')}
-                      className="bg-primary hover:bg-primary/90"
-                    >
-                      {t.register}
-                    </Button>
-                  </>
-                )
-              )}
-            </motion.div>
-          </div>
-        </header>
-
-        {/* Hero Section */}
-        <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
-          <div className="text-center max-w-4xl">
-            {/* Hands with Earth Image */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8 }}
-              className="mb-8"
-            >
-              <HandsWithEarth />
-            </motion.div>
-
-            {/* Title with shimmer animation - giving life! */}
-            {/* Responsive text size - smaller for longer languages like German/Turkish */}
-            <motion.h2
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className={`font-black tracking-tight mb-4 ${
-                ['de', 'tr'].includes(language) 
-                  ? 'text-xl sm:text-2xl lg:text-3xl' 
-                  : 'text-2xl sm:text-3xl lg:text-4xl'
-              }`}
-            >
-              <span className="shimmer-text">{t.heroTitle1}</span>
-              <br />
-              <span className="text-white">{t.heroTitle2}</span>
-              <br />
-              <span className="shimmer-text">{t.heroTitle3 || t.heroTitle2}</span>
-            </motion.h2>
-
-            {/* Tagline - Small text below title */}
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.22 }}
-              className="text-sm text-white/70 mb-6 max-w-lg mx-auto italic"
-            >
-              {t.heroTagline}
-            </motion.p>
-
-            {/* Slogan - iOS Picker Wheel Style */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-              className="mb-6"
-            >
-              <SloganPickerWheel />
-            </motion.div>
-
-            {/* Guarantee Banner */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 }}
-              className="glass rounded-xl px-4 py-2.5 max-w-sm mx-auto mb-6 border border-amber-500/30"
-            >
-              {/* Accuracy Section */}
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xl">🎯</span>
-                <div>
-                  <span className="text-xl font-black text-amber-400">95%</span>
-                  <span className="text-white font-medium text-sm ml-1">{t.accuracy || 'Ακρίβεια'}</span>
-                </div>
-              </div>
-              <p className="text-white/80 text-xs mb-3">
-                {t.accuracyDesc || 'Το A Babywish σας λέει με 95% βεβαιότητα το φύλο του μελλοντικού σας παιδιού.'}
-              </p>
-              
-              {/* Money Back Section */}
-              <div className="flex items-start gap-2 pt-2 border-t border-white/10">
-                <span className="text-lg">💰</span>
-                <p className="text-emerald-400/90 text-xs">
-                  {t.moneyBackFull || 'Με μας δε ρισκάρετε τα χρήματά σας. Σας τα επιστρέφουμε πίσω αν η πρόβλεψή μας δεν είναι η αρχική μας διάγνωση.'}
-                </p>
-              </div>
-            </motion.div>
-
-            {/* Description - iOS Picker Wheel Style */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35 }}
-              className="max-w-2xl mx-auto mb-8"
-            >
-              <DescriptionPickerWheel />
-            </motion.div>
-
-            {/* AI Fun & Lifestyle Section - FREE */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="mb-10"
-            >
-              {/* Section Header with FREE Badge */}
-              <div className="text-center mb-4">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 mb-2">
-                  <span className="text-lg">✨</span>
-                  <span className="text-white font-semibold text-sm">AI Fun & Lifestyle</span>
-                  <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-500 text-white rounded-full animate-pulse">
-                    {t.free || 'ΔΩΡΕΑΝ'}
-                  </span>
-                </div>
-                <p className="text-white/50 text-xs">
-                  {t.funModulesSubtitle || 'Παίξτε, εμπνευστείτε, μοιραστείτε!'}
-                </p>
-              </div>
-              
-              {/* Feature Buttons */}
-              <div className="flex flex-wrap justify-center gap-4">
-                {features.map((feature) => (
-                  <motion.button
-                    key={feature.name}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={feature.action}
-                    className="px-5 py-3 rounded-2xl bg-white/10 border border-white/20 text-sm text-white hover:bg-white/20 active:bg-white/30 transition-all cursor-pointer touch-manipulation select-none min-w-[140px]"
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
-                    data-testid={`feature-btn-${feature.name}`}
-                  >
-                    <span className="text-xl mb-1 block">{feature.icon}</span>
-                    <span className="whitespace-pre-line text-xs leading-tight">{feature.name}</span>
-                  </motion.button>
+                      {/* Play Icon */}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                        <div className={`bg-black/50 rounded-full p-2 ${index === selectedIndex ? 'scale-110' : 'scale-90'} transition-transform`}>
+                          <Play className="w-4 h-4 text-white" fill="white" />
+                        </div>
+                      </div>
+                      
+                      {/* Number Overlay */}
+                      <div className="absolute bottom-1 right-2 text-cyan-300 text-lg font-black drop-shadow-lg" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.7)' }}>
+                        {video.label}
+                      </div>
+                      
+                      {/* Platform Badge */}
+                      <div className="absolute top-1 left-1 bg-black/50 rounded-full p-0.5">
+                        <Icon className="w-3 h-3 text-white" />
+                      </div>
+                    </div>
+                  </a>
                 ))}
               </div>
-            </motion.div>
+            </div>
 
-            {/* Premium Prediction CTA */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="text-center"
+            {/* Bottom action */}
+            <a
+              href={videos[selectedIndex]?.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`block bg-gradient-to-r ${gradientClass} hover:opacity-90 py-2.5 text-center transition-colors`}
             >
-              {/* PRO Badge */}
-              <div className="inline-flex items-center gap-2 mb-3">
-                <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full shadow-lg shadow-amber-500/30">
-                  PRO
-                </span>
-                <span className="text-white/60 text-sm">{t.premiumPrediction || 'Επαγγελματική Πρόβλεψη'}</span>
-              </div>
-              
-              <Button
-                data-testid="get-started-btn"
-                onClick={handleGetStarted}
-                className="px-10 py-6 text-lg font-bold rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500 hover:from-amber-600 hover:via-orange-600 hover:to-pink-600 shadow-lg shadow-orange-500/25 btn-glow animate-glow-pulse"
-              >
-                <span className="flex items-center gap-3">
-                  <span>🎯</span>
-                  {t.getProfessionalPrediction || 'Λάβετε την Πρόβλεψη'}
-                  <ArrowRight className="w-5 h-5" />
-                </span>
-              </Button>
-              
-              {/* Sub-text */}
-              <p className="text-amber-400/80 text-xs mt-2 font-medium">
-                {t.biologicalCycles || 'Βιολογικοί Κύκλοι'} • 95% {t.accuracy || 'Ακρίβεια'}
-              </p>
-            </motion.div>
-
-            {/* Pricing Preview */}
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="text-sm text-muted-foreground mt-6"
-            >
-              {t.priceFrom}
-            </motion.p>
-
-            {/* Social Picker Wheel - Between price and terms */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
-              style={{ marginTop: '90px' }}
-            >
-              <SocialPickerWheel />
-            </motion.div>
-
-            {/* Terms & Disclaimer - Stays between ChatWidgets */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 }}
-              className="text-center"
-              style={{ marginTop: '60px' }}
-            >
-              <p className="text-xs text-muted-foreground/50">
-                {t.footer}
-              </p>
-              <button 
-                onClick={() => navigate('/terms')}
-                className="text-xs text-purple-400 hover:text-purple-300 underline mt-1"
-              >
-                Terms & Conditions | Refund Policy
-              </button>
-            </motion.div>
+              <span className="text-white text-xs font-bold flex items-center justify-center gap-1">
+                <Play className="w-3 h-3" fill="white" />
+                {t.watchReel || 'Watch Reel'}
+              </span>
+            </a>
           </div>
-        </main>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
 
-        {/* Empty footer spacer for ChatWidgets */}
-        <footer className="py-2"></footer>
-      </div>
-    </div>
-      
-      {/* Promo Application Modal */}
-      <PromoApplicationModal
-        isOpen={showPromoForm}
-        onClose={() => setShowPromoForm(false)}
-        formData={promoFormData}
-        setFormData={setPromoFormData}
-        isSubmitting={promoSubmitting}
-        setIsSubmitting={setPromoSubmitting}
-        onSuccess={() => {
-          setPromoSuccess(true);
-          setShowPromoForm(false);
-          alert('✅ Η αίτησή σας υποβλήθηκε επιτυχώς! Θα λάβετε email εντός 24-48 ωρών.');
-        }}
+// Main component that renders all 4 buttons
+const FloatingVideoCarousel = () => {
+  const { t } = useLanguage();
+  
+  // Calculate positions - 2 rows layout
+  // Row 1: YouTube (left) | Facebook (center) | TikTok (right)
+  // Row 2: Instagram (left) | X-Twitter (right)
+  const calculatePositions = () => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 390;
+    
+    // Button size
+    const buttonSize = 44;
+    
+    // LEFT side position
+    const leftPosition = isMobile ? 15 : 19;
+    
+    // RIGHT side position - ensure button is visible (button width + margin from edge)
+    const rightPosition = screenWidth - buttonSize - (isMobile ? 15 : 60);
+    
+    // CENTER position (exactly between left and right buttons)
+    const centerPosition = Math.floor((leftPosition + rightPosition) / 2);
+    
+    // Y positions
+    const row1Y = isMobile ? 140 : 131;
+    const row2Y = row1Y + 99;
+    
+    return {
+      // Row 1: YouTube (left), Facebook (center), TikTok (right)
+      youtube: { x: leftPosition, y: row1Y },
+      facebook: { x: centerPosition, y: row1Y },
+      tiktok: { x: rightPosition, y: row1Y },
+      // Row 2: Instagram (left, below YouTube), Twitter (right, below TikTok)
+      instagram: { x: leftPosition, y: row2Y },
+      twitter: { x: rightPosition, y: row2Y }
+    };
+  };
+  
+  const [positions, setPositions] = useState(() => calculatePositions());
+  
+  // Calculate positions on mount AND resize
+  useEffect(() => {
+    // Calculate immediately on mount
+    const newPositions = calculatePositions();
+    setPositions(newPositions);
+    
+    // Also recalculate on resize
+    const handleResize = () => {
+      const newPos = calculatePositions();
+      setPositions(newPos);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // TikTok videos
+  const tiktokVideos = [
+    { id: 1, url: 'https://vm.tiktok.com/ZGdH8Yabj/', label: '1', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/oxbjiq84_IMG_5930.jpeg' },
+    { id: 2, url: 'https://vm.tiktok.com/ZGdHR7d8g/', label: '2', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/pjwbilpb_IMG_5931.jpeg' },
+    { id: 3, url: 'https://vm.tiktok.com/ZGdHRnKqD/', label: '3', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/d9p8e2mj_IMG_5932.jpeg' },
+    { id: 4, url: 'https://vm.tiktok.com/ZGdHRvWjn/', label: '4', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/o0lfvl81_IMG_5933.jpeg' },
+    { id: 5, url: 'https://vm.tiktok.com/ZGdH8L2xC/', label: '5', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/0frrsvhw_IMG_5934.jpeg' },
+    { id: 6, url: 'https://vm.tiktok.com/ZGdH8NFef/', label: '6', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/9wcnvyra_IMG_5935.jpeg' },
+  ];
+
+  // Facebook videos/reels
+  const facebookVideos = [
+    { id: 1, url: 'https://www.facebook.com/share/r/1E2aAgDZxZ/?mibextid=wwXIfr', label: '1', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/oxbjiq84_IMG_5930.jpeg' },
+    { id: 2, url: 'https://www.facebook.com/share/r/1QLS5U73Eq/?mibextid=wwXIfr', label: '2', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/pjwbilpb_IMG_5931.jpeg' },
+    { id: 3, url: 'https://www.facebook.com/share/r/1BqqNuHvGu/?mibextid=wwXIfr', label: '3', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/d9p8e2mj_IMG_5932.jpeg' },
+    { id: 4, url: 'https://www.facebook.com/share/r/1Efwdv5fgw/?mibextid=wwXIfr', label: '4', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/o0lfvl81_IMG_5933.jpeg' },
+    { id: 5, url: 'https://www.facebook.com/share/v/1BAJnfbpAa/?mibextid=wwXIfr', label: '5', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/0frrsvhw_IMG_5934.jpeg' },
+  ];
+
+  // Instagram reels - using profile link for now, can be updated with specific reel links
+  const instagramVideos = [
+    { id: 1, url: 'https://www.instagram.com/getbabywish/', label: '1', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/oxbjiq84_IMG_5930.jpeg' },
+    { id: 2, url: 'https://www.instagram.com/getbabywish/', label: '2', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/pjwbilpb_IMG_5931.jpeg' },
+    { id: 3, url: 'https://www.instagram.com/getbabywish/', label: '3', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/d9p8e2mj_IMG_5932.jpeg' },
+    { id: 4, url: 'https://www.instagram.com/getbabywish/', label: '4', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/o0lfvl81_IMG_5933.jpeg' },
+    { id: 5, url: 'https://www.instagram.com/getbabywish/', label: '5', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/0frrsvhw_IMG_5934.jpeg' },
+  ];
+
+  // X/Twitter videos - using profile link for now, can be updated with specific video links
+  const twitterVideos = [
+    { id: 1, url: 'https://x.com/getbabywish', label: '1', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/oxbjiq84_IMG_5930.jpeg' },
+    { id: 2, url: 'https://x.com/getbabywish', label: '2', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/pjwbilpb_IMG_5931.jpeg' },
+    { id: 3, url: 'https://x.com/getbabywish', label: '3', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/d9p8e2mj_IMG_5932.jpeg' },
+    { id: 4, url: 'https://x.com/getbabywish', label: '4', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/o0lfvl81_IMG_5933.jpeg' },
+    { id: 5, url: 'https://x.com/getbabywish', label: '5', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/0frrsvhw_IMG_5934.jpeg' },
+  ];
+
+  // YouTube videos - channel @getbabywish
+  const youtubeVideos = [
+    { id: 1, url: 'https://www.youtube.com/@getbabywish', label: '1', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/oxbjiq84_IMG_5930.jpeg' },
+    { id: 2, url: 'https://www.youtube.com/@getbabywish', label: '2', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/pjwbilpb_IMG_5931.jpeg' },
+    { id: 3, url: 'https://www.youtube.com/@getbabywish', label: '3', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/d9p8e2mj_IMG_5932.jpeg' },
+    { id: 4, url: 'https://www.youtube.com/@getbabywish', label: '4', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/o0lfvl81_IMG_5933.jpeg' },
+    { id: 5, url: 'https://www.youtube.com/@getbabywish', label: '5', thumbnail: 'https://customer-assets.emergentagent.com/job_parent-to-baby-1/artifacts/0frrsvhw_IMG_5934.jpeg' },
+  ];
+  
+  return (
+    <>
+      {/* ROW 1: YouTube (left), Facebook (center), TikTok (right) */}
+      <FloatingReelButton 
+        type="youtube"
+        videos={youtubeVideos}
+        initialPosition={positions.youtube}
+        t={t}
       />
       
-      {/* Interactive Quiz Modal */}
-      {showQuiz && (
-        <InteractiveQuiz 
-          onClose={() => setShowQuiz(false)}
-          onComplete={(result) => {
-            setShowQuiz(false);
-            navigate('/pricing');
-          }}
-        />
-      )}
+      <FloatingReelButton 
+        type="facebook"
+        videos={facebookVideos}
+        initialPosition={positions.facebook}
+        t={t}
+      />
       
-      {showMilestone && (
-        <MilestonePredictor 
-          onClose={() => setShowMilestone(false)}
-        />
-      )}
+      <FloatingReelButton 
+        type="tiktok"
+        videos={tiktokVideos}
+        initialPosition={positions.tiktok}
+        t={t}
+      />
       
-      {showCertificate && (
-        <BabyCertificate 
-          onClose={() => setShowCertificate(false)}
-        />
-      )}
+      {/* ROW 2: Instagram (left), X/Twitter (right) */}
+      <FloatingReelButton 
+        type="instagram"
+        videos={instagramVideos}
+        initialPosition={positions.instagram}
+        t={t}
+      />
+      
+      <FloatingReelButton 
+        type="twitter"
+        videos={twitterVideos}
+        initialPosition={positions.twitter}
+        t={t}
+      />
     </>
   );
 };
 
-// Promo Application Modal Component
-const PromoApplicationModal = ({ 
-  isOpen, 
-  onClose, 
-  formData, 
-  setFormData, 
-  isSubmitting, 
-  setIsSubmitting,
-  onSuccess 
-}) => {
-  const API_URL = process.env.REACT_APP_BACKEND_URL;
-  
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    try {
-      const response = await fetch(`${API_URL}/api/promo/apply`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          offer_type: formData.offerType,
-          video_links: formData.videoLinks.split('\n').filter(link => link.trim()),
-          review_link: formData.reviewLink,
-          social_platform: formData.socialPlatform
-        })
-      });
-      
-      if (response.ok) {
-        onSuccess();
-      } else {
-        const error = await response.json();
-        alert(error.detail || 'Σφάλμα κατά την υποβολή. Δοκιμάστε ξανά.');
-      }
-    } catch (err) {
-      alert('Σφάλμα σύνδεσης. Δοκιμάστε ξανά.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      
-      {/* Modal */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
-        className="relative w-full max-w-md bg-gradient-to-br from-gray-900 via-purple-900/50 to-gray-900 rounded-2xl border border-white/20 shadow-2xl overflow-hidden"
-      >
-        {/* Header */}
-        <div className="relative px-6 py-4 border-b border-white/10">
-          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 to-purple-500/20" />
-          <div className="relative flex items-center justify-between">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              <Gift className="w-5 h-5 text-amber-400" />
-              Αίτηση Προσφοράς
-            </h3>
-            <button
-              onClick={onClose}
-              className="p-1 rounded-full hover:bg-white/10 transition-colors"
-            >
-              <X className="w-5 h-5 text-white/70" />
-            </button>
-          </div>
-        </div>
-        
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Offer Type Selection */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-white/80">Επιλέξτε Προσφορά</label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, offerType: 'launch50' }))}
-                className={`p-3 rounded-xl border-2 transition-all ${
-                  formData.offerType === 'launch50'
-                    ? 'border-yellow-400 bg-yellow-400/20'
-                    : 'border-white/20 hover:border-white/40'
-                }`}
-              >
-                <div className="text-2xl mb-1">🎁</div>
-                <div className="text-sm font-bold text-yellow-300">50% Έκπτωση</div>
-                <div className="text-xs text-white/60">5 videos + review</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, offerType: 'freepass100' }))}
-                className={`p-3 rounded-xl border-2 transition-all ${
-                  formData.offerType === 'freepass100'
-                    ? 'border-green-400 bg-green-400/20'
-                    : 'border-white/20 hover:border-white/40'
-                }`}
-              >
-                <div className="text-2xl mb-1">🌟</div>
-                <div className="text-sm font-bold text-green-300">100% ΔΩΡΕΑΝ</div>
-                <div className="text-xs text-white/60">9 videos + review</div>
-              </button>
-            </div>
-          </div>
-
-          {/* Email */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-white/80">Email</label>
-            <input
-              type="email"
-              required
-              value={formData.email}
-              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-              placeholder="your@email.com"
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-purple-400"
-            />
-          </div>
-
-          {/* Social Platform */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-white/80">Πλατφόρμα</label>
-            <div className="flex gap-2">
-              {['tiktok', 'facebook', 'instagram'].map((platform) => (
-                <button
-                  key={platform}
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, socialPlatform: platform }))}
-                  className={`flex-1 px-3 py-2 rounded-lg border transition-all ${
-                    formData.socialPlatform === platform
-                      ? 'border-purple-400 bg-purple-400/20 text-white'
-                      : 'border-white/20 text-white/60 hover:border-white/40'
-                  }`}
-                >
-                  {platform === 'tiktok' && '🎵 TikTok'}
-                  {platform === 'facebook' && '📘 Facebook'}
-                  {platform === 'instagram' && '📸 Instagram'}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Video Links */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-white/80">
-              <Video className="w-4 h-4 inline mr-1" />
-              Links Videos (ένα ανά γραμμή)
-            </label>
-            <textarea
-              required
-              value={formData.videoLinks}
-              onChange={(e) => setFormData(prev => ({ ...prev, videoLinks: e.target.value }))}
-              placeholder="https://tiktok.com/@user/video/123&#10;https://tiktok.com/@user/video/456"
-              rows={4}
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-purple-400 resize-none text-sm"
-            />
-            <p className="text-xs text-white/50">
-              {formData.offerType === 'launch50' ? '5 videos απαιτούνται' : '9 videos απαιτούνται'}
-            </p>
-          </div>
-
-          {/* Review Link */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-white/80">
-              <MessageSquare className="w-4 h-4 inline mr-1" />
-              Link Αξιολόγησης (Google/App Store)
-            </label>
-            <input
-              type="url"
-              required
-              value={formData.reviewLink}
-              onChange={(e) => setFormData(prev => ({ ...prev, reviewLink: e.target.value }))}
-              placeholder="https://g.page/r/..."
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-purple-400"
-            />
-          </div>
-
-          {/* Submit Button */}
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-bold rounded-xl shadow-lg"
-          >
-            {isSubmitting ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                Υποβολή...
-              </span>
-            ) : (
-              <span className="flex items-center justify-center gap-2">
-                📤 Υποβολή Αίτησης
-              </span>
-            )}
-          </Button>
-
-          {/* Info */}
-          <p className="text-xs text-white/50 text-center">
-            Η αίτησή σας θα ελεγχθεί και θα λάβετε email με τον κωδικό έκπτωσης εντός 24-48 ωρών.
-          </p>
-        </form>
-      </motion.div>
-    </div>
-  );
-};
-
-export default LandingPage;
+export default FloatingVideoCarousel;
