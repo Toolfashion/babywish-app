@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Button } from '../components/ui/button';
@@ -69,6 +69,7 @@ const LandingPage = () => {
   const [showQuiz, setShowQuiz] = useState(false);
   const [showMilestone, setShowMilestone] = useState(false);
   const [showCertificate, setShowCertificate] = useState(false);
+  const [showBetaWelcome, setShowBetaWelcome] = useState(false);
   
   const showComingSoonMessage = () => {
     alert(t.featureComingSoon || "This feature is coming soon! Our software is being updated. 🚀");
@@ -117,16 +118,15 @@ const LandingPage = () => {
               <span className="text-sm">🎁</span>
               <span className="font-bold text-xs text-yellow-300 drop-shadow-lg">Launch 50%</span>
               <span className="text-xs text-white/80">5 videos + review</span>
-              <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">9/9</span>
+              <span className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">9/9</span>
             </div>
             
-            {/* Line 2 - Free Pass 100% - SOLD OUT */}
-            <div className="flex items-center gap-2 flex-wrap justify-center opacity-60">
+            {/* Line 2 - Free Pass 100% */}
+            <div className="flex items-center gap-2 flex-wrap justify-center">
               <span className="text-sm">🌟</span>
-              <span className="font-bold text-xs text-green-300 drop-shadow-lg line-through">Free Pass 100%</span>
+              <span className="font-bold text-xs text-green-300 drop-shadow-lg">Free Pass 100%</span>
               <span className="text-xs text-white/80">9 videos + review</span>
-              <span className="text-[10px] bg-gray-500 text-white px-1.5 py-0.5 rounded-full">0/3</span>
-              <span className="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded-full font-bold">SOLD OUT</span>
+              <span className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">3/3</span>
             </div>
           </div>
         </div>
@@ -143,10 +143,55 @@ const LandingPage = () => {
               <h1 className="text-lg md:text-xl font-bold shimmer-text" data-testid="app-title">
                 {t.appTitle}
               </h1>
-              {/* Beta Badge */}
-              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-black rounded-full animate-pulse">
-                BETA
-              </span>
+              {/* Beta II Badge - Clickable with Popup */}
+              <div className="relative" style={{ marginTop: '-3px' }}>
+                <button 
+                  onClick={() => setShowBetaWelcome(!showBetaWelcome)}
+                  className="px-1.5 py-0.5 text-[9px] font-bold rounded-full animate-pulse cursor-pointer hover:scale-110 transition-transform whitespace-nowrap"
+                  style={{
+                    background: 'linear-gradient(90deg, #1e3a8a, #3b82f6)',
+                    color: '#ffffff',
+                    border: 'none',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                  }}
+                >
+                  BETA II
+                </button>
+                
+                {/* Popup Welcome Banner */}
+                <AnimatePresence>
+                  {showBetaWelcome && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      className="fixed md:absolute top-20 md:top-full left-4 md:left-0 mt-0 md:mt-2 z-50"
+                    >
+                      <div 
+                        className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg shadow-xl"
+                        style={{
+                          background: 'linear-gradient(135deg, #1e3a8a, #3b82f6)',
+                          border: '1px solid rgba(255,255,255,0.3)',
+                          minWidth: '260px',
+                          maxWidth: '90vw'
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">🚀</span>
+                          <span className="font-bold text-sm text-white">WELCOME TO BETA 2.0</span>
+                        </div>
+                        <span className="text-xs text-cyan-200">Εξερεύνησε τις νέες δυνατότητες!</span>
+                        <button 
+                          onClick={() => setShowBetaWelcome(false)}
+                          className="text-[10px] text-white/60 hover:text-white mt-1"
+                        >
+                          ✕ Κλείσιμο
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
               <Moon className="w-5 h-5 text-purple-400 animate-pulse-slow" />
             </motion.div>
 
