@@ -117,7 +117,7 @@ const LandingPage = () => {
               <span className="text-sm">🎁</span>
               <span className="font-bold text-xs text-yellow-300 drop-shadow-lg">Launch 50%</span>
               <span className="text-xs text-white/80">5 videos + review</span>
-              <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">0/9</span>
+              <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">9/9</span>
             </div>
             
             {/* Line 2 - Free Pass 100% - SOLD OUT */}
