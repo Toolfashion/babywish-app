@@ -118,7 +118,7 @@ const LandingPage = () => {
               <span className="text-sm">🎁</span>
               <span className="font-bold text-xs text-yellow-300 drop-shadow-lg">Launch 50%</span>
               <span className="text-xs text-white/80">5 videos + review</span>
-              <span className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">9/9</span>
+              <span className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">6/9</span>
             </div>
             
             {/* Line 2 - Free Pass 100% */}
@@ -126,7 +126,7 @@ const LandingPage = () => {
               <span className="text-sm">🌟</span>
               <span className="font-bold text-xs text-green-300 drop-shadow-lg">Free Pass 100%</span>
               <span className="text-xs text-white/80">9 videos + review</span>
-              <span className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">3/3</span>
+              <span className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">0/3</span>
             </div>
           </div>
         </div>
@@ -168,24 +168,162 @@ const LandingPage = () => {
                       className="fixed md:absolute top-20 md:top-full left-4 md:left-0 mt-0 md:mt-2 z-50"
                     >
                       <div 
-                        className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg shadow-xl"
+                        className="flex flex-col items-start gap-3 px-5 py-4 rounded-lg shadow-xl"
                         style={{
                           background: 'linear-gradient(135deg, #1e3a8a, #3b82f6)',
                           border: '1px solid rgba(255,255,255,0.3)',
-                          minWidth: '260px',
+                          minWidth: '300px',
                           maxWidth: '90vw'
                         }}
                       >
-                        <div className="flex items-center gap-2">
+                        {/* Header */}
+                        <div className="flex items-center gap-2 w-full justify-center border-b border-white/20 pb-2">
                           <span className="text-lg">🚀</span>
                           <span className="font-bold text-sm text-white">WELCOME TO BETA 2.0</span>
+                          <span className="text-white/50">•</span>
+                          <span className="text-xs text-cyan-200">
+                            {{
+                              en: "Explore the new features!",
+                              el: "Εξερεύνησε τις νέες δυνατότητες!",
+                              de: "Entdecke die neuen Funktionen!",
+                              es: "¡Explora las nuevas funciones!",
+                              fr: "Découvrez les nouvelles fonctionnalités!",
+                              it: "Esplora le nuove funzionalità!",
+                              pt: "Explore os novos recursos!",
+                              ru: "Исследуйте новые возможности!",
+                              zh: "探索新功能！",
+                              ja: "新機能を探索しよう！",
+                              pl: "Odkryj nowe funkcje!",
+                              ar: "اكتشف الميزات الجديدة!",
+                              hi: "नई सुविधाओं का अन्वेषण करें!",
+                              tr: "Yeni özellikleri keşfet!",
+                              sv: "Utforska de nya funktionerna!",
+                              fa: "ویژگی‌های جدید را کشف کن!",
+                              sr: "Истражи нове функције!",
+                              cs: "Prozkoumej nové funkce!"
+                            }[language] || "Explore the new features!"}
+                          </span>
                         </div>
-                        <span className="text-xs text-cyan-200">Εξερεύνησε τις νέες δυνατότητες!</span>
+                        
+                        {/* Stability & UI */}
+                        <p className="text-xs text-white/90">
+                          {{
+                            en: "• Beta II includes stability fixes and refreshed UI.",
+                            el: "• Η Beta II περιλαμβάνει διορθώσεις σταθερότητας και ανανεωμένο UI.",
+                            de: "• Beta II enthält Stabilitätsfixes und überarbeitete UI.",
+                            es: "• Beta II incluye correcciones de estabilidad y UI renovada.",
+                            fr: "• Beta II inclut des corrections de stabilité et une UI renouvelée.",
+                            it: "• Beta II include correzioni di stabilità e UI rinnovata.",
+                            pt: "• Beta II inclui correções de estabilidade e UI renovada.",
+                            ru: "• Beta II включает исправления стабильности и обновлённый UI.",
+                            zh: "• Beta II 包含稳定性修复和更新的界面。",
+                            ja: "• Beta IIには安定性の修正と刷新されたUIが含まれています。",
+                            pl: "• Beta II zawiera poprawki stabilności i odświeżony UI.",
+                            ar: "• يتضمن Beta II إصلاحات الاستقرار وواجهة مستخدم محدثة.",
+                            hi: "• Beta II में स्थिरता सुधार और नया UI शामिल है।",
+                            tr: "• Beta II kararlılık düzeltmeleri ve yenilenmiş UI içerir.",
+                            sv: "• Beta II inkluderar stabilitetskorrigeringar och förnyat UI.",
+                            fa: "• Beta II شامل اصلاحات پایداری و رابط کاربری به‌روز شده است.",
+                            sr: "• Beta II укључује исправке стабилности и обновљен UI.",
+                            cs: "• Beta II obsahuje opravy stability a obnovené UI."
+                          }[language] || "• Beta II includes stability fixes and refreshed UI."}
+                        </p>
+                        
+                        {/* Testing Phase */}
+                        <p className="text-xs text-white/90">
+                          {{
+                            en: "• We're in testing phase. Found a bug?",
+                            el: "• Είμαστε σε φάση δοκιμών. Βρήκες κάποιο bug;",
+                            de: "• Wir befinden uns in der Testphase. Einen Bug gefunden?",
+                            es: "• Estamos en fase de pruebas. ¿Encontraste un bug?",
+                            fr: "• Nous sommes en phase de test. Trouvé un bug?",
+                            it: "• Siamo in fase di test. Trovato un bug?",
+                            pt: "• Estamos em fase de testes. Encontrou um bug?",
+                            ru: "• Мы на этапе тестирования. Нашли баг?",
+                            zh: "• 我们正在测试阶段。发现了bug吗？",
+                            ja: "• テスト段階です。バグを見つけましたか？",
+                            pl: "• Jesteśmy w fazie testów. Znalazłeś błąd?",
+                            ar: "• نحن في مرحلة الاختبار. وجدت خطأ؟",
+                            hi: "• हम परीक्षण चरण में हैं। कोई बग मिला?",
+                            tr: "• Test aşamasındayız. Bir hata mı buldunuz?",
+                            sv: "• Vi är i testfas. Hittat en bugg?",
+                            fa: "• ما در مرحله تست هستیم. باگی پیدا کردید؟",
+                            sr: "• У фази тестирања смо. Пронашли сте грешку?",
+                            cs: "• Jsme ve fázi testování. Našli jste chybu?"
+                          }[language] || "• We're in testing phase. Found a bug?"}{' '}
+                          <a href="mailto:support@getbabywish.com" className="text-cyan-300 underline hover:text-white">
+                            {{
+                              en: "Report it here",
+                              el: "Ανάφερέ το εδώ",
+                              de: "Hier melden",
+                              es: "Repórtalo aquí",
+                              fr: "Signaler ici",
+                              it: "Segnalalo qui",
+                              pt: "Reporte aqui",
+                              ru: "Сообщить здесь",
+                              zh: "在此报告",
+                              ja: "ここで報告",
+                              pl: "Zgłoś tutaj",
+                              ar: "أبلغ هنا",
+                              hi: "यहाँ रिपोर्ट करें",
+                              tr: "Buradan bildir",
+                              sv: "Rapportera här",
+                              fa: "اینجا گزارش دهید",
+                              sr: "Пријавите овде",
+                              cs: "Nahlaste to zde"
+                            }[language] || "Report it here"}
+                          </a>
+                        </p>
+                        
+                        {/* Thank you */}
+                        <p className="text-xs text-cyan-200 italic">
+                          {{
+                            en: "Thank you for testing our new version!",
+                            el: "Σας ευχαριστούμε που δοκιμάζετε τη νέα μας έκδοση!",
+                            de: "Danke, dass Sie unsere neue Version testen!",
+                            es: "¡Gracias por probar nuestra nueva versión!",
+                            fr: "Merci de tester notre nouvelle version!",
+                            it: "Grazie per aver testato la nostra nuova versione!",
+                            pt: "Obrigado por testar nossa nova versão!",
+                            ru: "Спасибо за тестирование нашей новой версии!",
+                            zh: "感谢您测试我们的新版本！",
+                            ja: "新しいバージョンをテストしていただきありがとうございます！",
+                            pl: "Dziękujemy za testowanie naszej nowej wersji!",
+                            ar: "شكراً لاختبار نسختنا الجديدة!",
+                            hi: "हमारे नए संस्करण का परीक्षण करने के लिए धन्यवाद!",
+                            tr: "Yeni sürümümüzü test ettiğiniz için teşekkürler!",
+                            sv: "Tack för att du testar vår nya version!",
+                            fa: "از تست نسخه جدید ما متشکریم!",
+                            sr: "Хвала што тестирате нашу нову верзију!",
+                            cs: "Děkujeme za testování naší nové verze!"
+                          }[language] || "Thank you for testing our new version!"}
+                        </p>
+                        
+                        {/* Close button */}
                         <button 
                           onClick={() => setShowBetaWelcome(false)}
-                          className="text-[10px] text-white/60 hover:text-white mt-1"
+                          className="text-[10px] text-white/60 hover:text-white mt-2 self-center"
                         >
-                          ✕ Κλείσιμο
+                          ✕ {{
+                            en: "Close",
+                            el: "Κλείσιμο",
+                            de: "Schließen",
+                            es: "Cerrar",
+                            fr: "Fermer",
+                            it: "Chiudi",
+                            pt: "Fechar",
+                            ru: "Закрыть",
+                            zh: "关闭",
+                            ja: "閉じる",
+                            pl: "Zamknij",
+                            ar: "إغلاق",
+                            hi: "बंद करें",
+                            tr: "Kapat",
+                            sv: "Stäng",
+                            fa: "بستن",
+                            sr: "Затвори",
+                            cs: "Zavřít"
+                          }[language] || "Close"}
                         </button>
                       </div>
                     </motion.div>
