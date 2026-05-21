@@ -18,7 +18,7 @@ export const LanguageProvider = ({ children }) => {
     return saved || detectLanguage();
   });
 
-  const t = translations[language] || translations.de;
+  const t = translations[language] || translations.en;
   const isRTL = rtlLanguages.includes(language);
 
   useEffect(() => {
