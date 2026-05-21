@@ -333,6 +333,12 @@ export const translations = {
     feature2: "Здоровье-Образование\nСвободное время",
     feature3: "Lifestyle\nОдежда-Дом",
     getStarted: "Начать",
+    // Fun Modules vs Premium
+    free: "БЕСПЛАТНО",
+    funModulesSubtitle: "Играйте, вдохновляйтесь, делитесь!",
+    premiumPrediction: "Профессиональный прогноз",
+    getProfessionalPrediction: "Получить прогноз",
+    biologicalCycles: "Биологические циклы",
     priceFrom: "От €10 за полный прогноз",
     footer: "Только для развлечения",
     
@@ -444,6 +450,12 @@ export const translations = {
     feature2: "健康-教育\n休闲时间",
     feature3: "生活方式\n服装-家居",
     getStarted: "开始",
+    // Fun Modules vs Premium
+    free: "免费",
+    funModulesSubtitle: "玩乐、获取灵感、分享！",
+    premiumPrediction: "专业预测",
+    getProfessionalPrediction: "获取预测",
+    biologicalCycles: "生物周期",
     priceFrom: "完整预测仅需€10起",
     footer: "仅供娱乐",
     
@@ -555,6 +567,12 @@ export const translations = {
     feature2: "स्वास्थ्य-शिक्षा\nखाली समय",
     feature3: "जीवनशैली\nवस्त्र-घर",
     getStarted: "शुरू करें",
+    // Fun Modules vs Premium
+    free: "मुफ़्त",
+    funModulesSubtitle: "खेलें, प्रेरित हों, साझा करें!",
+    premiumPrediction: "पेशेवर भविष्यवाणी",
+    getProfessionalPrediction: "भविष्यवाणी प्राप्त करें",
+    biologicalCycles: "जैविक चक्र",
     priceFrom: "पूर्ण भविष्यवाणी के लिए €10 से",
     footer: "केवल मनोरंजन के लिए",
     
@@ -666,6 +684,12 @@ export const translations = {
     feature2: "Salud-Educación\nTiempo libre",
     feature3: "Lifestyle\nRopa-Hogar",
     getStarted: "Comenzar",
+    // Fun Modules vs Premium
+    free: "GRATIS",
+    funModulesSubtitle: "¡Juega, inspírate, comparte!",
+    premiumPrediction: "Predicción Profesional",
+    getProfessionalPrediction: "Obtener Predicción",
+    biologicalCycles: "Ciclos Biológicos",
     priceFrom: "Desde €10 por una predicción completa",
     footer: "Solo para entretenimiento",
     
@@ -777,6 +801,12 @@ export const translations = {
     feature2: "Saúde-Educação\nTempo livre",
     feature3: "Lifestyle\nRoupa-Casa",
     getStarted: "Começar",
+    // Fun Modules vs Premium
+    free: "GRÁTIS",
+    funModulesSubtitle: "Jogue, inspire-se, partilhe!",
+    premiumPrediction: "Previsão Profissional",
+    getProfessionalPrediction: "Obter Previsão",
+    biologicalCycles: "Ciclos Biológicos",
     priceFrom: "A partir de €10 por uma previsão completa",
     footer: "Apenas para entretenimento",
     
@@ -888,6 +918,12 @@ export const translations = {
     feature2: "Santé-Éducation\nTemps libre",
     feature3: "Lifestyle\nVêtements-Maison",
     getStarted: "Commencer",
+    // Fun Modules vs Premium
+    free: "GRATUIT",
+    funModulesSubtitle: "Jouez, inspirez-vous, partagez !",
+    premiumPrediction: "Prédiction Professionnelle",
+    getProfessionalPrediction: "Obtenir une Prédiction",
+    biologicalCycles: "Cycles Biologiques",
     priceFrom: "À partir de 10€ pour une prédiction complète",
     footer: "À des fins de divertissement uniquement",
     
@@ -999,6 +1035,12 @@ export const translations = {
     feature2: "Sağlık-Eğitim\nBoş zaman",
     feature3: "Lifestyle\nGiyim-Ev",
     getStarted: "Başla",
+    // Fun Modules vs Premium
+    free: "ÜCRETSİZ",
+    funModulesSubtitle: "Oyna, ilham al, paylaş!",
+    premiumPrediction: "Profesyonel Tahmin",
+    getProfessionalPrediction: "Tahmin Al",
+    biologicalCycles: "Biyolojik Döngüler",
     priceFrom: "Tam bir tahmin için €10'dan başlayan fiyatlar",
     footer: "Sadece eğlence amaçlıdır",
     
@@ -1110,6 +1152,12 @@ export const translations = {
     feature2: "بهداشت-آموزش\nوقت آزاد",
     feature3: "سبک زندگی\nلباس-خانه",
     getStarted: "شروع کنید",
+    // Fun Modules vs Premium
+    free: "رایگان",
+    funModulesSubtitle: "بازی کنید، الهام بگیرید، به اشتراک بگذارید!",
+    premiumPrediction: "پیش‌بینی حرفه‌ای",
+    getProfessionalPrediction: "دریافت پیش‌بینی",
+    biologicalCycles: "چرخه‌های بیولوژیکی",
     priceFrom: "از €۱۰ برای پیش‌بینی کامل",
     footer: "فقط برای سرگرمی",
     
@@ -1221,6 +1269,12 @@ export const translations = {
     feature2: "الصحة-التعليم\nوقت الفراغ",
     feature3: "عناصر الحظ",
     getStarted: "ابدأ الآن",
+    // Fun Modules vs Premium
+    free: "مجاني",
+    funModulesSubtitle: "العب، استلهم، شارك!",
+    premiumPrediction: "التنبؤ الاحترافي",
+    getProfessionalPrediction: "احصل على التنبؤ",
+    biologicalCycles: "الدورات البيولوجية",
     priceFrom: "ابتداءً من €10 للتنبؤ الكامل",
     footer: "للترفيه فقط",
     
@@ -1332,6 +1386,12 @@ export const translations = {
     feature2: "健康-教育\n自由時間",
     feature3: "ラッキー要素",
     getStarted: "始める",
+    // Fun Modules vs Premium
+    free: "無料",
+    funModulesSubtitle: "遊んで、インスピレーションを得て、共有しよう！",
+    premiumPrediction: "プロフェッショナル予測",
+    getProfessionalPrediction: "予測を取得",
+    biologicalCycles: "生物学的サイクル",
     priceFrom: "完全な予測が€10から",
     footer: "エンターテインメント目的のみ",
     
@@ -1443,6 +1503,12 @@ export const translations = {
     feature2: "Stjärntecken & Personlighet",
     feature3: "Livsstil\nKläder-Hem",
     getStarted: "Kom igång",
+    // Fun Modules vs Premium
+    free: "GRATIS",
+    funModulesSubtitle: "Spela, inspireras, dela!",
+    premiumPrediction: "Professionell Förutsägelse",
+    getProfessionalPrediction: "Få Förutsägelse",
+    biologicalCycles: "Biologiska Cykler",
     priceFrom: "Från €10 för en komplett förutsägelse",
     footer: "Endast för underhållning",
     
@@ -1697,6 +1763,12 @@ export const translations = {
     feature2: "Zodiaco & Personalità",
     feature3: "Lifestyle\nAbbigliamento-Casa",
     getStarted: "Inizia",
+    // Fun Modules vs Premium
+    free: "GRATIS",
+    funModulesSubtitle: "Gioca, lasciati ispirare, condividi!",
+    premiumPrediction: "Previsione Professionale",
+    getProfessionalPrediction: "Ottieni Previsione",
+    biologicalCycles: "Cicli Biologici",
     priceFrom: "Da €10 per una previsione completa",
     footer: "Solo a scopo di intrattenimento",
     
@@ -1808,6 +1880,13 @@ export const translations = {
     feature2: "Хороскопски знак и Личност",
     feature3: "Срећни елементи",
     getStarted: "Почни",
+    // Fun Modules vs Premium
+    free: "БЕСПЛАТНО",
+    funModulesSubtitle: "Играј, инспириши се, дели!",
+    premiumPrediction: "Професионална Предвиђања",
+    getProfessionalPrediction: "Добиј Предвиђање",
+    biologicalCycles: "Биолошки Циклуси",
+    priceFrom: "Од €10 за комплетно предвиђање",
     priceFrom: "Од €10 за комплетно предвиђање",
     footer: "Само у сврху забаве",
     
@@ -1918,6 +1997,13 @@ export const translations = {
     feature2: "Znak Zodiaku i Osobowość",
     feature3: "Styl życia\nOdzież-Dom",
     getStarted: "Rozpocznij",
+    // Fun Modules vs Premium
+    free: "ZA DARMO",
+    funModulesSubtitle: "Graj, inspiruj się, dziel się!",
+    premiumPrediction: "Profesjonalna Predykcja",
+    getProfessionalPrediction: "Uzyskaj Predykcję",
+    biologicalCycles: "Cykle Biologiczne",
+    priceFrom: "Od €10 za pełną predykcję",
     priceFrom: "Od €10 za pełną prognozę",
     footer: "Tylko dla celów rozrywkowych",
     
@@ -2028,6 +2114,12 @@ export const translations = {
     feature2: "Znamení zvěrokruhu a Osobnost",
     feature3: "Životní styl\nOblečení-Domov",
     getStarted: "Začít",
+    // Fun Modules vs Premium
+    free: "ZDARMA",
+    funModulesSubtitle: "Hraj, inspiruj se, sdílej!",
+    premiumPrediction: "Profesionální Predikce",
+    getProfessionalPrediction: "Získat Predikci",
+    biologicalCycles: "Biologické Cykly",
     priceFrom: "Od €10 za kompletní předpověď",
     footer: "Pouze pro zábavu",
     
