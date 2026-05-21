@@ -2264,5 +2264,5 @@ export const detectLanguage = () => {
     nn: 'sv', // Norwegian Nynorsk -> Swedish
   };
   
-  return languageMap[langCode] || 'de'; // Default to German
+  return languageMap[langCode] || 'en'; // Default to English
 };
