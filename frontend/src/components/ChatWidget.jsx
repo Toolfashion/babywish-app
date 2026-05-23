@@ -38,7 +38,9 @@ const welcomeMessagesFemale = {
   hi: "नमस्ते! 🌸 मैं mindjerry's हूं, मातृत्व की खूबसूरत यात्रा में आपकी देखभाल करने वाली साथी। आज आप कैसा महसूस कर रही हैं?",
   tr: "Merhaba! 🌸 Ben mindjerry's, anneliğe giden güzel yolculuğunuzda şefkatli yol arkadaşınız. Bugün kendinizi nasıl hissediyorsunuz?",
   sv: "Hej! 🌸 Jag är mindjerry's, din omtänksamma följeslagare på den vackra resan mot moderskapet. Hur mår du idag?",
-  he: "שלום! 🌸 אני mindjerry's, המלווה האכפתית שלך במסע היפה לאמהות. איך את מרגישה היום?"
+  fa: "سلام! 🌸 من mindjerry's هستم، همراه مهربان شما در سفر زیبای مادری. امروز چه احساسی دارید؟",
+  sr: "Здраво! 🌸 Ја сам mindjerry's, твоја брижна сапутница на лепом путу ка материнству. Како се осећаш данас?",
+  cs: "Ahoj! 🌸 Jsem mindjerry's, tvá pečující společnice na krásné cestě k mateřství. Jak se dnes cítíš?"
 };
 
 // Male-focused welcome messages (mindjerry)
@@ -60,7 +62,9 @@ const welcomeMessagesMale = {
   hi: "हे! 💪 मैं mindjerry हूं, पितृत्व के लिए आपका व्यावहारिक मार्गदर्शक। मैं पुरुषों को यह समझने में मदद करता हूं कि अपने साथी का समर्थन कैसे करें। आपके मन में क्या है?",
   tr: "Selam! 💪 Ben mindjerry, babalığa giden yolda pratik rehberin. Erkeklerin partnerlerini nasıl destekleyeceklerini anlamalarına yardımcı oluyorum. Aklında ne var?",
   sv: "Hej! 💪 Jag är mindjerry, din praktiska guide till faderskap. Jag hjälper män att förstå hur de kan stödja sina partners. Vad tänker du på?",
-  he: "היי! 💪 אני mindjerry, המדריך המעשי שלך לאבהות. אני עוזר לגברים להבין איך לתמוך בבנות הזוג שלהם. מה עובר לך בראש?"
+  fa: "سلام! 💪 من mindjerry هستم، راهنمای عملی شما برای پدر شدن. به مردان کمک می‌کنم تا بفهمند چگونه از همسرانشان حمایت کنند. چه چیزی در ذهنت هست?",
+  sr: "Здраво! 💪 Ја сам mindjerry, твој практични водич за очинство. Помажем мушкарцима да разумеју како да подрже своје партнерке. Шта ти је на уму?",
+  cs: "Ahoj! 💪 Jsem mindjerry, tvůj praktický průvodce otcovstvím. Pomáhám mužům pochopit, jak podpořit své partnerky. Co máš na mysli?"
 };
 
 // Female-focused suggested questions
@@ -77,12 +81,13 @@ const suggestedQuestionsFemale = {
   ja: ['妊娠可能な時期の追跡方法は？', '妊活に良い食べ物は？', '妊娠中の不安の対処法', 'セルフケアのヒント'],
   nl: ['Hoe volg ik mijn vruchtbare periode?', 'Welke voeding helpt bij vruchtbaarheid?', 'Omgaan met zwangerschapsangst', 'Zelfzorgtips'],
   pl: ['Jak śledzić okres płodny?', 'Jakie jedzenie pomaga w płodności?', 'Radzenie sobie z lękiem ciążowym', 'Porady dotyczące samoopieki'],
-  ko: ['가임기를 어떻게 추적하나요?', '임신에 도움이 되는 음식은?', '임신 불안 관리', '임신 준비 자기 관리 팁'],
   ar: ['كيف أتتبع فترة الخصوبة؟', 'ما الأطعمة التي تساعد على الخصوبة؟', 'إدارة قلق الحمل', 'نصائح للعناية بالنفس'],
   hi: ['मैं अपनी प्रजनन अवधि को कैसे ट्रैक करूं?', 'कौन से खाद्य पदार्थ प्रजनन में मदद करते हैं?', 'गर्भावस्था की चिंता का प्रबंधन', 'गर्भधारण के लिए स्व-देखभाल युक्तियाँ'],
   tr: ['Doğurgan dönemimi nasıl takip ederim?', 'Hangi yiyecekler doğurganlığa yardımcı olur?', 'Hamilelik kaygısını yönetmek', 'Gebe kalma için öz bakım ipuçları'],
   sv: ['Hur spårar jag min fertila period?', 'Vilka livsmedel hjälper fertiliteten?', 'Hantera graviditetsångest', 'Egenvårdstips'],
-  he: ['איך אני עוקבת אחרי תקופת הפוריות?', 'אילו מאכלים עוזרים לפוריות?', 'ניהול חרדת הריון', 'טיפים לטיפול עצמי']
+  fa: ['چگونه دوره باروری خود را پیگیری کنم؟', 'چه غذاهایی به باروری کمک می‌کند؟', 'مدیریت اضطراب بارداری', 'نکات مراقبت از خود'],
+  sr: ['Како да пратим период плодности?', 'Која храна помаже плодности?', 'Управљање анксиозношћу током трудноће', 'Савети за бригу о себи'],
+  cs: ['Jak sledovat plodné období?', 'Jaké jídlo pomáhá plodnosti?', 'Zvládání úzkosti v těhotenství', 'Tipy pro péči o sebe']
 };
 
 // Male-focused suggested questions
@@ -99,12 +104,13 @@ const suggestedQuestionsMale = {
   ja: ['パートナーをどうサポートする？', '赤ちゃんのための家の準備', '彼女の気分の変化を理解する', '実践的な父親のヒント'],
   nl: ['Hoe kan ik mijn partner ondersteunen?', 'Het huis voorbereiden voor de baby', 'Haar stemmingswisselingen begrijpen', 'Praktische vaderschapstips'],
   pl: ['Jak mogę wspierać moją partnerkę?', 'Przygotowanie domu dla dziecka', 'Zrozumienie jej zmian nastroju', 'Praktyczne porady ojcowskie'],
-  ko: ['파트너를 어떻게 지원할 수 있나요?', '아기를 위한 집 준비', '그녀의 기분 변화 이해하기', '실용적인 아버지 팁'],
   ar: ['كيف يمكنني دعم شريكتي؟', 'تجهيز المنزل للطفل', 'فهم تقلبات مزاجها', 'نصائح عملية للأبوة'],
   hi: ['मैं अपने साथी का समर्थन कैसे कर सकता हूं?', 'बच्चे के लिए घर तैयार करना', 'उसके मूड में बदलाव को समझना', 'व्यावहारिक पितृत्व युक्तियाँ'],
   tr: ['Partnerimi nasıl destekleyebilirim?', 'Bebek için evi hazırlamak', 'Onun ruh hali değişimlerini anlamak', 'Pratik babalık ipuçları'],
   sv: ['Hur kan jag stödja min partner?', 'Förbereda hemmet för bebisen', 'Förstå hennes humörsvängningar', 'Praktiska pappatips'],
-  he: ['איך אני יכול לתמוך בבת הזוג שלי?', 'הכנת הבית לתינוק', 'הבנת שינויי מצב הרוח שלה', 'טיפים מעשיים לאבהות']
+  fa: ['چگونه می‌توانم از همسرم حمایت کنم؟', 'آماده‌سازی خانه برای نوزاد', 'درک تغییرات خلق و خوی او', 'نکات عملی پدری'],
+  sr: ['Како могу да подржим партнерку?', 'Припрема дома за бебу', 'Разумевање њених промена расположења', 'Практични савети за очеве'],
+  cs: ['Jak mohu podpořit svou partnerku?', 'Příprava domova pro miminko', 'Pochopení jejích změn nálad', 'Praktické tipy pro otce']
 };
 
 // Multilingual placeholders by gender
@@ -121,12 +127,13 @@ const placeholderFemale = {
   ja: "mindjerry'sに聞く...",
   nl: "Vraag mindjerry's...",
   pl: "Zapytaj mindjerry's...",
-  ko: "mindjerry's에게 물어보세요...",
   ar: "اسألي mindjerry's...",
   hi: "mindjerry's से पूछें...",
   tr: "mindjerry's'e sor...",
   sv: "Fråga mindjerry's...",
-  he: "שאלי את mindjerry's..."
+  fa: "از mindjerry's بپرس...",
+  sr: "Питај mindjerry's...",
+  cs: "Zeptej se mindjerry's..."
 };
 
 const placeholderMale = {
@@ -142,12 +149,13 @@ const placeholderMale = {
   ja: "mindjerryに聞く...",
   nl: "Vraag mindjerry...",
   pl: "Zapytaj mindjerry...",
-  ko: "mindjerry에게 물어보세요...",
   ar: "اسأل mindjerry...",
   hi: "mindjerry से पूछें...",
   tr: "mindjerry'e sor...",
   sv: "Fråga mindjerry...",
-  he: "שאל את mindjerry..."
+  fa: "از mindjerry بپرس...",
+  sr: "Питај mindjerry...",
+  cs: "Zeptej se mindjerry..."
 };
 
 // Legacy fallbacks
@@ -401,7 +409,8 @@ const ChatWidget = ({ gender = 'male', side = 'right' }) => {
         body: JSON.stringify({
           message: text.trim(),
           session_id: sessionId,
-          gender: gender  // Send gender for personality selection
+          gender: gender,  // Send gender for personality selection
+          language: language  // Send user's language for response
         }),
         cache: 'no-store'
       });
