@@ -3409,6 +3409,7 @@ class ChatMessage(BaseModel):
     message: str
     session_id: Optional[str] = None
     gender: Optional[str] = "male"  # "male" or "female"
+    language: Optional[str] = "en"  # User's language code
 
 class ChatResponse(BaseModel):
     response: str
@@ -3419,12 +3420,29 @@ async def chat_with_assistant(chat_message: ChatMessage):
     """AI Chat endpoint for A BabyWish assistant with gender-specific personalities"""
     try:
         session_id = chat_message.session_id or f"chat_{uuid.uuid4().hex[:12]}"
+        user_lang = chat_message.language or "en"
+        
+        # Language instruction to add to system prompt
+        language_names = {
+            'en': 'English', 'el': 'Greek', 'de': 'German', 'es': 'Spanish',
+            'fr': 'French', 'it': 'Italian', 'pt': 'Portuguese', 'ru': 'Russian',
+            'zh': 'Chinese', 'ja': 'Japanese', 'ar': 'Arabic', 'hi': 'Hindi',
+            'tr': 'Turkish', 'sv': 'Swedish', 'pl': 'Polish', 'fa': 'Persian',
+            'sr': 'Serbian', 'cs': 'Czech', 'nl': 'Dutch', 'ko': 'Korean'
+        }
+        lang_name = language_names.get(user_lang, 'English')
         
         # Select system prompt based on gender
         if chat_message.gender == "female":
-            system_prompt = MINDJERRY_FEMALE_PROMPT
+            base_prompt = MINDJERRY_FEMALE_PROMPT
         else:
-            system_prompt = MINDJERRY_MALE_PROMPT
+            base_prompt = MINDJERRY_MALE_PROMPT
+        
+        # Add explicit language instruction at the beginning
+        system_prompt = f"""🌐 CRITICAL LANGUAGE RULE: You MUST respond ONLY in {lang_name}. The user's language is {user_lang}. 
+Do NOT respond in Greek unless the user writes in Greek. Match the user's language exactly.
+
+{base_prompt}"""
         
         # Try Mistral API first, then fallback to Emergent key
         mistral_key = os.environ.get('MISTRAL_API_KEY')
