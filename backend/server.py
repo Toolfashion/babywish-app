@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends
 from fastapi.responses import JSONResponse, FileResponse, PlainTextResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
-Importprotokollierung
+import logging
 import asyncio
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
@@ -13,79 +14,79 @@ import uuid
 from datetime import datetime, timezone, date, timedelta
 import random
 import httpx
-Import erneut senden
+import resend
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB-Verbindung
+# MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Streifen
-Importstreifen
+# Stripe
+import stripe
 
 stripe_api_key = os.environ.get('STRIPE_API_KEY')
 stripe.api_key = stripe_api_key
 
-# E-Mail erneut senden
+# Resend Email
 resend.api_key = os.environ.get('RESEND_API_KEY')
 NOTIFICATION_EMAIL = os.environ.get('NOTIFICATION_EMAIL', 'getbabywish@protonmail.com')
 SENDER_EMAIL = "getbabywish@protonmail.com"
 
-# Erstelle die Hauptanwendung ohne Präfix
+# Create the main app without a prefix
 app = FastAPI()
 
-# Erstelle einen Router mit dem Präfix /api
+# Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
-# Endpunkt für die Zustandsprüfung zur Überwachung der Verfügbarkeit
+# Health check endpoint for uptime monitoring
 @api_router.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "babywish-api"}
 
 @api_router.get("/debug/chat-status")
 async def debug_chat_status():
-    """Debug-Endpunkt zur Überprüfung der KI-Chat-Konfiguration""
+    """Debug endpoint to check AI chat configuration"""
     mistral_key = os.environ.get('MISTRAL_API_KEY')
     emergent_key = os.environ.get('EMERGENT_LLM_KEY')
     
-    Ergebnis = {
-        "mistral_configuration": bool(mistral_key),
+    result = {
+        "mistral_configured": bool(mistral_key),
         "mistral_key_length": len(mistral_key) if mistral_key else 0,
         "mistral_key_prefix": mistral_key[:8] + "..." if mistral_key and len(mistral_key) > 8 else None,
-        "emergent_configuration": bool(emergent_key),
+        "emergent_configured": bool(emergent_key),
         "test_result": None,
-        "Fehler": Keine
+        "error": None
     }
     
     if mistral_key:
-        versuchen:
-            aus Mistralai importiert Mistral
+        try:
+            from mistralai import Mistral
             client = Mistral(api_key=mistral_key.strip())
-            # Einfacher Testaufruf
-            Antwort = client.chat.complete(
+            # Simple test call
+            response = client.chat.complete(
                 model="mistral-small-latest",
-                messages=[{"role": "user", "content": "Sag 'OK' in einem Wort"}]
+                messages=[{"role": "user", "content": "Say 'OK' in one word"}]
             )
-            result["test_result"] = "ERFOLG"
+            result["test_result"] = "SUCCESS"
             result["test_response"] = response.choices[0].message.content[:50]
-        außer Ausnahme als e:
-            result["test_result"] = "FEHLGESCHLAGEN"
+        except Exception as e:
+            result["test_result"] = "FAILED"
             result["error"] = f"{type(e).__name__}: {str(e)}"
     
-    Rückgabeergebnis
+    return result
 
-# Download-Endpunkt für Codedateien
+# Download endpoint for code files
 @api_router.get("/download/{filename}")
 async def download_file(filename: str):
-    "Alle Dateien zum Download bereitstellen – erzwingt den Download anstelle der Vorschau""
+    """Serve ALL files for download - forces download instead of preview"""
     import os
-    aus fastapi.responses FileResponse importieren
+    from fastapi.responses import FileResponse
     file_path = f"/app/downloads/{filename}"
     if os.path.exists(file_path):
-        # Medientyp bestimmen
+        # Determine media type
         media_types = {
             '.jpg': 'image/jpeg',
             '.jpeg': 'image/jpeg',
@@ -104,43 +105,43 @@ async def download_file(filename: str):
         ext = '.' + filename.split('.')[-1].lower()
         media_type = media_types.get(ext, 'application/octet-stream')
         
-        # Download erzwingen mit Content-Disposition: attachment für ALLE Dateien
+        # Force download with Content-Disposition: attachment for ALL files
         return FileResponse(
-            Dateipfad,
+            file_path, 
             media_type=media_type,
-            Dateiname=Dateiname,
+            filename=filename,
             headers={"Content-Disposition": f"attachment; filename={filename}"}
         )
-    return JSONResponse({"error": "Datei nicht gefunden"}, status_code=404)
+    return JSONResponse({"error": "File not found"}, status_code=404)
 
 @api_router.get("/view/{filename}")
 async def view_file(filename: str):
-    """Dateiinhalt im Browser anzeigen, um einfaches Kopieren und Einfügen zu ermöglichen""
+    """View file content in browser for easy copy-paste"""
     import os
     file_path = f"/app/downloads/{filename}"
     if os.path.exists(file_path):
-        versuchen:
+        try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
-            # Als Klartext zurückgeben, der kopiert werden kann
+            # Return as plain text that can be copied
             return PlainTextResponse(content, media_type="text/plain; charset=utf-8")
-        außer:
-            return JSONResponse({"error": "Datei kann nicht als Text gelesen werden"}, status_code=400)
-    return JSONResponse({"error": "Datei nicht gefunden"}, status_code=404)
+        except:
+            return JSONResponse({"error": "Cannot read file as text"}, status_code=400)
+    return JSONResponse({"error": "File not found"}, status_code=404)
 
 
-# Abonnementpakete – Beträge in EUR
-ABONNEMENTPAKETE = {
-    "3_months": {"name": "3 Monate", "amount": 10.00, "duration_months": 3},
-    "9_months": {"name": "9 Monate", "amount": 25.00, "duration_months": 9},
-    "18_months": {"name": "18 Monate", "amount": 50.00, "duration_months": 18},
+# Subscription packages - amounts in EUR
+SUBSCRIPTION_PACKAGES = {
+    "3_months": {"name": "3 Μήνες", "amount": 10.00, "duration_months": 3},
+    "9_months": {"name": "9 Μήνες", "amount": 25.00, "duration_months": 9},
+    "18_months": {"name": "18 Μήνες", "amount": 50.00, "duration_months": 18},
 }
 
-# ===================== E-MAIL-BENACHRICHTIGUNG =====================
+# ===================== EMAIL NOTIFICATION =====================
 
 async def send_subscription_notification(user_email: str, user_name: str, package_id: str, amount: float, subscription_id: str):
-    """Sende eine E-Mail-Benachrichtigung an den Administrator, wenn ein neues Abonnement erstellt wird""
-    versuchen:
+    """Send email notification to admin when a new subscription is created"""
+    try:
         package_info = SUBSCRIPTION_PACKAGES.get(package_id, {})
         package_name = package_info.get("name", package_id)
         
@@ -151,7 +152,7 @@ async def send_subscription_notification(user_email: str, user_name: str, packag
             </div>
             
             <div style="background: #f9f9f9; padding: 30px; border: 1px solid #ddd;">
-                <h2 style="color: #333; margin-top: 0;">Neue Version</h2>
+                <h2 style="color: #333; margin-top: 0;">Στοιχεία Πελάτη</h2>
                 
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
@@ -159,7 +160,7 @@ async def send_subscription_notification(user_email: str, user_name: str, packag
                         <td style="padding: 10px; border-bottom: 1px solid #eee; color: #333;">{user_name}</td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold; color: #666;">E-Mail:</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold; color: #666;">Email:</td>
                         <td style="padding: 10px; border-bottom: 1px solid #eee; color: #333;">{user_email}</td>
                     </tr>
                     <tr>
@@ -171,11 +172,11 @@ async def send_subscription_notification(user_email: str, user_name: str, packag
                         <td style="padding: 10px; border-bottom: 1px solid #eee; color: #27ae60; font-weight: bold;">€{amount:.2f}</td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold; color: #666;">Abonnement-ID:</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold; color: #666;">Subscription ID:</td>
                         <td style="padding: 10px; border-bottom: 1px solid #eee; color: #333; font-size: 12px;">{subscription_id}</td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px; Schriftstärke: fett; Farbe: #666;">Einstellungen:</td>
+                        <td style="padding: 10px; font-weight: bold; color: #666;">Ημερομηνία:</td>
                         <td style="padding: 10px; color: #333;">{datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M UTC')}</td>
                     </tr>
                 </table>
@@ -188,855 +189,855 @@ async def send_subscription_notification(user_email: str, user_name: str, packag
         """
         
         params = {
-            "von": SENDER_EMAIL,
+            "from": SENDER_EMAIL,
             "to": [NOTIFICATION_EMAIL],
-            „subject“: f“🎉 Νέος Συνδρομητής: {user_name} - €{amount:.2f}“,
+            "subject": f"🎉 Νέος Συνδρομητής: {user_name} - €{amount:.2f}",
             "html": html_content
         }
         
-        # Führe das Sync-SDK in einem Thread aus, um FastAPI nicht blockierend zu halten.
+        # Run sync SDK in thread to keep FastAPI non-blocking
         email_response = await asyncio.to_thread(resend.Emails.send, params)
-        logging.info(f"Benachrichtigungs-E-Mail gesendet: {email_response}")
-        Rückgabewert: True
+        logging.info(f"Notification email sent: {email_response}")
+        return True
         
-    außer Ausnahme als e:
-        logging.error(f"Fehler beim Senden der Benachrichtigungs-E-Mail: {str(e)}")
+    except Exception as e:
+        logging.error(f"Failed to send notification email: {str(e)}")
         return False
 
-# Sternzeichendaten
-ZODIAK_ZEICHEN = [
-    {"name": "Widder", "symbol": "♈", "element": "Feuer", "start": (3, 21), "end": (4, 19)},
+# Zodiac data
+ZODIAC_SIGNS = [
+    {"name": "Aries", "symbol": "♈", "element": "Fire", "start": (3, 21), "end": (4, 19)},
     {"name": "Taurus", "symbol": "♉", "element": "Earth", "start": (4, 20), "end": (5, 20)},
-    {"name": "Zwillinge", "symbol": "♊", "element": "Luft", "start": (5, 21), "end": (6, 20)},
-    {"name": "Krebs", "symbol": "♋", "element": "Wasser", "start": (6, 21), "end": (7, 22)},
-    {"name": "Leo", "symbol": "♌", "element": "Feuer", "start": (7, 23), "end": (8, 22)},
-    {"name": "Jungfrau", "symbol": "♍", "element": "Erde", "start": (8, 23), "end": (9, 22)},
-    {"name": "Waage", "symbol": "♎", "element": "Luft", "start": (9, 23), "end": (10, 22)},
+    {"name": "Gemini", "symbol": "♊", "element": "Air", "start": (5, 21), "end": (6, 20)},
+    {"name": "Cancer", "symbol": "♋", "element": "Water", "start": (6, 21), "end": (7, 22)},
+    {"name": "Leo", "symbol": "♌", "element": "Fire", "start": (7, 23), "end": (8, 22)},
+    {"name": "Virgo", "symbol": "♍", "element": "Earth", "start": (8, 23), "end": (9, 22)},
+    {"name": "Libra", "symbol": "♎", "element": "Air", "start": (9, 23), "end": (10, 22)},
     {"name": "Scorpio", "symbol": "♏", "element": "Water", "start": (10, 23), "end": (11, 21)},
-    {"name": "Schütze", "symbol": "♐", "element": "Feuer", "start": (11, 22), "end": (12, 21)},
-    {"name": "Steinbock", "symbol": "♑", "element": "Erde", "start": (12, 22), "end": (1, 19)},
-    {"name": "Wassermann", "symbol": "♒", "element": "Luft", "start": (1, 20), "end": (2, 18)},
+    {"name": "Sagittarius", "symbol": "♐", "element": "Fire", "start": (11, 22), "end": (12, 21)},
+    {"name": "Capricorn", "symbol": "♑", "element": "Earth", "start": (12, 22), "end": (1, 19)},
+    {"name": "Aquarius", "symbol": "♒", "element": "Air", "start": (1, 20), "end": (2, 18)},
     {"name": "Pisces", "symbol": "♓", "element": "Water", "start": (2, 19), "end": (3, 20)},
 ]
 
-# Sternzeichennamen übersetzt nach Sprache
+# Zodiac names translated by language
 ZODIAC_TRANSLATIONS = {
-    „en“: [„Widder“, „Stier“, „Zwillinge“, „Krebs“, „Löwe“, „Jungfrau“, „Waage“, „Skorpion“, „Schütze“, „Steinbock“, „Wassermann“, „Fische“],
-    „de“: [„Widder“, „Stier“, „Zwillinge“, „Krebs“, „Löwe“, „Jungfrau“, „Waage“, „Skorpion“, „Schütze“, „Steinbock“, „Wassermann“, „Fische“],
-    „el“: [„Κριός“, „Ταύρος“, „Δίδυμοι“, „Καρκίνος“, „Λέων“, „Παρθένος“, „Ζυγός“, „Σκορπιός“, „Τοξότης“, „Αιγόκερως“, „Υδροχόος“, „Ιχθύες“],
-    „it“: [„Ariete“, „Toro“, „Gemelli“, „Cancro“, „Leone“, „Vergine“, „Bilancia“, „Scorpione“, „Sagittario“, „Capricorno“, „Acquario“, „Pesci“],
-    „es“: [„Widder“, „Stier“, „Zwillinge“, „Krebs“, „Löwe“, „Jungfrau“, „Waage“, „Escorpio“, „Sagitario“, „Capricornio“, „Acuario“, „Piscis“],
-    „fr“: [„Bélier“, „Taureau“, „Gémeaux“, „Cancer“, „Lion“, „Vierge“, „Balance“, „Scorpion“, „Sagittaire“, „Capricorne“, „Verseau“, „Poissons“],
-    „pt“: [„Áries“, „Touro“, „Gêmeos“, „Câncer“, „Leão“, „Virgem“, „Libra“, „Escorpião“, „Sagitário“, „Capricórnio“, „Aquário“, „Peixes“],
-    „ru“: [„Овен“, „Телец“, „Близнецы“, „Рак“, „Лев“, „Дева“, „Весы“, „Скорпион“, „Streлец“, „Козерог“, „Водолей“, „Рыбы“],
-    „zh“: [“白羊座“, „金牛座“, „双子座“, „巨蟹座“, „狮子座“, „处女座“, „天秤座“, „天蝎座“, „射手座“, „摩羯座“, „水瓶座“, „双鱼座“],
-    „ja“: [„牡羊座“, „牡牛座“, „双子座“, „蟹座“, „獅子座“, „乙女座“, „天秤座“, „蠍座“, „射手座“, „山羊座“, „水瓶座“, „魚座“],
-    „ar“: [„الحمل“, „الثور“, „الجوزاء“, „السرطان“, „الأسد“, „العذراء“, „الميزان“, „العقرب“, „القوس“, „الجدي“, „الدلو“, „الحوت“],
-    „hi“: [“मेष“, „वृषभ“, „मिथुन“, „कर्क“, „सिंह“, „कन्या“, „तुला“, „वृश्चिक“, „धनु“, „मकर“, „कुंभ“, „मीन“],
-    „tr“: [„Koç“, „Boğa“, „İkizler“, „Yengeç“, „Aslan“, „Başak“, „Terazi“, „Akrep“, „Yay“, „Oğlak“, „Kova“, „Balık“],
-    „pl“: [„Baran“, „Byk“, „Bliźnięta“, „Rak“, „Lew“, „Panna“, „Waga“, „Skorpion“, „Strzelec“, „Koziorożec“, „Wodnik“, „Ryby“],
-    „cs“: [„Beran“, „Býk“, „Blíženci“, „Rak“, „Lev“, „Panna“, „Váhy“, „Štír“, „Střelec“, „Kozoroh“, „Vodnář“, „Ryby“],
-    sr
-    „sv“: [„Väduren“, „Oxen“, „Tvillingarna“, „Kräftan“, „Lejonet“, „Jungfrun“, „Vågen“, „Skorpionen“, „Skytten“, „Stenbocken“, „Vattumannen“, „Fiskarna“],
-    „fa“: [„حمل“, „ثور“, „جوزا“, „سرطان“, „اسد“, „سنبله“, „میزان“, „عقرب“, „قوس“, „جدی“, „دلو“, „حوت“],
-    „ko“: [„양자리“, „황소자리“, „쌍둥이자리“, „게자리“, „사자자리“, „처녀자리“, „천칭자리“, „전갈자리“, „궁수자리“, „염소자리“, „물병자리“, „물고기자리“],
+    "en": ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"],
+    "de": ["Widder", "Stier", "Zwillinge", "Krebs", "Löwe", "Jungfrau", "Waage", "Skorpion", "Schütze", "Steinbock", "Wassermann", "Fische"],
+    "el": ["Κριός", "Ταύρος", "Δίδυμοι", "Καρκίνος", "Λέων", "Παρθένος", "Ζυγός", "Σκορπιός", "Τοξότης", "Αιγόκερως", "Υδροχόος", "Ιχθύες"],
+    "it": ["Ariete", "Toro", "Gemelli", "Cancro", "Leone", "Vergine", "Bilancia", "Scorpione", "Sagittario", "Capricorno", "Acquario", "Pesci"],
+    "es": ["Aries", "Tauro", "Géminis", "Cáncer", "Leo", "Virgo", "Libra", "Escorpio", "Sagitario", "Capricornio", "Acuario", "Piscis"],
+    "fr": ["Bélier", "Taureau", "Gémeaux", "Cancer", "Lion", "Vierge", "Balance", "Scorpion", "Sagittaire", "Capricorne", "Verseau", "Poissons"],
+    "pt": ["Áries", "Touro", "Gêmeos", "Câncer", "Leão", "Virgem", "Libra", "Escorpião", "Sagitário", "Capricórnio", "Aquário", "Peixes"],
+    "ru": ["Овен", "Телец", "Близнецы", "Рак", "Лев", "Дева", "Весы", "Скорпион", "Стрелец", "Козерог", "Водолей", "Рыбы"],
+    "zh": ["白羊座", "金牛座", "双子座", "巨蟹座", "狮子座", "处女座", "天秤座", "天蝎座", "射手座", "摩羯座", "水瓶座", "双鱼座"],
+    "ja": ["牡羊座", "牡牛座", "双子座", "蟹座", "獅子座", "乙女座", "天秤座", "蠍座", "射手座", "山羊座", "水瓶座", "魚座"],
+    "ar": ["الحمل", "الثور", "الجوزاء", "السرطان", "الأسد", "العذراء", "الميزان", "العقرب", "القوس", "الجدي", "الدلو", "الحوت"],
+    "hi": ["मेष", "वृषभ", "मिथुन", "कर्क", "सिंह", "कन्या", "तुला", "वृश्चिक", "धनु", "मकर", "कुंभ", "मीन"],
+    "tr": ["Koç", "Boğa", "İkizler", "Yengeç", "Aslan", "Başak", "Terazi", "Akrep", "Yay", "Oğlak", "Kova", "Balık"],
+    "pl": ["Baran", "Byk", "Bliźnięta", "Rak", "Lew", "Panna", "Waga", "Skorpion", "Strzelec", "Koziorożec", "Wodnik", "Ryby"],
+    "cs": ["Beran", "Býk", "Blíženci", "Rak", "Lev", "Panna", "Váhy", "Štír", "Střelec", "Kozoroh", "Vodnář", "Ryby"],
+    "sr": ["Ован", "Бик", "Близанци", "Рак", "Лав", "Девица", "Вага", "Шкорпија", "Стрелац", "Јарац", "Водолија", "Рибе"],
+    "sv": ["Väduren", "Oxen", "Tvillingarna", "Kräftan", "Lejonet", "Jungfrun", "Vågen", "Skorpionen", "Skytten", "Stenbocken", "Vattumannen", "Fiskarna"],
+    "fa": ["حمل", "ثور", "جوزا", "سرطان", "اسد", "سنبله", "میزان", "عقرب", "قوس", "جدی", "دلو", "حوت"],
+    "ko": ["양자리", "황소자리", "쌍둥이자리", "게자리", "사자자리", "처녀자리", "천칭자리", "전갈자리", "궁수자리", "염소자리", "물병자리", "물고기자리"],
 }
 
-# Chinesischer Tierkreis
-CHINESISCHES ZODIAK = [
+# Chinese Zodiac
+CHINESE_ZODIAC = [
     {"name": "Rat", "symbol": "🐀", "years": [1924, 1936, 1948, 1960, 1972, 1984, 1996, 2008, 2020, 2032]},
-    {"name": "Ochse", "symbol": "🐂", "years": [1925, 1937, 1949, 1961, 1973, 1985, 1997, 2009, 2021, 2033]},
+    {"name": "Ox", "symbol": "🐂", "years": [1925, 1937, 1949, 1961, 1973, 1985, 1997, 2009, 2021, 2033]},
     {"name": "Tiger", "symbol": "🐅", "years": [1926, 1938, 1950, 1962, 1974, 1986, 1998, 2010, 2022, 2034]},
-    {"name": "Kaninchen", "symbol": "🐇", "years": [1927, 1939, 1951, 1963, 1975, 1987, 1999, 2011, 2023, 2035]},
-    {"name": "Drache", "symbol": "🐉", "years": [1928, 1940, 1952, 1964, 1976, 1988, 2000, 2012, 2024, 2036]},
-    {"name": "Schlange", "symbol": "🐍", "years": [1929, 1941, 1953, 1965, 1977, 1989, 2001, 2013, 2025, 2037]},
-    {"name": "Pferd", "symbol": "🐴", "years": [1930, 1942, 1954, 1966, 1978, 1990, 2002, 2014, 2026, 2038]},
+    {"name": "Rabbit", "symbol": "🐇", "years": [1927, 1939, 1951, 1963, 1975, 1987, 1999, 2011, 2023, 2035]},
+    {"name": "Dragon", "symbol": "🐉", "years": [1928, 1940, 1952, 1964, 1976, 1988, 2000, 2012, 2024, 2036]},
+    {"name": "Snake", "symbol": "🐍", "years": [1929, 1941, 1953, 1965, 1977, 1989, 2001, 2013, 2025, 2037]},
+    {"name": "Horse", "symbol": "🐴", "years": [1930, 1942, 1954, 1966, 1978, 1990, 2002, 2014, 2026, 2038]},
     {"name": "Goat", "symbol": "🐐", "years": [1931, 1943, 1955, 1967, 1979, 1991, 2003, 2015, 2027, 2039]},
-    {"name": "Affe", "symbol": "🐒", "years": [1932, 1944, 1956, 1968, 1980, 1992, 2004, 2016, 2028, 2040]},
+    {"name": "Monkey", "symbol": "🐒", "years": [1932, 1944, 1956, 1968, 1980, 1992, 2004, 2016, 2028, 2040]},
     {"name": "Rooster", "symbol": "🐓", "years": [1933, 1945, 1957, 1969, 1981, 1993, 2005, 2017, 2029, 2041]},
-    {"name": "Hund", "symbol": "🐕", "years": [1934, 1946, 1958, 1970, 1982, 1994, 2006, 2018, 2030, 2042]},
-    {"name": "Schwein", "symbol": "🐖", "years": [1935, 1947, 1959, 1971, 1983, 1995, 2007, 2019, 2031, 2043]},
+    {"name": "Dog", "symbol": "🐕", "years": [1934, 1946, 1958, 1970, 1982, 1994, 2006, 2018, 2030, 2042]},
+    {"name": "Pig", "symbol": "🐖", "years": [1935, 1947, 1959, 1971, 1983, 1995, 2007, 2019, 2031, 2043]},
 ]
 
-# Chinesische Tierkreiszeichen-Übersetzungen
-CHINESISCHE_ZODIAK_ÜBERSETZUNGEN = {
-    "en": ["Ratte", "Ochse", "Tiger", "Kaninchen", "Drache", "Schlange", "Pferd", "Ziege", "Affe", "Hahn", "Hund", "Schwein"],
-    „de“: [„Ratte“, „Ochse“, „Tiger“, „Hase“, „Drache“, „Schlange“, „Pferd“, „Ziege“, „Affe“, „Hahn“, „Hund“, „Schwein“],
-    „el“: [„Αρουραίος“, „Βόδι“, „Τίγρης“, „Κουνέλι“, „Δράκος“, „Φίδι“, „Άλογο“, „Κατσίκα“, „Μαϊμού“, „Κόκορας“, „Σκύλος“, „Γουρούνι“],
-    „zh“: [„鼠“, „牛“, „虎“, „兔“, „龙“, „蛇“, „马“, „羊“, „猴“, „鸡“, „狗“, „猪“],
-    „ja“: [„子“, „丑“, „寅“, „卯“, „辰“, „巳“, „午“, „未“, „申“, „酉“, „戌“, „亥“],
-    „ko“: [„쥐“, „소“, „호랑이“, „토끼“, „용“, „뱀“, „말“, „양“, „원숭이“, „닭“, „개“, „돼지“],
-    „ru“: [„Крыса“, „Бык“, „Тигр“, „Кролик“, „Дракон“, „Змея“, „Лошадь“, „Коза“, „Обезьяна“, „Петух“, „Собака“, „Свинья“],
-    „es“: [„Rata“, „Buey“, „Tigre“, „Conejo“, „Dragón“, „Serpiente“, „Caballo“, „Cabra“, „Mono“, „Gallo“, „Perro“, „Cerdo“],
-    „fr“: [„Rat“, „Bœuf“, „Tigre“, „Lapin“, „Dragon“, „Serpent“, „Cheval“, „Chèvre“, „Singe“, „Coq“, „Chien“, „Cochon“],
-    „it“: [„Topo“, „Bue“, „Tigre“, „Coniglio“, „Drago“, „Serpente“, „Cavallo“, „Capra“, „Scimmia“, „Gallo“, „Cane“, „Maiale“],
-    „pt“: [„Rato“, „Boi“, „Tigre“, „Coelho“, „Dragão“, „Serpente“, „Cavalo“, „Cabra“, „Macaco“, „Galo“, „Cão“, „Porco“],
-    „ar“: [„الفأر“, „الثور“, „النمر“, „الأرنب“, „التنين“, „الأفعى“, „الحصان“, „الماعز“, „القرد“, „الديك“, „الكلب“, „الخنزير“],
-    „hi“: [“चूहा“, „बैल“, „बाघ“, „खरगोश“, „ड्रैगन“, „साँप“, „घोड़ा“, „बकरी“, „बंदर“, „मुर्गा“, „कुत्ता“, „सूअर“],
-    „tr“: [„Fare“, „Öküz“, „Kaplan“, „Tavşan“, „Ejderha“, „Yılan“, „At“, „Keçi“, „Maymun“, „Horoz“, „Köpek“, „Domuz“],
+# Chinese Zodiac translations
+CHINESE_ZODIAC_TRANSLATIONS = {
+    "en": ["Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"],
+    "de": ["Ratte", "Ochse", "Tiger", "Hase", "Drache", "Schlange", "Pferd", "Ziege", "Affe", "Hahn", "Hund", "Schwein"],
+    "el": ["Αρουραίος", "Βόδι", "Τίγρης", "Κουνέλι", "Δράκος", "Φίδι", "Άλογο", "Κατσίκα", "Μαϊμού", "Κόκορας", "Σκύλος", "Γουρούνι"],
+    "zh": ["鼠", "牛", "虎", "兔", "龙", "蛇", "马", "羊", "猴", "鸡", "狗", "猪"],
+    "ja": ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"],
+    "ko": ["쥐", "소", "호랑이", "토끼", "용", "뱀", "말", "양", "원숭이", "닭", "개", "돼지"],
+    "ru": ["Крыса", "Бык", "Тигр", "Кролик", "Дракон", "Змея", "Лошадь", "Коза", "Обезьяна", "Петух", "Собака", "Свинья"],
+    "es": ["Rata", "Buey", "Tigre", "Conejo", "Dragón", "Serpiente", "Caballo", "Cabra", "Mono", "Gallo", "Perro", "Cerdo"],
+    "fr": ["Rat", "Bœuf", "Tigre", "Lapin", "Dragon", "Serpent", "Cheval", "Chèvre", "Singe", "Coq", "Chien", "Cochon"],
+    "it": ["Topo", "Bue", "Tigre", "Coniglio", "Drago", "Serpente", "Cavallo", "Capra", "Scimmia", "Gallo", "Cane", "Maiale"],
+    "pt": ["Rato", "Boi", "Tigre", "Coelho", "Dragão", "Serpente", "Cavalo", "Cabra", "Macaco", "Galo", "Cão", "Porco"],
+    "ar": ["الفأر", "الثور", "النمر", "الأرنب", "التنين", "الأفعى", "الحصان", "الماعز", "القرد", "الديك", "الكلب", "الخنزير"],
+    "hi": ["चूहा", "बैल", "बाघ", "खरगोश", "ड्रैगन", "साँप", "घोड़ा", "बकरी", "बंदर", "मुर्गा", "कुत्ता", "सूअर"],
+    "tr": ["Fare", "Öküz", "Kaplan", "Tavşan", "Ejderha", "Yılan", "At", "Keçi", "Maymun", "Horoz", "Köpek", "Domuz"],
 }
 
-# Lucky Elements Übersetzungen
+# Lucky Elements Translations
 LUCKY_COLORS_TRANSLATIONS = {
-    "en": {"Red": "Rot", "Orange": "Orange", "Green": "Grün", "Pink": "Rosa", "Yellow": "Gelb",
-           "Hellgrün": "Hellgrün", "Weiß": "Weiß", "Silber": "Silber", "Gold": "Gold",
-           "Grau": "Grau", "Beige": "Beige", "Hellgelb": "Hellgelb", "Blau": "Blau",
-           "Scharlachrot": "Scharlachrot", "Schwarz": "Schwarz", "Kastanienbraun": "Kastanienbraun", "Lila": "Lila",
-           "Braun": "Braun", "Dunkelgrün": "Dunkelgrün", "Türkis": "Türkis"
+    "en": {"Red": "Red", "Orange": "Orange", "Green": "Green", "Pink": "Pink", "Yellow": "Yellow", 
+           "Light Green": "Light Green", "White": "White", "Silver": "Silver", "Gold": "Gold",
+           "Grey": "Grey", "Beige": "Beige", "Pale Yellow": "Pale Yellow", "Blue": "Blue",
+           "Scarlet": "Scarlet", "Black": "Black", "Maroon": "Maroon", "Purple": "Purple",
+           "Brown": "Brown", "Dark Green": "Dark Green", "Turquoise": "Turquoise", 
            "Sea Green": "Sea Green", "Lavender": "Lavender"},
     "de": {"Red": "Rot", "Orange": "Orange", "Green": "Grün", "Pink": "Rosa", "Yellow": "Gelb",
-           „Light Green“: „Hellgrün“, „White“: „Weiß“, „Silver“: „Silber“, „Gold“: „Gold“,
-           "Grau": "Grau", "Beige": "Beige", "Hellgelb": "Blassgelb", "Blau": "Blau",
-           „Scarlet“: „Scharlachrot“, „Black“: „Schwarz“, „Maroon“: „Kastanienbraun“, „Purple“: „Lila“,
-           „Brown“: „Braun“, „Dark Green“: „Dunkelgrün“, „Turquoise“: „Türkis“,
-           „Sea Green“: „Meergrün“, „Lavender“: „Lavendel“},
-    „el“: {„Rot“: „Κόκκινο“, „Orange“: „Πορτοκαλί“, „Grün“: „Πράσινο“, „Rosa“: „Ροζ“, „Gelb“: „Κίτρινο“,
-           „Hellgrün“: „Ανοιχτό Πράσινο“, „Weiß“: „Λευκό“, „Silber“: „Ασημί“, „Gold“: „Χρυσό“,
-           „Grau“: „Schwarz“, „Beige“: „Schwarz“, „Hellgelb“: „Schwarz“, „Blau“: „Schwarz“,
-           „Scarlet“: „Άλικο“, „Black“: „Μαύρο“, „Maroon“: „Καστανό“, „Purple“: „Μωβ“,
-           „Braun“: „Καφέ“, „Dunkelgrün“: „Σκούρο Πράσινο“, „Türkis“: „Τιρκουάζ“,
-           „Sea Green“: „Θαλασσί“, „Lavender“: „Λεβάντα“},
-    „es“: {„Rot“: „Rojo“, „Orange“: „Naranja“, „Grün“: „Verde“, „Pink“: „Rosa“, „Gelb“: „Amarillo“,
-           „Hellgrün“: „Verde Claro“, „Weiß“: „Blanco“, „Silber“: „Plata“, „Gold“: „Oro“,
-           „Grau“: „Gris“, „Beige“: „Beige“, „Blassgelb“: „Amarillo Pálido“, „Blau“: „Azul“,
-           „Scarlet“: „Escarlata“, „Black“: „Negro“, „Maroon“: „Granate“, „Purple“: „Púrpura“,
-           „Braun“: „Marrón“, „Dunkelgrün“: „Verde Oscuro“, „Türkis“: „Turquesa“,
-           „Sea Green“: „Verde Mar“, „Lavender“: „Lavanda“},
+           "Light Green": "Hellgrün", "White": "Weiß", "Silver": "Silber", "Gold": "Gold",
+           "Grey": "Grau", "Beige": "Beige", "Pale Yellow": "Blassgelb", "Blue": "Blau",
+           "Scarlet": "Scharlachrot", "Black": "Schwarz", "Maroon": "Kastanienbraun", "Purple": "Lila",
+           "Brown": "Braun", "Dark Green": "Dunkelgrün", "Turquoise": "Türkis",
+           "Sea Green": "Meergrün", "Lavender": "Lavendel"},
+    "el": {"Red": "Κόκκινο", "Orange": "Πορτοκαλί", "Green": "Πράσινο", "Pink": "Ροζ", "Yellow": "Κίτρινο",
+           "Light Green": "Ανοιχτό Πράσινο", "White": "Λευκό", "Silver": "Ασημί", "Gold": "Χρυσό",
+           "Grey": "Γκρι", "Beige": "Μπεζ", "Pale Yellow": "Απαλό Κίτρινο", "Blue": "Μπλε",
+           "Scarlet": "Άλικο", "Black": "Μαύρο", "Maroon": "Καστανό", "Purple": "Μωβ",
+           "Brown": "Καφέ", "Dark Green": "Σκούρο Πράσινο", "Turquoise": "Τιρκουάζ",
+           "Sea Green": "Θαλασσί", "Lavender": "Λεβάντα"},
+    "es": {"Red": "Rojo", "Orange": "Naranja", "Green": "Verde", "Pink": "Rosa", "Yellow": "Amarillo",
+           "Light Green": "Verde Claro", "White": "Blanco", "Silver": "Plata", "Gold": "Oro",
+           "Grey": "Gris", "Beige": "Beige", "Pale Yellow": "Amarillo Pálido", "Blue": "Azul",
+           "Scarlet": "Escarlata", "Black": "Negro", "Maroon": "Granate", "Purple": "Púrpura",
+           "Brown": "Marrón", "Dark Green": "Verde Oscuro", "Turquoise": "Turquesa",
+           "Sea Green": "Verde Mar", "Lavender": "Lavanda"},
     "fr": {"Red": "Rouge", "Orange": "Orange", "Green": "Vert", "Pink": "Rose", "Yellow": "Jaune",
-           "Hellgrün": "Vert Clair", "Weiß": "Blanc", "Silber": "Argent", "Gold": "Or",
-           „Grau“: „Gris“, „Beige“: „Beige“, „Blassgelb“: „Jaune Pâle“, „Blau“: „Bleu“,
-           „Scarlet“: „Écarlate“, „Black“: „Noir“, „Maroon“: „Bordeaux“, „Purple“: „Violet“,
-           „Brown“: „Marron“, „Dark Green“: „Vert Foncé“, „Turquoise“: „Turquoise“,
-           „Sea Green“: „Vert Mer“, „Lavender“: „Lavande“},
-    „it“: {„Rot“: „Rosso“, „Orange“: „Arancione“, „Grün“: „Verde“, „Pink“: „Rosa“, „Gelb“: „Giallo“,
-           „Hellgrün“: „Verde Chiaro“, „Weiß“: „Bianco“, „Silber“: „Argento“, „Gold“: „Oro“,
-           „Grau“: „Grigio“, „Beige“: „Beige“, „Hellgelb“: „Giallo Pallido“, „Blau“: „Blu“,
-           „Scarlet“: „Scarlatto“, „Black“: „Nero“, „Maroon“: „Bordeaux“, „Purple“: „Viola“,
-           „Brown“: „Marrone“, „Dark Green“: „Verde Scuro“, „Turquoise“: „Turchese“,
-           „Sea Green“: „Verde Mare“, „Lavender“: „Lavanda“},
-    „ru“: {„Rot“: „Rot“, „Orange“: „Grün“, „Grün“: „Gelb“, „Rosa“: „Gelb“, „Gelb“: „Gelb“,
-           „Hellgrün“: „Sterngrün“, „Weiß“: „Weiß“, „Silber“: „Schwarz“, „Gold“: „Schwarz“,
-           „Grau“: „Schwarz“, „Beige“: „Weiß“, „Hellgelb“: „Schwarz“, „Blau“: „Schwarz“,
-           „Scarlet“: „Алый“, „Black“: „Чёрный“, „Maroon“: „Бордовый“, „Purple“: „Фиолетовый“,
-           „Braun“: „Korisch“, „Dunkelgrün“: „Schwarz“, „Türkis“: „Schwarz“,
-           „Sea Green“: „Морской“, „Lavender“: „Лавандовый“},
-    „zh“: {„Rot“: „红色“, „Orange“: „橙色“, „Grün“: „绿色“, „Pink“: „粉色“, „Gelb“: „黄色“,
-           „Hellgrün“: „浅绿“, „Weiß“: „白色“, „Silber“: „银色“, „Gold“: „金色“,
-           „Grau“: „灰色“, „Beige“: „米色“, „Hellgelb“: „淡黄“, „Blau“: „蓝色“,
-           „Scarlet“: „猩红“, „Black“: „黑色“, „Maroon“: „栗色“, „Purple“: „紫色“,
-           „Braun“: „棕色“, „Dunkelgrün“: „深绿“, „Türkis“: „青绿“,
-           „Sea Green“: „海绿“, „Lavender“: „淡紫“},
-    „ja“: {„Rot“: „赤“, „Orange“: „オレンジ“, „Grün“: „緑“, „Pink“: „ピンク“, „Gelb“: „黄色“,
-           „Hellgrün“: „黄緑“, „Weiß“: „白“, „Silber“: „銀“, „Gold“: „金“,
-           „Grau“: „灰色“, „Beige“: „ベージュ“, „Hellgelb“: „淡黄色“, „Blau“: „青“,
-           „Scarlet“: „緋色“, „Black“: „黒“, „Maroon“: „栗色“, „Purple“: „紫“,
-           „Braun“: „茶色“, „Dunkelgrün“: „深緑“, „Türkis“: „ターコイズ“,
-           „Sea Green“: „シーグリーン“, „Lavender“: „ラベンダー“},
+           "Light Green": "Vert Clair", "White": "Blanc", "Silver": "Argent", "Gold": "Or",
+           "Grey": "Gris", "Beige": "Beige", "Pale Yellow": "Jaune Pâle", "Blue": "Bleu",
+           "Scarlet": "Écarlate", "Black": "Noir", "Maroon": "Bordeaux", "Purple": "Violet",
+           "Brown": "Marron", "Dark Green": "Vert Foncé", "Turquoise": "Turquoise",
+           "Sea Green": "Vert Mer", "Lavender": "Lavande"},
+    "it": {"Red": "Rosso", "Orange": "Arancione", "Green": "Verde", "Pink": "Rosa", "Yellow": "Giallo",
+           "Light Green": "Verde Chiaro", "White": "Bianco", "Silver": "Argento", "Gold": "Oro",
+           "Grey": "Grigio", "Beige": "Beige", "Pale Yellow": "Giallo Pallido", "Blue": "Blu",
+           "Scarlet": "Scarlatto", "Black": "Nero", "Maroon": "Bordeaux", "Purple": "Viola",
+           "Brown": "Marrone", "Dark Green": "Verde Scuro", "Turquoise": "Turchese",
+           "Sea Green": "Verde Mare", "Lavender": "Lavanda"},
+    "ru": {"Red": "Красный", "Orange": "Оранжевый", "Green": "Зелёный", "Pink": "Розовый", "Yellow": "Жёлтый",
+           "Light Green": "Светло-зелёный", "White": "Белый", "Silver": "Серебряный", "Gold": "Золотой",
+           "Grey": "Серый", "Beige": "Бежевый", "Pale Yellow": "Бледно-жёлтый", "Blue": "Синий",
+           "Scarlet": "Алый", "Black": "Чёрный", "Maroon": "Бордовый", "Purple": "Фиолетовый",
+           "Brown": "Коричневый", "Dark Green": "Тёмно-зелёный", "Turquoise": "Бирюзовый",
+           "Sea Green": "Морской", "Lavender": "Лавандовый"},
+    "zh": {"Red": "红色", "Orange": "橙色", "Green": "绿色", "Pink": "粉色", "Yellow": "黄色",
+           "Light Green": "浅绿", "White": "白色", "Silver": "银色", "Gold": "金色",
+           "Grey": "灰色", "Beige": "米色", "Pale Yellow": "淡黄", "Blue": "蓝色",
+           "Scarlet": "猩红", "Black": "黑色", "Maroon": "栗色", "Purple": "紫色",
+           "Brown": "棕色", "Dark Green": "深绿", "Turquoise": "青绿",
+           "Sea Green": "海绿", "Lavender": "淡紫"},
+    "ja": {"Red": "赤", "Orange": "オレンジ", "Green": "緑", "Pink": "ピンク", "Yellow": "黄色",
+           "Light Green": "黄緑", "White": "白", "Silver": "銀", "Gold": "金",
+           "Grey": "灰色", "Beige": "ベージュ", "Pale Yellow": "淡黄色", "Blue": "青",
+           "Scarlet": "緋色", "Black": "黒", "Maroon": "栗色", "Purple": "紫",
+           "Brown": "茶色", "Dark Green": "深緑", "Turquoise": "ターコイズ",
+           "Sea Green": "シーグリーン", "Lavender": "ラベンダー"},
 }
 
 LUCKY_DAYS_TRANSLATIONS = {
     "en": {"Monday": "Monday", "Tuesday": "Tuesday", "Wednesday": "Wednesday", "Thursday": "Thursday",
-           "Freitag": "Freitag", "Samstag": "Samstag", "Sonntag": "Sonntag"},
-    „de“: {“Monday“: „Montag“, „Tuesday“: „Dienstag“, „Wednesday“: „Mittwoch“, „Thursday“: „Donnerstag“,
-           „Freitag“: „Freitag“, „Samstag“: „Samstag“, „Sunday“: „Sonntag“},
-    „el“: {„Montag“: „Δευτέρα“, „Dienstag“: „Τρίτη“, „Mittwoch“: „Τετάρτη“, „Donnerstag“: „Πέμπτη“,
-           „Freitag“: „Παρασκευή“, „Samstag“: „Σάββατο“, „Sonntag“: „Κυριακή“},
-    „es“: {„Montag“: „Lunes“, „Dienstag“: „Martes“, „Mittwoch“: „Miércoles“, „Donnerstag“: „Jueves“,
-           „Freitag“: „Viernes“, „Samstag“: „Sábado“, „Sonntag“: „Domingo“},
-    „fr“: {„Montag“: „Lundi“, „Dienstag“: „Mardi“, „Mittwoch“: „Mercredi“, „Donnerstag“: „Jeudi“,
-           „Freitag“: „Vendredi“, „Samstag“: „Samedi“, „Sonntag“: „Dimanche“},
-    „it“: {„Montag“: „Lunedì“, „Dienstag“: „Martedì“, „Mittwoch“: „Mercoledì“, „Donnerstag“: „Giovedì“,
-           „Freitag“: „Venerdì“, „Samstag“: „Sabato“, „Sonntag“: „Domenica“},
-    „ru“: {„Montag“: „Понедельник“, „Dienstag“: „Вторник“, „Mittwoch“: „Mittwoch“, „Donnerstag“: „Четверг“,
-           „Freitag“: „Пятница“, „Samstag“: „Суббота“, „Sonntag“: „Воскресенье“},
-    „zh“: {„Montag“: „星期一“, „Dienstag“: „星期二“, „Mittwoch“: „星期三“, „Donnerstag“: „星期四“,
-           „Freitag“: „星期五“, „Samstag“: „星期六“, „Sonntag“: „星期日“},
-    „ja“: {„Montag“: „月曜日“, „Dienstag“: „火曜日“, „Mittwoch“: „水曜日“, „Donnerstag“: „木曜日“,
-           „Freitag“: „金曜日“, „Samstag“: „土曜日“, „Sonntag“: „日曜日“},
+           "Friday": "Friday", "Saturday": "Saturday", "Sunday": "Sunday"},
+    "de": {"Monday": "Montag", "Tuesday": "Dienstag", "Wednesday": "Mittwoch", "Thursday": "Donnerstag",
+           "Friday": "Freitag", "Saturday": "Samstag", "Sunday": "Sonntag"},
+    "el": {"Monday": "Δευτέρα", "Tuesday": "Τρίτη", "Wednesday": "Τετάρτη", "Thursday": "Πέμπτη",
+           "Friday": "Παρασκευή", "Saturday": "Σάββατο", "Sunday": "Κυριακή"},
+    "es": {"Monday": "Lunes", "Tuesday": "Martes", "Wednesday": "Miércoles", "Thursday": "Jueves",
+           "Friday": "Viernes", "Saturday": "Sábado", "Sunday": "Domingo"},
+    "fr": {"Monday": "Lundi", "Tuesday": "Mardi", "Wednesday": "Mercredi", "Thursday": "Jeudi",
+           "Friday": "Vendredi", "Saturday": "Samedi", "Sunday": "Dimanche"},
+    "it": {"Monday": "Lunedì", "Tuesday": "Martedì", "Wednesday": "Mercoledì", "Thursday": "Giovedì",
+           "Friday": "Venerdì", "Saturday": "Sabato", "Sunday": "Domenica"},
+    "ru": {"Monday": "Понедельник", "Tuesday": "Вторник", "Wednesday": "Среда", "Thursday": "Четверг",
+           "Friday": "Пятница", "Saturday": "Суббота", "Sunday": "Воскресенье"},
+    "zh": {"Monday": "星期一", "Tuesday": "星期二", "Wednesday": "星期三", "Thursday": "星期四",
+           "Friday": "星期五", "Saturday": "星期六", "Sunday": "星期日"},
+    "ja": {"Monday": "月曜日", "Tuesday": "火曜日", "Wednesday": "水曜日", "Thursday": "木曜日",
+           "Friday": "金曜日", "Saturday": "土曜日", "Sunday": "日曜日"},
 }
 
-# Glückssteine ​​nach Sternzeichen
-GLÜCKSGESTEINE = {
-    "Widder": {"name": "Diamant", "symbol": "💎", "color": "#b9f2ff"},
+# Lucky Gemstones by Zodiac
+LUCKY_GEMSTONES = {
+    "Aries": {"name": "Diamond", "symbol": "💎", "color": "#b9f2ff"},
     "Taurus": {"name": "Emerald", "symbol": "💚", "color": "#50C878"},
     "Gemini": {"name": "Pearl", "symbol": "🤍", "color": "#FDEEF4"},
-    "Krebs": {"name": "Rubin", "symbol": "❤️", "color": "#E0115F"},
+    "Cancer": {"name": "Ruby", "symbol": "❤️", "color": "#E0115F"},
     "Leo": {"name": "Peridot", "symbol": "💛", "color": "#B4C424"},
-    "Jungfrau": {"name": "Sapphire", "symbol": "💙", "color": "#0F52BA"},
+    "Virgo": {"name": "Sapphire", "symbol": "💙", "color": "#0F52BA"},
     "Libra": {"name": "Opal", "symbol": "🌈", "color": "#A8C3BC"},
     "Scorpio": {"name": "Topaz", "symbol": "🧡", "color": "#FFC87C"},
     "Sagittarius": {"name": "Turquoise", "symbol": "💠", "color": "#40E0D0"},
-    "Steinbock": {"name": "Granat", "symbol": "🔴", "color": "#733635"},
-    "Wassermann": {"name": "Amethyst", "symbol": "💜", "color": "#9966CC"},
-    "Pisces": {"name": "Aquamarin", "symbol": "🩵", "color": "#7FFFD4"},
+    "Capricorn": {"name": "Garnet", "symbol": "🔴", "color": "#733635"},
+    "Aquarius": {"name": "Amethyst", "symbol": "💜", "color": "#9966CC"},
+    "Pisces": {"name": "Aquamarine", "symbol": "🩵", "color": "#7FFFD4"},
 }
 
-EDELSTEIN_ÜBERSETZUNGEN = {
-    "en": {"Diamond": "Diamant", "Emerald": "Emerald", "Pearl": "Perle", "Ruby": "Ruby",
-           "Peridot": "Peridot", "Saphir": "Saphir", "Opal": "Opal", "Topas": "Topas"
-           "Türkis": "Türkis", "Granat": "Granat", "Amethyst": "Amethyst", "Aquamarin": "Aquamarin"},
+GEMSTONE_TRANSLATIONS = {
+    "en": {"Diamond": "Diamond", "Emerald": "Emerald", "Pearl": "Pearl", "Ruby": "Ruby",
+           "Peridot": "Peridot", "Sapphire": "Sapphire", "Opal": "Opal", "Topaz": "Topaz",
+           "Turquoise": "Turquoise", "Garnet": "Garnet", "Amethyst": "Amethyst", "Aquamarine": "Aquamarine"},
     "de": {"Diamond": "Diamant", "Emerald": "Smaragd", "Pearl": "Perle", "Ruby": "Rubin",
-           „Peridot“: „Peridot“, „Sapphire“: „Saphir“, „Opal“: „Opal“, „Topaz“: „Topas“,
-           „Turquoise“: „Türkis“, „Granat“: „Granat“, „Amethyst“: „Amethyst“, „Aquamarin“: „Aquamarin“},
-    „el“: {„Diamond“: „Διαμάντι“, „Emerald“: „Σμαράγδι“, „Pearl“: „Μαργαριτάρι“, „Ruby“: „Ρουμπίνι“,
-           „Peridot“: „Περίδοτο“, „Saphir“: „Ζαφείρι“, „Opal“: „Οπάλιο“, „Topas“: „Τοπάζι“,
-           „Türkis“: „Τιρκουάζ“, „Granat“: „Γρανάτης“, „Amethyst“: „Αμέθυστος“, „Aquamarin“: „Ακουαμαρίνα“},
-    „es“: {„Diamond“: „Diamante“, „Emerald“: „Esmeralda“, „Pearl“: „Perla“, „Ruby“: „Rubí“,
-           „Peridot“: „Peridoto“, „Saphir“: „Zafiro“, „Opal“: „Ópalo“, „Topas“: „Topacio“,
-           „Turquoise“: „Turquesa“, „Garnet“: „Granate“, „Amethyst“: „Amatista“, „Aquamarine“: „Aguamarina“},
-    „fr“: {“Diamond“: „Diamant“, „Emerald“: „Émeraude“, „Pearl“: „Perle“, „Ruby“: „Rubis“,
-           „Peridot“: „Péridot“, „Sapphire“: „Saphir“, „Opal“: „Opal“, „Topaz“: „Topaze“,
-           „Turquoise“: „Turquoise“, „Granat“: „Grenat“, „Amethyst“: „Améthyste“, „Aquamarin“: „Aigue-marine“},
+           "Peridot": "Peridot", "Sapphire": "Saphir", "Opal": "Opal", "Topaz": "Topas",
+           "Turquoise": "Türkis", "Garnet": "Granat", "Amethyst": "Amethyst", "Aquamarine": "Aquamarin"},
+    "el": {"Diamond": "Διαμάντι", "Emerald": "Σμαράγδι", "Pearl": "Μαργαριτάρι", "Ruby": "Ρουμπίνι",
+           "Peridot": "Περίδοτο", "Sapphire": "Ζαφείρι", "Opal": "Οπάλιο", "Topaz": "Τοπάζι",
+           "Turquoise": "Τιρκουάζ", "Garnet": "Γρανάτης", "Amethyst": "Αμέθυστος", "Aquamarine": "Ακουαμαρίνα"},
+    "es": {"Diamond": "Diamante", "Emerald": "Esmeralda", "Pearl": "Perla", "Ruby": "Rubí",
+           "Peridot": "Peridoto", "Sapphire": "Zafiro", "Opal": "Ópalo", "Topaz": "Topacio",
+           "Turquoise": "Turquesa", "Garnet": "Granate", "Amethyst": "Amatista", "Aquamarine": "Aguamarina"},
+    "fr": {"Diamond": "Diamant", "Emerald": "Émeraude", "Pearl": "Perle", "Ruby": "Rubis",
+           "Peridot": "Péridot", "Sapphire": "Saphir", "Opal": "Opale", "Topaz": "Topaze",
+           "Turquoise": "Turquoise", "Garnet": "Grenat", "Amethyst": "Améthyste", "Aquamarine": "Aigue-marine"},
     "it": {"Diamond": "Diamante", "Emerald": "Smeraldo", "Pearl": "Perla", "Ruby": "Rubino",
-           „Peridot“: „Peridoto“, „Saphir“: „Zaffiro“, „Opal“: „Opal“, „Topas“: „Topazio“,
-           „Turquoise“: „Turchese“, „Garnet“: „Granato“, „Amethyst“: „Ametista“, „Aquamarine“: „Acquamarina“},
-    "ru": {"Diamond": "Brilliant", "Emerald": "Изумруд", "Pearl": "Жемчуг", "Ruby": "Рубин",
-           „Peridot“: „Peridot“, „Saphir“: „Sapfir“, „Opal“: „Opal“, „Topas“: „Topaz“,
-           „Türkis“: „Бирюза“, „Granat“: „Гранат“, „Amethyst“: „АMETIST“, „Aquamarin“: „Аквамарин“},
-    „zh“: {“Diamond“: „钻石“, „Emerald“: „祖母绿“, „Pearl“: „珍珠“, „Ruby“: „红宝石“,
-           „Peridot“: „橄榄石“, „Saphir“: „蓝宝石“, „Opal“: „蛋白石“, „Topas“: „黄玉“,
-           „Türkis“: „绿松石“, „Granat“: „石榴石“, „Amethyst“: „紫水晶“, „Aquamarin“: „海蓝宝石“},
-    „ja“: {„Diamond“: „ダイヤモンド“, „Emerald“: „エメラルド“, „Pearl“: „真珠“, „Ruby“: „ルビー“,
-           „Peridot“: „ペリドット“, „Saphir“: „サファイア“, „Opal“: „オパール“, „Topas“: „トパーズ“,
-           „Turquoise“: „ターコイズ“, „Garnet“: „ガーネット“, „Amethyst“: „アメジスト“, „Aquamarine“: „アクアマリン“},
+           "Peridot": "Peridoto", "Sapphire": "Zaffiro", "Opal": "Opale", "Topaz": "Topazio",
+           "Turquoise": "Turchese", "Garnet": "Granato", "Amethyst": "Ametista", "Aquamarine": "Acquamarina"},
+    "ru": {"Diamond": "Бриллиант", "Emerald": "Изумруд", "Pearl": "Жемчуг", "Ruby": "Рубин",
+           "Peridot": "Перидот", "Sapphire": "Сапфир", "Opal": "Опал", "Topaz": "Топаз",
+           "Turquoise": "Бирюза", "Garnet": "Гранат", "Amethyst": "Аметист", "Aquamarine": "Аквамарин"},
+    "zh": {"Diamond": "钻石", "Emerald": "祖母绿", "Pearl": "珍珠", "Ruby": "红宝石",
+           "Peridot": "橄榄石", "Sapphire": "蓝宝石", "Opal": "蛋白石", "Topaz": "黄玉",
+           "Turquoise": "绿松石", "Garnet": "石榴石", "Amethyst": "紫水晶", "Aquamarine": "海蓝宝石"},
+    "ja": {"Diamond": "ダイヤモンド", "Emerald": "エメラルド", "Pearl": "真珠", "Ruby": "ルビー",
+           "Peridot": "ペリドット", "Sapphire": "サファイア", "Opal": "オパール", "Topaz": "トパーズ",
+           "Turquoise": "ターコイズ", "Garnet": "ガーネット", "Amethyst": "アメジスト", "Aquamarine": "アクアマリン"},
 }
 
-# Babyprodukte zum Einkaufen
-BABYPRODUKTE = {
-    "Edelstein": {
-        "amazon_search": "Geburtssteinschmuck für Babys {Edelstein}",
-        "ebay_search": "Baby {Edelstein} Anhänger Halskette"
+# Baby Products for Shopping Links
+BABY_PRODUCTS = {
+    "gemstone": {
+        "amazon_search": "baby birthstone jewelry {gemstone}",
+        "ebay_search": "baby {gemstone} pendant necklace"
     },
-    "Tidiac": {
-        "amazon_search": "Baby {Sternzeichen} Sternzeichen Geschenk",
-        "ebay_search": "Babydecke mit Sternbildmotiven"
+    "zodiac": {
+        "amazon_search": "baby {zodiac} zodiac gift",
+        "ebay_search": "baby {zodiac} constellation blanket"
     },
-    "Farbe": {
-        "amazon_search": "Babykleidung {Farbe}",
-        "ebay_search": "Baby-Outfit {Farbe}"
+    "color": {
+        "amazon_search": "baby clothes {color}",
+        "ebay_search": "baby outfit {color}"
     }
 }
 
 def translate_lucky_color(color: str, lang: str) -> str:
-    "Übersetze die Glücksfarbe in die Sprache des Benutzers"
+    """Translate lucky color to user's language"""
     translations = LUCKY_COLORS_TRANSLATIONS.get(lang, LUCKY_COLORS_TRANSLATIONS["en"])
     return translations.get(color, color)
 
 def translate_lucky_day(day: str, lang: str) -> str:
-    "Übersetze Glückstag in die Sprache des Benutzers"
+    """Translate lucky day to user's language"""
     translations = LUCKY_DAYS_TRANSLATIONS.get(lang, LUCKY_DAYS_TRANSLATIONS["en"])
     return translations.get(day, day)
 
 def get_lucky_gemstone(zodiac_name: str, lang: str) -> dict:
-    """Finde deinen Glücksstein für dein Sternzeichen mit Übersetzung""
+    """Get lucky gemstone for a zodiac sign with translation"""
     gemstone_data = LUCKY_GEMSTONES.get(zodiac_name, LUCKY_GEMSTONES["Aries"])
-    Edelsteinname = Edelsteindaten["Name"]
+    gemstone_name = gemstone_data["name"]
     translations = GEMSTONE_TRANSLATIONS.get(lang, GEMSTONE_TRANSLATIONS["en"])
     
-    zurückkehren {
+    return {
         "name": translations.get(gemstone_name, gemstone_name),
         "english_name": gemstone_name,
         "symbol": gemstone_data["symbol"],
-        "Farbe": Edelsteindaten["Farbe"]
+        "color": gemstone_data["color"]
     }
 
 def get_shopping_links(zodiac_name: str, gemstone_name: str, color: str) -> dict:
-    """Generiere Shopping-Links für Babyprodukte""
-    # Suchanfragen erstellen
+    """Generate shopping links for baby products"""
+    # Create search queries
     gemstone_amazon = f"https://www.amazon.com/s?k=baby+{gemstone_name.lower()}+birthstone+gift"
     gemstone_ebay = f"https://www.ebay.com/sch/i.html?_nkw=baby+{gemstone_name.lower()}+jewelry"
     
     zodiac_amazon = f"https://www.amazon.com/s?k=baby+{zodiac_name.lower()}+zodiac+gift"
     zodiac_ebay = f"https://www.ebay.com/sch/i.html?_nkw=baby+{zodiac_name.lower()}+constellation"
     
-    color_clean = color.split()[0].lower() # Nimm das erste Wort der Farbe
+    color_clean = color.split()[0].lower()  # Take first word of color
     clothes_amazon = f"https://www.amazon.com/s?k=baby+clothes+{color_clean}"
     clothes_ebay = f"https://www.ebay.com/sch/i.html?_nkw=baby+outfit+{color_clean}"
     
-    zurückkehren {
-        "Edelstein": {
+    return {
+        "gemstone": {
             "amazon": gemstone_amazon,
             "ebay": gemstone_ebay
         },
-        "Tidiac": {
-            "amazon": Tierkreiszeichen_amazon,
-            "ebay": Tierkreiszeichen_ebay
+        "zodiac": {
+            "amazon": zodiac_amazon,
+            "ebay": zodiac_ebay
         },
-        "Kleidung": {
+        "clothes": {
             "amazon": clothes_amazon,
             "ebay": clothes_ebay
         }
     }
 
-# Erweiterte Persönlichkeitsmerkmale (über 50 pro Element)
-PERSÖNLICHKEITSMERKMALE = {
-    "Feuer": [
-        "leidenschaftlich", "energisch", "mutig", "abenteuerlustig", "selbstbewusst"
-        "begeistert", "dynamisch", "mutig", "spontan", "optimistisch"
-        "charismatisch", "inspirierend", "zielstrebig", "wettbewerbsorientiert", "ehrgeizig"
-        "unabhängig", "kreativ", "herzlich", "großzügig", "spannend"
-        "impulsiv", "furchtlos", "bahnbrechend", "handlungsorientiert", "direkt"
-        "ausdrucksstark", "dramatisch", "magnetisch", "selbstbewusst", "lebhaft"
-        "temperamentvoll", "intensiv", "feurig", "lebhaft", "kühne"
-        "bahnbrechend", "motivierend", "strahlend", "kraftvoll", "unaufhaltsam"
-        "freigeistig", "risikofreudig", "selbstsicher", "geborene Führungspersönlichkeit", "Trendsetter"
-        „einflussreich“, „klug“, „brennendes Verlangen“, „Kriegergeist“, „Champion“
+# Extended Personality Traits (50+ per element)
+PERSONALITY_TRAITS = {
+    "Fire": [
+        "passionate", "energetic", "courageous", "adventurous", "confident", 
+        "enthusiastic", "dynamic", "bold", "spontaneous", "optimistic",
+        "charismatic", "inspiring", "determined", "competitive", "ambitious",
+        "independent", "creative", "warm", "generous", "exciting",
+        "impulsive", "fearless", "pioneering", "action-oriented", "direct",
+        "expressive", "dramatic", "magnetic", "assertive", "vivacious",
+        "spirited", "intense", "fiery", "lively", "daring",
+        "trailblazing", "motivating", "radiant", "powerful", "unstoppable",
+        "free-spirited", "risk-taking", "self-assured", "natural leader", "trendsetter",
+        "influential", "bright", "burning desire", "warrior spirit", "champion"
     ],
-    "Erde": [
-        "praktisch", "zuverlässig", "geduldig", "ehrgeizig", "bodenständig"
-        "stabil", "fleißig", "beharrlich", "loyal", "vernünftig"
-        "methodisch", "organisiert", "verantwortungsbewusst", "diszipliniert", "realistisch"
-        "zuverlässig", "gründlich", "vorsichtig", "traditionell", "beständig"
-        "materialistisch", "zielorientiert", "effizient", "produktiv", "konservativ"
-        "pragmatisch", "entschlossen", "einfallsreich", "beharrlich", "strukturiert"
-        "fokussiert", "engagiert", "zuverlässig", "solidarisch"
-        "bodenständig", "systematisch", "akribisch", "berechnet", "dauerhaft"
-        "Erbauer", "Versorger", "Beschützer", "Planer", "Erfolgsmenschen"
-        "wohlstandsbewusst", "sicherheitsorientiert", "naturverbunden", "taktil", "sinnlich"
+    "Earth": [
+        "practical", "reliable", "patient", "ambitious", "grounded",
+        "stable", "hardworking", "persistent", "loyal", "sensible",
+        "methodical", "organized", "responsible", "disciplined", "realistic",
+        "dependable", "thorough", "cautious", "traditional", "steady",
+        "materialistic", "goal-oriented", "efficient", "productive", "conservative",
+        "pragmatic", "determined", "resourceful", "tenacious", "structured",
+        "focused", "dedicated", "committed", "trustworthy", "solid",
+        "down-to-earth", "systematic", "meticulous", "calculated", "enduring",
+        "builder", "provider", "protector", "planner", "achiever",
+        "wealth-conscious", "security-oriented", "nature-loving", "tactile", "sensual"
     ],
-    "Luft": [
-        "intellektuell", "kommunikativ", "neugierig", "sozial", "innovativ"
-        "analytisch", "logisch", "geistreich", "vielseitig", "objektiv"
-        "unvoreingenommen", "diplomatisch", "idealistisch", "progressiv", "erfinderisch"
-        "schnell denkend", "wortgewandt", "klug", "anpassungsfähig", "rational"
-        "aufgeschlossen", "theoretisch", "abstrakt", "konzeptionell", "visionär"
-        "Netzwerken", "kooperativ", "überzeugend", "eloquent", "kultiviert"
-        "kultiviert", "anspruchsvoll", "wissend", "gebildet", "nachdenklich"
-        "Debattieren", "hinterfragen", "erforschen", "verbinden", "Brücken bauen"
-        "vermitteln", "harmonisieren", "ausgleichen", "verhandeln", "erleichtern"
-        „technikaffin“, „zukunftsorientiert“, „humanitär“, „freiheitsliebend“, „unabhängiger Denker“
+    "Air": [
+        "intellectual", "communicative", "curious", "social", "innovative",
+        "analytical", "logical", "witty", "versatile", "objective",
+        "fair-minded", "diplomatic", "idealistic", "progressive", "inventive",
+        "quick-thinking", "articulate", "clever", "adaptable", "rational",
+        "open-minded", "theoretical", "abstract", "conceptual", "visionary",
+        "networking", "collaborative", "persuasive", "eloquent", "refined",
+        "cultured", "sophisticated", "knowledgeable", "educated", "thoughtful",
+        "debating", "questioning", "exploring", "connecting", "bridging",
+        "mediating", "harmonizing", "balancing", "negotiating", "facilitating",
+        "tech-savvy", "future-oriented", "humanitarian", "freedom-loving", "independent-thinker"
     ],
-    "Wasser": [
-        "intuitiv", "emotional", "mitfühlend", "kreativ", "sensibel"
-        "einfühlsam", "fürsorglich", "fantasievoll", "vertäumt", "geheimnisvoll"
-        "psychisch", "heilend", "fürsorglich", "beschützend", "hingebungsvoll"
-        "romantisch", "künstlerisch", "poetisch", "gefühlvoll", "tiefgründig"
-        "reflektierend", "introspektiv", "meditativ", "spirituell", "mystisch"
-        "einfühlsam", "verständnisvoll", "hilfsbereit", "sanft", "freundlich"
-        "liebevoll", "zärtlich", "verständnisvoll", "empfänglich"
-        "fließend", "anpassungsfähig", "veränderlich", "launisch", "komplex"
-        "intensiv", "leidenschaftlich", "tiefgreifend", "transformativ", "regenerativ"
-        "magisch", "bezaubernd", "jenseitig", "transzendent", "verbunden"
+    "Water": [
+        "intuitive", "emotional", "compassionate", "creative", "sensitive",
+        "empathetic", "nurturing", "imaginative", "dreamy", "mysterious",
+        "psychic", "healing", "caring", "protective", "devoted",
+        "romantic", "artistic", "poetic", "soulful", "deep",
+        "reflective", "introspective", "meditative", "spiritual", "mystical",
+        "perceptive", "understanding", "supportive", "gentle", "kind",
+        "loving", "affectionate", "tender", "sympathetic", "receptive",
+        "flowing", "adaptable", "changeable", "moody", "complex",
+        "intense", "passionate", "profound", "transformative", "regenerative",
+        "magical", "enchanting", "otherworldly", "transcendent", "connected"
     ],
 }
 
-# Kompatibilitätsmatrix der Sternzeichen (Skala 1-10)
+# Zodiac Compatibility Matrix (1-10 scale)
 ZODIAC_COMPATIBILITY = {
-    ("Widder", "Widder"): 7, ("Widder", "Stier"): 5, ("Widder", "Zwillinge"): 8, ("Widder", "Krebs"): 4,
-    ("Widder", "Löwe"): 9, ("Widder", "Jungfrau"): 4, ("Widder", "Waage"): 7, ("Widder", "Skorpion"): 5,
-    ("Widder", "Schütze"): 9, ("Widder", "Steinbock"): 5, ("Widder", "Wassermann"): 8, ("Widder", "Fische"): 5,
+    ("Aries", "Aries"): 7, ("Aries", "Taurus"): 5, ("Aries", "Gemini"): 8, ("Aries", "Cancer"): 4,
+    ("Aries", "Leo"): 9, ("Aries", "Virgo"): 4, ("Aries", "Libra"): 7, ("Aries", "Scorpio"): 5,
+    ("Aries", "Sagittarius"): 9, ("Aries", "Capricorn"): 5, ("Aries", "Aquarius"): 8, ("Aries", "Pisces"): 5,
     
     ("Taurus", "Taurus"): 8, ("Taurus", "Gemini"): 4, ("Taurus", "Cancer"): 9, ("Taurus", "Leo"): 5,
-    („Stier“, „Jungfrau“): 9, („Stier“, „Waage“): 6, („Stier“, „Skorpion“): 8, („Stier“, „Schütze“): 4,
-    ("Stier", "Steinbock"): 10, ("Stier", "Wassermann"): 4, ("Stier", "Fische"): 8,
+    ("Taurus", "Virgo"): 9, ("Taurus", "Libra"): 6, ("Taurus", "Scorpio"): 8, ("Taurus", "Sagittarius"): 4,
+    ("Taurus", "Capricorn"): 10, ("Taurus", "Aquarius"): 4, ("Taurus", "Pisces"): 8,
     
-    („Zwillinge“, „Zwillinge“): 7, („Zwillinge“, „Krebs“): 5, („Zwillinge“, „Löwe“): 8, („Zwillinge“, „Jungfrau“): 5,
-    („Zwillinge“, „Waage“): 9, („Zwillinge“, „Skorpion“): 4, („Zwillinge“, „Schütze“): 8, („Zwillinge“, „Steinbock“): 4,
-    („Zwillinge“, „Wassermann“): 10, („Zwillinge“, „Fische“): 5,
+    ("Gemini", "Gemini"): 7, ("Gemini", "Cancer"): 5, ("Gemini", "Leo"): 8, ("Gemini", "Virgo"): 5,
+    ("Gemini", "Libra"): 9, ("Gemini", "Scorpio"): 4, ("Gemini", "Sagittarius"): 8, ("Gemini", "Capricorn"): 4,
+    ("Gemini", "Aquarius"): 10, ("Gemini", "Pisces"): 5,
     
-    ("Krebs", "Krebs"): 8, ("Krebs", "Löwe"): 6, ("Krebs", "Jungfrau"): 8, ("Krebs", "Waage"): 5,
-    ("Krebs", "Skorpion"): 10, ("Krebs", "Schütze"): 4, ("Krebs", "Steinbock"): 7, ("Krebs", "Wassermann"): 4,
-    ("Krebs", "Fische"): 10,
+    ("Cancer", "Cancer"): 8, ("Cancer", "Leo"): 6, ("Cancer", "Virgo"): 8, ("Cancer", "Libra"): 5,
+    ("Cancer", "Scorpio"): 10, ("Cancer", "Sagittarius"): 4, ("Cancer", "Capricorn"): 7, ("Cancer", "Aquarius"): 4,
+    ("Cancer", "Pisces"): 10,
     
     ("Leo", "Leo"): 7, ("Leo", "Virgo"): 5, ("Leo", "Libra"): 8, ("Leo", "Scorpio"): 6,
     ("Leo", "Sagittarius"): 10, ("Leo", "Capricorn"): 5, ("Leo", "Aquarius"): 7, ("Leo", "Pisces"): 5,
     
-    ("Jungfrau", "Jungfrau"): 8, ("Jungfrau", "Waage"): 5, ("Jungfrau", "Skorpion"): 8, ("Jungfrau", "Schütze"): 4,
-    ("Jungfrau", "Steinbock"): 9, ("Jungfrau", "Wassermann"): 4, ("Jungfrau", "Fische"): 7,
+    ("Virgo", "Virgo"): 8, ("Virgo", "Libra"): 5, ("Virgo", "Scorpio"): 8, ("Virgo", "Sagittarius"): 4,
+    ("Virgo", "Capricorn"): 9, ("Virgo", "Aquarius"): 4, ("Virgo", "Pisces"): 7,
     
-    ("Waage", "Waage"): 7, ("Waage", "Skorpion"): 6, ("Waage", "Schütze"): 8, ("Waage", "Steinbock"): 5,
-    („Waage“, „Wassermann“): 9, („Waage“, „Fische“): 6,
+    ("Libra", "Libra"): 7, ("Libra", "Scorpio"): 6, ("Libra", "Sagittarius"): 8, ("Libra", "Capricorn"): 5,
+    ("Libra", "Aquarius"): 9, ("Libra", "Pisces"): 6,
     
-    ("Skorpion", "Skorpion"): 8, ("Skorpion", "Schütze"): 5, ("Skorpion", "Steinbock"): 8,
-    („Skorpion“, „Wassermann“): 5, („Skorpion“, „Fische“): 10,
+    ("Scorpio", "Scorpio"): 8, ("Scorpio", "Sagittarius"): 5, ("Scorpio", "Capricorn"): 8,
+    ("Scorpio", "Aquarius"): 5, ("Scorpio", "Pisces"): 10,
     
-    ("Schütze", "Schütze"): 8, ("Schütze", "Steinbock"): 5, ("Schütze", "Wassermann"): 9,
-    ("Schütze", "Fische"): 6,
+    ("Sagittarius", "Sagittarius"): 8, ("Sagittarius", "Capricorn"): 5, ("Sagittarius", "Aquarius"): 9,
+    ("Sagittarius", "Pisces"): 6,
     
-    ("Steinbock", "Steinbock"): 8, ("Steinbock", "Wassermann"): 5, ("Steinbock", "Fische"): 7,
+    ("Capricorn", "Capricorn"): 8, ("Capricorn", "Aquarius"): 5, ("Capricorn", "Pisces"): 7,
     
-    ("Wassermann", "Wassermann"): 8, ("Wassermann", "Fische"): 6,
+    ("Aquarius", "Aquarius"): 8, ("Aquarius", "Pisces"): 6,
     
-    ("Fische", "Fische"): 8,
+    ("Pisces", "Pisces"): 8,
 }
 
-# Detaillierte Sternzeichenprofile
+# Detailed Zodiac Profiles
 ZODIAC_PROFILES = {
-    "Widder": {
-        "Stärken": ["Führung", "Mut", "Begeisterung", "Selbstvertrauen", "Entschlossenheit"],
-        "Schwächen": ["Ungeduld", "Impulsivität", "Aufbrausend", "Egoismus"],
+    "Aries": {
+        "strengths": ["Leadership", "Courage", "Enthusiasm", "Confidence", "Determination"],
+        "weaknesses": ["Impatience", "Impulsiveness", "Short temper", "Selfishness"],
         "lucky_numbers": [1, 8, 17],
-        "lucky_colors": ["Rot", "Orange"],
-        "lucky_day": "Dienstag",
-        "Herrscherplanet": "Mars",
+        "lucky_colors": ["Red", "Orange"],
+        "lucky_day": "Tuesday",
+        "ruling_planet": "Mars",
         "best_match": ["Leo", "Sagittarius", "Aquarius"],
-        "Beschreibung": "Geborene Führungspersönlichkeit mit unbändiger Energie und Pioniergeist."
+        "description": "Natural born leader with boundless energy and pioneering spirit."
     },
-    "Stier": {
-        "Stärken": ["Zuverlässigkeit", "Geduld", "Praktikumsorientierung", "Hingabe", "Stabilität"],
-        "Schwächen": ["Sturheit", "Besessenheit", "Kompromisslosigkeit", "Materialismus"],
+    "Taurus": {
+        "strengths": ["Reliability", "Patience", "Practicality", "Devotion", "Stability"],
+        "weaknesses": ["Stubbornness", "Possessiveness", "Uncompromising", "Materialistic"],
         "lucky_numbers": [2, 6, 9, 12, 24],
-        "lucky_colors": ["Grün", "Rosa"],
-        "lucky_day": "Freitag",
-        "Herrscherplanet": "Venus",
-        "best_match": ["Krebs", "Jungfrau", "Steinbock"],
-        "Beschreibung": "Eine bodenständige und zuverlässige Seele, die die Freuden des Lebens zu schätzen weiß."
+        "lucky_colors": ["Green", "Pink"],
+        "lucky_day": "Friday",
+        "ruling_planet": "Venus",
+        "best_match": ["Cancer", "Virgo", "Capricorn"],
+        "description": "Grounded and reliable soul who appreciates life's pleasures."
     },
-    "Zwillinge": {
-        "Stärken": ["Anpassungsfähigkeit", "Vielseitigkeit", "Witz", "Intellekt", "Kommunikationsfähigkeit"],
-        "Schwächen": ["Nervosität", "Unbeständigkeit", "Unentschlossenheit", "Oberflächlichkeit"],
+    "Gemini": {
+        "strengths": ["Adaptability", "Versatility", "Wit", "Intellect", "Communication"],
+        "weaknesses": ["Nervousness", "Inconsistency", "Indecisiveness", "Superficiality"],
         "lucky_numbers": [5, 7, 14, 23],
-        "lucky_colors": ["Gelb", "Hellgrün"],
-        "lucky_day": "Mittwoch",
-        "Herrscherplanet": "Merkur",
+        "lucky_colors": ["Yellow", "Light Green"],
+        "lucky_day": "Wednesday",
+        "ruling_planet": "Mercury",
         "best_match": ["Libra", "Aquarius", "Aries"],
-        "Beschreibung": "Schlagfertiger Kommunikator mit unstillbarer Neugier."
+        "description": "Quick-witted communicator with endless curiosity."
     },
-    "Krebs": {
-        "Stärken": ["Loyalität", "Emotionale Tiefe", "Fürsorglichkeit", "Intuition", "Beschützerinstinkt"],
-        "Schwächen": ["Launenhaftigkeit", "Überempfindlichkeit", "Anhänglichkeit", "Selbstmitleid"],
+    "Cancer": {
+        "strengths": ["Loyalty", "Emotional depth", "Nurturing", "Intuition", "Protectiveness"],
+        "weaknesses": ["Moodiness", "Over-sensitivity", "Clinginess", "Self-pity"],
         "lucky_numbers": [2, 7, 11, 16, 20],
-        "lucky_colors": ["Weiß", "Silber"],
-        "lucky_day": "Montag",
-        "Herrscherplanet": "Mond",
+        "lucky_colors": ["White", "Silver"],
+        "lucky_day": "Monday",
+        "ruling_planet": "Moon",
         "best_match": ["Scorpio", "Pisces", "Taurus"],
-        "Beschreibung": "Eine tiefgründig fürsorgliche und intuitive Seele mit starken familiären Bindungen."
+        "description": "Deeply caring and intuitive soul with strong family bonds."
     },
     "Leo": {
-        "Stärken": ["Kreativität", "Großzügigkeit", "Herzlichkeit", "Humor", "Führungsqualitäten"],
-        "Schwächen": ["Arroganz", "Sturheit", "Egozentrik", "Unflexibilität"],
+        "strengths": ["Creativity", "Generosity", "Warm-heartedness", "Humor", "Leadership"],
+        "weaknesses": ["Arrogance", "Stubbornness", "Self-centeredness", "Inflexibility"],
         "lucky_numbers": [1, 3, 10, 19],
-        "lucky_colors": ["Gold", "Orange", "Gelb"],
-        "lucky_day": "Sonntag",
-        "Herrscherplanet": "Sonne",
-        "best_match": ["Widder", "Schütze", "Zwillinge"],
-        "Beschreibung": "Eine strahlende Persönlichkeit, die jeden Raum mit Charisma erfüllt."
+        "lucky_colors": ["Gold", "Orange", "Yellow"],
+        "lucky_day": "Sunday",
+        "ruling_planet": "Sun",
+        "best_match": ["Aries", "Sagittarius", "Gemini"],
+        "description": "Radiant personality who lights up any room with charisma."
     },
-    "Jungfrau": {
-        "Stärken": ["Analytisches Denken", "Detailgenauigkeit", "Zuverlässigkeit", "Praktisches Denken", "Hilfsbereitschaft"],
-        "Schwächen": ["Überkritisch", "Sorgen", "Schüchternheit", "Perfektionismus"],
+    "Virgo": {
+        "strengths": ["Analytical mind", "Attention to detail", "Reliability", "Practicality", "Helpfulness"],
+        "weaknesses": ["Overcritical", "Worry", "Shyness", "Perfectionism"],
         "lucky_numbers": [5, 14, 15, 23, 32],
-        "lucky_colors": ["Grau", "Beige", "Hellgelb"],
-        "lucky_day": "Mittwoch",
-        "Herrscherplanet": "Merkur",
+        "lucky_colors": ["Grey", "Beige", "Pale Yellow"],
+        "lucky_day": "Wednesday",
+        "ruling_planet": "Mercury",
         "best_match": ["Taurus", "Capricorn", "Cancer"],
-        "Beschreibung": "Akribischer Perfektionist mit einem Herz für den Dienst am Nächsten."
+        "description": "Meticulous perfectionist with a heart of service."
     },
-    "Waage": {
-        "Stärken": ["Diplomatie", "Fairness", "Soziale Eleganz", "Charme", "Künstlerisches Gespür"],
-        "Schwächen": ["Unentschlossenheit", "Konfliktvermeidung", "Selbstmitleid", "Gefallenwollen"],
+    "Libra": {
+        "strengths": ["Diplomacy", "Fairness", "Social grace", "Charm", "Artistic sense"],
+        "weaknesses": ["Indecisiveness", "Avoidance of conflict", "Self-pity", "People-pleasing"],
         "lucky_numbers": [4, 6, 13, 15, 24],
         "lucky_colors": ["Pink", "Blue", "Green"],
-        "lucky_day": "Freitag",
-        "Herrscherplanet": "Venus",
-        "best_match": ["Zwillinge", "Wassermann", "Löwe"],
-        "Beschreibung": "Harmonischer Friedensstifter mit feinem ästhetischen Sinn."
+        "lucky_day": "Friday",
+        "ruling_planet": "Venus",
+        "best_match": ["Gemini", "Aquarius", "Leo"],
+        "description": "Harmonious peacemaker with refined aesthetic sense."
     },
-    "Skorpion": {
-        "Stärken": ["Einfallsreichtum", "Leidenschaft", "Entschlossenheit", "Loyalität", "Tiefe"],
-        "Schwächen": ["Eifersucht", "Verschlossenheit", "Groll", "Manipulationsfähigkeit"],
+    "Scorpio": {
+        "strengths": ["Resourcefulness", "Passion", "Determination", "Loyalty", "Depth"],
+        "weaknesses": ["Jealousy", "Secretiveness", "Resentfulness", "Manipulativeness"],
         "lucky_numbers": [8, 11, 18, 22],
-        "lucky_colors": ["Scharlachrot", "Schwarz", "Kastanienbraun"],
-        "lucky_day": "Dienstag",
-        "Herrscherplanet": "Pluto",
-        "best_match": ["Krebs", "Fische", "Jungfrau"],
-        "Beschreibung": "Eine leidenschaftliche Seele mit transformativer Kraft."
+        "lucky_colors": ["Scarlet", "Black", "Maroon"],
+        "lucky_day": "Tuesday",
+        "ruling_planet": "Pluto",
+        "best_match": ["Cancer", "Pisces", "Virgo"],
+        "description": "Intensely passionate soul with transformative power."
     },
-    "Schütze": {
-        "Stärken": ["Optimismus", "Freiheitsliebe", "Ehrlichkeit", "Philosophie", "Abenteuerlust"],
-        "Schwächen": ["Ungeduld", "Taktlosigkeit", "Ruhelosigkeit", "Überheblichkeit"],
+    "Sagittarius": {
+        "strengths": ["Optimism", "Freedom-loving", "Honesty", "Philosophy", "Adventure"],
+        "weaknesses": ["Impatience", "Tactlessness", "Restlessness", "Overconfidence"],
         "lucky_numbers": [3, 7, 9, 12, 21],
-        "lucky_colors": ["Lila", "Blau"],
-        "lucky_day": "Donnerstag",
-        "Herrscherplanet": "Jupiter",
-        "best_match": ["Widder", "Löwe", "Wassermann"],
-        "Beschreibung": "Freigeistiger Abenteurer auf der Suche nach Wahrheit und Sinn."
+        "lucky_colors": ["Purple", "Blue"],
+        "lucky_day": "Thursday",
+        "ruling_planet": "Jupiter",
+        "best_match": ["Aries", "Leo", "Aquarius"],
+        "description": "Free-spirited adventurer seeking truth and meaning."
     },
-    "Steinbock": {
-        "Stärken": ["Disziplin", "Verantwortungsbewusstsein", "Selbstbeherrschung", "Ehrgeiz", "Management"],
-        "Schwächen": ["Pessimismus", "Sturheit", "Starrheit", "Kälte"],
+    "Capricorn": {
+        "strengths": ["Discipline", "Responsibility", "Self-control", "Ambition", "Management"],
+        "weaknesses": ["Pessimism", "Stubbornness", "Rigidity", "Coldness"],
         "lucky_numbers": [4, 8, 13, 22],
-        "lucky_colors": ["Braun", "Schwarz", "Dunkelgrün"],
-        "lucky_day": "Samstag",
-        "Herrscherplanet": "Saturn",
+        "lucky_colors": ["Brown", "Black", "Dark Green"],
+        "lucky_day": "Saturday",
+        "ruling_planet": "Saturn",
         "best_match": ["Taurus", "Virgo", "Pisces"],
-        "Beschreibung": "Ein ehrgeiziger Leistungsträger, der nachhaltigen Erfolg aufbaut."
+        "description": "Ambitious achiever who builds lasting success."
     },
-    "Wassermann": {
-        "Stärken": ["Unabhängigkeit", "Originalität", "Humanitarismus", "Vision", "Innovation"],
-        "Schwächen": ["Emotionale Distanz", "Unberechenbarkeit", "Sturheit", "Abgeschiedenheit"],
+    "Aquarius": {
+        "strengths": ["Independence", "Originality", "Humanitarianism", "Vision", "Innovation"],
+        "weaknesses": ["Emotional detachment", "Unpredictability", "Stubbornness", "Aloofness"],
         "lucky_numbers": [4, 7, 11, 22, 29],
-        "lucky_colors": ["Blau", "Türkis"],
-        "lucky_day": "Samstag",
-        "Herrscherplanet": "Uranus",
-        "best_match": ["Zwillinge", "Waage", "Schütze"],
-        "Beschreibung": "Visionärer Humanist, seiner Zeit voraus."
+        "lucky_colors": ["Blue", "Turquoise"],
+        "lucky_day": "Saturday",
+        "ruling_planet": "Uranus",
+        "best_match": ["Gemini", "Libra", "Sagittarius"],
+        "description": "Visionary humanitarian ahead of their time."
     },
-    "Fische": {
-        "Stärken": ["Mitgefühl", "Intuition", "Kunstfertigkeit", "Sanftmut", "Weisheit"],
-        "Schwächen": ["Fluchtverhalten", "Übermäßiges Vertrauen", "Opfermentalität", "Ängstlichkeit"],
+    "Pisces": {
+        "strengths": ["Compassion", "Intuition", "Artistry", "Gentleness", "Wisdom"],
+        "weaknesses": ["Escapism", "Over-trusting", "Victim mentality", "Fearfulness"],
         "lucky_numbers": [3, 9, 12, 15, 18, 24],
-        "lucky_colors": ["Seegrün", "Lavendel"],
-        "lucky_day": "Donnerstag",
-        "Herrscherplanet": "Neptun",
-        "best_match": ["Krebs", "Skorpion", "Steinbock"],
-        "Beschreibung": "Tief intuitiver Träumer mit Verbindung zum Mystischen."
+        "lucky_colors": ["Sea Green", "Lavender"],
+        "lucky_day": "Thursday",
+        "ruling_planet": "Neptune",
+        "best_match": ["Cancer", "Scorpio", "Capricorn"],
+        "description": "Deeply intuitive dreamer connected to the mystical."
     },
 }
 
-KINDERNAMEN_NACH_REGION = {
-    # ========== GRIECHENLAND & ZYPERN ==========
-    "griechisch": {
-        "Junge": ["Achilles", "Odysseus", "Herkules", "Perseus", "Theseus", "Ajax", "Hektor",
-                "Apollo", "Ares", "Hermes", "Dionysos", "Orpheus", "Jason", "Alexander"
-                „Leonidas“, „Perikles“, „Sokrates“, „Platon“, „Aristoteles“, „Archimedes“
-                „Andreas“, „Nikolas“, „Dimitrios“, „Konstantinos“, „Theodoros“, „Stephanos“,
-                „Georgios“, „Ioannis“, „Michail“, „Petros“, „Pavlos“, „Christos“, „Evangelos“],
-        "Mädchen": ["Athena", "Artemis", "Aphrodite", "Hera", "Demeter", "Persephone", "Hestia",
-                 "Helen", "Penelope", "Cassandra", "Elektra", "Ariadne", "Kalliope", "Clio"
-                 „Sophia“, „Alexandra“, „Eleni“, „Maria“, „Aikaterini“, „Anastasia“, „Theodora“,
-                 „Dimitra“, „Eirini“, „Paraskevi“, „Angeliki“, „Fotini“, „Vasiliki“, „Despina“],
-        "Länder": ["GR", "CY"]
+CHILD_NAMES_BY_REGION = {
+    # ========== GREECE & CYPRUS ==========
+    "greek": {
+        "boy": ["Achilles", "Odysseus", "Hercules", "Perseus", "Theseus", "Ajax", "Hector",
+                "Apollo", "Ares", "Hermes", "Dionysus", "Orpheus", "Jason", "Alexander",
+                "Leonidas", "Pericles", "Socrates", "Plato", "Aristotle", "Archimedes",
+                "Andreas", "Nikolas", "Dimitrios", "Konstantinos", "Theodoros", "Stephanos",
+                "Georgios", "Ioannis", "Michail", "Petros", "Pavlos", "Christos", "Evangelos"],
+        "girl": ["Athena", "Artemis", "Aphrodite", "Hera", "Demeter", "Persephone", "Hestia",
+                 "Helen", "Penelope", "Cassandra", "Electra", "Ariadne", "Calliope", "Clio",
+                 "Sophia", "Alexandra", "Eleni", "Maria", "Aikaterini", "Anastasia", "Theodora",
+                 "Dimitra", "Eirini", "Paraskevi", "Angeliki", "Fotini", "Vasiliki", "Despina"],
+        "countries": ["GR", "CY"]
     },
     
-    # ========== ITALIEN ==========
-    "italienisch": {
-        „boy“: [„Marco“, „Luca“, „Matteo“, „Leonardo“, „Alessandro“, „Lorenzo“, „Andrea“,
-                „Giovanni“, „Francesco“, „Giuseppe“, „Antonio“, „Salvatore“, „Mario“,
-                „Luigi“, „Pietro“, „Paolo“, „Stefano“, „Roberto“, „Carlo“, „Enrico“,
-                „Fabio“, „Giancarlo“, „Massimo“, „Riccardo“, „Vincenzo“, „Domenico“],
-        „Mädchen“: [„Giulia“, „Francesca“, „Chiara“, „Sara“, „Martina“, „Giorgia“, „Alessia“,
-                 „Sofia“, „Aurora“, „Alice“, „Ginevra“, „Gaia“, „Valentina“, „Beatrice“,
-                 „Elisa“, „Federica“, „Ilaria“, „Serena“, „Roberta“, „Paola“, „Bianca“],
-        "Länder": ["IT", "SM", "VA"]
+    # ========== ITALY ==========
+    "italian": {
+        "boy": ["Marco", "Luca", "Matteo", "Leonardo", "Alessandro", "Lorenzo", "Andrea",
+                "Giovanni", "Francesco", "Giuseppe", "Antonio", "Salvatore", "Mario",
+                "Luigi", "Pietro", "Paolo", "Stefano", "Roberto", "Carlo", "Enrico",
+                "Fabio", "Giancarlo", "Massimo", "Riccardo", "Vincenzo", "Domenico"],
+        "girl": ["Giulia", "Francesca", "Chiara", "Sara", "Martina", "Giorgia", "Alessia",
+                 "Sofia", "Aurora", "Alice", "Ginevra", "Gaia", "Valentina", "Beatrice",
+                 "Elisa", "Federica", "Ilaria", "Serena", "Roberta", "Paola", "Bianca"],
+        "countries": ["IT", "SM", "VA"]
     },
     
-    # ========== SPANIEN & LATEINAMERIKA ==========
-    "Spanisch": {
-        „boy“: [„Santiago“, „Mateo“, „Diego“, „Carlos“, „Miguel“, „Pablo“, „Alejandro“,
-                „Fernando“, „Rafael“, „Antonio“, „Francisco“, „Jose“, „Luis“, „Juan“,
-                „Andres“, „Sergio“, „Javier“, „Eduardo“, „Manuel“, „Ricardo“, „Enrique“],
-        „Mädchen“: [„Isabella“, „Sofia“, „Valentina“, „Camila“, „Lucia“, „Elena“, „Maria“,
-                 „Carmen“, „Rosa“, „Ana“, „Paula“, „Adriana“, „Gabriela“, „Daniela“,
-                 „Alejandra“, „Fernanda“, „Natalia“, „Carolina“, „Mariana“, „Paloma“],
-        „Länder“: [„ES“, „MX“, „AR“, „CO“, „PE“, „VE“, „CL“, „EC“, „GT“, „CU“, „BO“, „DO“, „HN“, „PY“, „SV“, „NI“, „CR“, „PA“, „UY“]
+    # ========== SPAIN & LATIN AMERICA ==========
+    "spanish": {
+        "boy": ["Santiago", "Mateo", "Diego", "Carlos", "Miguel", "Pablo", "Alejandro",
+                "Fernando", "Rafael", "Antonio", "Francisco", "Jose", "Luis", "Juan",
+                "Andres", "Sergio", "Javier", "Eduardo", "Manuel", "Ricardo", "Enrique"],
+        "girl": ["Isabella", "Sofia", "Valentina", "Camila", "Lucia", "Elena", "Maria",
+                 "Carmen", "Rosa", "Ana", "Paula", "Adriana", "Gabriela", "Daniela",
+                 "Alejandra", "Fernanda", "Natalia", "Carolina", "Mariana", "Paloma"],
+        "countries": ["ES", "MX", "AR", "CO", "PE", "VE", "CL", "EC", "GT", "CU", "BO", "DO", "HN", "PY", "SV", "NI", "CR", "PA", "UY"]
     },
     
-    # ========== PORTUGAL & BRASILIEN ==========
-    "portugiesisch": {
-        „Junge“: [„Joao“, „Pedro“, „Tiago“, „Diogo“, „Rodrigo“, „Goncalo“, „Miguel“,
-                „Rafael“, „Bruno“, „Hugo“, „Andre“, „Ricardo“, „Nuno“, „Vasco“,
-                „Afonso“, „Duarte“, „Henrique“, „Luis“, „Filipe“, „Manuel“, „Rui“],
-        „Mädchen“: [„Mariana“, „Beatriz“, „Ana“, „Ines“, „Leonor“, „Matilde“, „Carolina“,
-                 „Sofia“, „Maria“, „Francisca“, „Margarida“, „Catarina“, „Rita“,
-                 „Joana“, „Teresa“, „Clara“, „Madalena“, „Lara“, „Diana“, „Sara“],
-        "Länder": ["PT", "BR", "AO", "MZ"]
+    # ========== PORTUGAL & BRAZIL ==========
+    "portuguese": {
+        "boy": ["Joao", "Pedro", "Tiago", "Diogo", "Rodrigo", "Goncalo", "Miguel",
+                "Rafael", "Bruno", "Hugo", "Andre", "Ricardo", "Nuno", "Vasco",
+                "Afonso", "Duarte", "Henrique", "Luis", "Filipe", "Manuel", "Rui"],
+        "girl": ["Mariana", "Beatriz", "Ana", "Ines", "Leonor", "Matilde", "Carolina",
+                 "Sofia", "Maria", "Francisca", "Margarida", "Catarina", "Rita",
+                 "Joana", "Teresa", "Clara", "Madalena", "Lara", "Diana", "Sara"],
+        "countries": ["PT", "BR", "AO", "MZ"]
     },
     
-    # ========== FRANKREICH ==========
-    "französisch": {
-        "Junge": ["Louis", "Gabriel", "Raphael", "Jules", "Adam", "Lucas", "Leo",
-                „Hugo“, „Arthur“, „Nathan“, „Ethan“, „Paul“, „Noel“, „Theo“,
-                „Antoine“, „Baptiste“, „Clement“, „Maxime“, „Alexandre“, „Pierre“],
-        "Mädchen": ["Emma", "Louise", "Alice", "Chloe", "Lea", "Manon", "Ines",
-                 „Camille“, „Lola“, „Jade“, „Zoe“, „Juliette“, „Charlotte“, „Clemence“,
-                 „Aurelie“, „Marine“, „Margot“, ​​„Anais“, „Elise“, „Amelie“],
-        "Länder": ["FR", "BE", "CH", "LU", "MC", "CA"]
+    # ========== FRANCE ==========
+    "french": {
+        "boy": ["Louis", "Gabriel", "Raphael", "Jules", "Adam", "Lucas", "Leo",
+                "Hugo", "Arthur", "Nathan", "Ethan", "Paul", "Noel", "Theo",
+                "Antoine", "Baptiste", "Clement", "Maxime", "Alexandre", "Pierre"],
+        "girl": ["Emma", "Louise", "Alice", "Chloe", "Lea", "Manon", "Ines",
+                 "Camille", "Lola", "Jade", "Zoe", "Juliette", "Charlotte", "Clemence",
+                 "Aurelie", "Marine", "Margot", "Anais", "Elise", "Amelie"],
+        "countries": ["FR", "BE", "CH", "LU", "MC", "CA"]
     },
     
-    # ========== DEUTSCHLAND, ÖSTERREICH, SCHWEIZ ==========
-    "Deutsch": {
-        "Junge": ["Felix", "Leon", "Paul", "Lukas", "Jonas", "Maximilian", "Elias",
-                „Noah“, „Ben“, „Finn“, „Luca“, „Emil“, „Anton“, „Oskar“, „Theo“,
+    # ========== GERMANY, AUSTRIA, SWITZERLAND ==========
+    "german": {
+        "boy": ["Felix", "Leon", "Paul", "Lukas", "Jonas", "Maximilian", "Elias",
+                "Noah", "Ben", "Finn", "Luca", "Emil", "Anton", "Oskar", "Theo",
                 "Moritz", "Johann", "Friedrich", "Wilhelm", "Heinrich", "Karl"],
-        „Mädchen“: [„Emma“, „Mia“, „Hannah“, „Sofia“, „Emilia“, „Anna“, „Marie“,
-                 „Lina“, „Lea“, „Lena“, „Clara“, „Ella“, „Amelie“, „Luisa“,
+        "girl": ["Emma", "Mia", "Hannah", "Sofia", "Emilia", "Anna", "Marie",
+                 "Lina", "Lea", "Lena", "Clara", "Ella", "Amelie", "Luisa",
                  "Johanna", "Frieda", "Charlotte", "Mathilda", "Greta", "Helena"],
-        "Länder": ["DE", "AT", "CH", "LI"]
+        "countries": ["DE", "AT", "CH", "LI"]
     },
     
-    # ========== RUSSLAND & OSTSLAVISCH ==========
-    "russisch": {
-        „Junge“: [„Ivan“, „Dmitri“, „Alexei“, „Nikolai“, „Sergei“, „Vladimir“, „Boris“,
-                „Fjodor“, „Mikhail“, „Pavel“, „Andrei“, „Juri“, „Oleg“, „Igor“,
-                „Konstantin“, „Wassili“, „Grigori“, „Maxim“, „Roman“, „Stanislaw“],
-        "Mädchen": ["Anastasia", "Natasha", "Tatiana", "Olga", "Svetlana", "Yelena",
-                 „Irina“, „Marina“, „Ekaterina“, „Ludmila“, „Nadia“, „Vera“,
-                 „Daria“, „Ksenia“, „Larisa“, „Galina“, „Tamara“, „Valentina“],
-        "Länder": ["RU", "BY", "UA", "KZ"]
+    # ========== RUSSIA & EASTERN SLAVIC ==========
+    "russian": {
+        "boy": ["Ivan", "Dmitri", "Alexei", "Nikolai", "Sergei", "Vladimir", "Boris",
+                "Fyodor", "Mikhail", "Pavel", "Andrei", "Yuri", "Oleg", "Igor",
+                "Konstantin", "Vasily", "Grigori", "Maxim", "Roman", "Stanislav"],
+        "girl": ["Anastasia", "Natasha", "Tatiana", "Olga", "Svetlana", "Yelena",
+                 "Irina", "Marina", "Ekaterina", "Ludmila", "Nadia", "Vera",
+                 "Daria", "Ksenia", "Larisa", "Galina", "Tamara", "Valentina"],
+        "countries": ["RU", "BY", "UA", "KZ"]
     },
     
-    # ========== POLEN ==========
-    "polnisch": {
-        „Junge“: [„Jakub“, „Jan“, „Szymon“, „Filip“, „Aleksander“, „Franciszek“, „Mikołaj“,
-                „Wojciech“, „Adam“, „Kacper“, „Michał“, „Mateusz“, „Bartek“, „Piotr“,
-                „Tomasz“, „Krzysztof“, „Paweł“, „Marcin“, „Kamil“, „Dawid“],
-        „Mädchen“: [„Zuzanna“, „Julia“, „Maja“, „Zofia“, „Hanna“, „Lena“, „Alicja“,
-                 „Maria“, „Amelia“, „Oliwia“, „Wiktoria“, „Emilia“, „Aleksandra“,
-                 „Natalia“, „Antonina“, „Gabriela“, „Agnieszka“, „Magdalena“, „Katarzyna“],
-        "Länder": ["PL"]
+    # ========== POLAND ==========
+    "polish": {
+        "boy": ["Jakub", "Jan", "Szymon", "Filip", "Aleksander", "Franciszek", "Mikołaj",
+                "Wojciech", "Adam", "Kacper", "Michał", "Mateusz", "Bartek", "Piotr",
+                "Tomasz", "Krzysztof", "Paweł", "Marcin", "Kamil", "Dawid"],
+        "girl": ["Zuzanna", "Julia", "Maja", "Zofia", "Hanna", "Lena", "Alicja",
+                 "Maria", "Amelia", "Oliwia", "Wiktoria", "Emilia", "Aleksandra",
+                 "Natalia", "Antonina", "Gabriela", "Agnieszka", "Magdalena", "Katarzyna"],
+        "countries": ["PL"]
     },
     
-    # ========== TSCHECHISCHE REPUBLIK & SLOWAKEI ==========
-    "tschechisch": {
-        „boy“: [„Jakub“, „Jan“, „Tomas“, „Adam“, „Matej“, „Filip“, „Vojtech“,
-                „Ondrej“, „Lukas“, „David“, „Martin“, „Petr“, „Daniel“, „Marek“,
-                „Pavel“, „Jiri“, „Michal“, „Karel“, „Vaclav“, „Frantisek“],
-        „Mädchen“: [„Eliska“, „Anna“, „Adela“, „Tereza“, „Natalie“, „Viktorie“, „Sofie“,
-                 „Karolina“, „Barbora“, „Kristyna“, „Klara“, „Lucie“, „Katerina“,
-                 „Marketa“, „Michaela“, „Petra“, „Veronika“, „Jana“, „Eva“],
-        "Länder": ["CZ", "SK"]
+    # ========== CZECH REPUBLIC & SLOVAKIA ==========
+    "czech": {
+        "boy": ["Jakub", "Jan", "Tomas", "Adam", "Matej", "Filip", "Vojtech",
+                "Ondrej", "Lukas", "David", "Martin", "Petr", "Daniel", "Marek",
+                "Pavel", "Jiri", "Michal", "Karel", "Vaclav", "Frantisek"],
+        "girl": ["Eliska", "Anna", "Adela", "Tereza", "Natalie", "Viktorie", "Sofie",
+                 "Karolina", "Barbora", "Kristyna", "Klara", "Lucie", "Katerina",
+                 "Marketa", "Michaela", "Petra", "Veronika", "Jana", "Eva"],
+        "countries": ["CZ", "SK"]
     },
     
-    # ========== SERBIEN, KROATIEN, BALKAN ==========
-    "serbisch": {
-        „boy“: [„Nikola“, „Stefan“, „Luka“, „Marko“, „Aleksandar“, „Milos“, „Dusan“,
-                „Petar“, „Filip“, „Vuk“, „Nemanja“, „Uros“, „Djordje“, „Ivan“,
-                „Bogdan“, „Miroslav“, „Radoslav“, „Svetoslav“, „Vladislav“, „Darko“],
-        „Mädchen“: [„Ana“, „Mila“, „Sara“, „Mia“, „Marija“, „Jana“, „Teodora“,
-                 „Milica“, „Jovana“, „Tamara“, „Katarina“, „Jelena“, „Natalija“,
-                 „Dragana“, „Snezana“, „Mirjana“, „Biljana“, „Vesna“, „Ivana“],
-        "Länder": ["RS", "HR", "BA", "ME", "MK", ​​"SI"]
+    # ========== SERBIA, CROATIA, BALKANS ==========
+    "serbian": {
+        "boy": ["Nikola", "Stefan", "Luka", "Marko", "Aleksandar", "Milos", "Dusan",
+                "Petar", "Filip", "Vuk", "Nemanja", "Uros", "Djordje", "Ivan",
+                "Bogdan", "Miroslav", "Radoslav", "Svetoslav", "Vladislav", "Darko"],
+        "girl": ["Ana", "Mila", "Sara", "Mia", "Marija", "Jana", "Teodora",
+                 "Milica", "Jovana", "Tamara", "Katarina", "Jelena", "Natalija",
+                 "Dragana", "Snezana", "Mirjana", "Biljana", "Vesna", "Ivana"],
+        "countries": ["RS", "HR", "BA", "ME", "MK", "SI"]
     },
     
-    # ========== SKANDINAVIEN ==========
-    "skandinavisch": {
-        „boy“: [„Erik“, „Lars“, „Olaf“, „Magnus“, „Sven“, „Anders“, „Björn“,
-                „Leif“, „Thor“, „Axel“, „Oscar“, „Gustav“, „Henrik“, „Kristian“,
-                „Nils“, „Frederik“, „Mikkel“, „Rasmus“, „Emil“, „Valdemar“],
-        "Mädchen": ["Ingrid", "Astrid", "Freya", "Sigrid", "Helga", "Greta", "Elsa",
-                 „Saga“, „Liv“, „Maja“, „Ebba“, „Wilma“, „Alma“, „Ella“,
-                 „Freja“, „Signe“, „Thora“, „Solveig“, „Hedda“, „Eira“],
-        "Länder": ["SE", "NO", "DK", "FI", "IS"]
+    # ========== SCANDINAVIA ==========
+    "scandinavian": {
+        "boy": ["Erik", "Lars", "Olaf", "Magnus", "Sven", "Anders", "Bjorn",
+                "Leif", "Thor", "Axel", "Oscar", "Gustav", "Henrik", "Kristian",
+                "Nils", "Frederik", "Mikkel", "Rasmus", "Emil", "Valdemar"],
+        "girl": ["Ingrid", "Astrid", "Freya", "Sigrid", "Helga", "Greta", "Elsa",
+                 "Saga", "Liv", "Maja", "Ebba", "Wilma", "Alma", "Ella",
+                 "Freja", "Signe", "Thora", "Solveig", "Hedda", "Eira"],
+        "countries": ["SE", "NO", "DK", "FI", "IS"]
     },
     
-    # ========== GROSSBRITANNIEN & IRLAND ==========
-    "Englisch": {
-        "Junge": ["Oliver", "George", "Harry", "Noah", "Jack", "Leo", "Arthur",
-                "Muhammad", "Oscar", "Charlie", "William", "James", "Henry", "Thomas"
+    # ========== UK & IRELAND ==========
+    "english": {
+        "boy": ["Oliver", "George", "Harry", "Noah", "Jack", "Leo", "Arthur",
+                "Muhammad", "Oscar", "Charlie", "William", "James", "Henry", "Thomas",
                 "Alexander", "Edward", "Sebastian", "Benjamin", "Lucas", "Theodore"],
-        "Mädchen": ["Olivia", "Amelia", "Isla", "Ava", "Mia", "Grace", "Freya",
-                 "Emily", "Sophie", "Lily", "Ella", "Florence", "Evelyn", "Ivy"
+        "girl": ["Olivia", "Amelia", "Isla", "Ava", "Mia", "Grace", "Freya",
+                 "Emily", "Sophie", "Lily", "Ella", "Florence", "Evelyn", "Ivy",
                  "Charlotte", "Willow", "Poppy", "Isabella", "Daisy", "Rosie"],
-        "Länder": ["GB", "IE", "AU", "NZ"]
+        "countries": ["GB", "IE", "AU", "NZ"]
     },
     
     # ========== USA ==========
-    "amerikanisch": {
-        "Junge": ["Liam", "Noah", "Oliver", "James", "Elijah", "William", "Henry",
+    "american": {
+        "boy": ["Liam", "Noah", "Oliver", "James", "Elijah", "William", "Henry",
                 "Lucas", "Benjamin", "Theodore", "Jack", "Levi", "Alexander", "Mason",
                 "Ethan", "Jacob", "Michael", "Daniel", "Logan", "Jackson"],
-        "Mädchen": ["Olivia", "Emma", "Charlotte", "Amelia", "Sophia", "Mia", "Isabella",
-                 "Ava", "Evelyn", "Luna", "Harper", "Camila", "Sofia", "Scarlett"
+        "girl": ["Olivia", "Emma", "Charlotte", "Amelia", "Sophia", "Mia", "Isabella",
+                 "Ava", "Evelyn", "Luna", "Harper", "Camila", "Sofia", "Scarlett",
                  "Elizabeth", "Eleanor", "Emily", "Chloe", "Mila", "Violet"],
-        "Länder": ["USA"]
+        "countries": ["US"]
     },
     
     # ========== CHINA ==========
-    "chinesisch": {
-        „Junge“: [„Wei“, „Chen“, „Ming“, „Jian“, „Long“, „Feng“, „Lei“, „Hao“,
-                „Jun“, „Tao“, „Yang“, „Zhi“, „Xiang“, „Cheng“, „Bo“, „Liang“,
-                „Yong“, „Qiang“, „Gang“, „Hai“, „Wen“, „Jie“, „Hui“, „Peng“],
-        „Mädchen“: [„Mei“, „Lin“, „Ying“, „Xiu“, „Lan“, „Hua“, „Jing“, „Fang“,
-                 „Li“, „Yan“, „Yue“, „Qian“, „Xia“, „Hong“, „Juan“, „Min“,
-                 „Na“, „Ping“, „Qing“, „Rong“, „Shan“, „Ting“, „Wei“, „Xiao“],
-        "Länder": ["CN", "TW", "HK", "MO", "SG"]
+    "chinese": {
+        "boy": ["Wei", "Chen", "Ming", "Jian", "Long", "Feng", "Lei", "Hao",
+                "Jun", "Tao", "Yang", "Zhi", "Xiang", "Cheng", "Bo", "Liang",
+                "Yong", "Qiang", "Gang", "Hai", "Wen", "Jie", "Hui", "Peng"],
+        "girl": ["Mei", "Lin", "Ying", "Xiu", "Lan", "Hua", "Jing", "Fang",
+                 "Li", "Yan", "Yue", "Qian", "Xia", "Hong", "Juan", "Min",
+                 "Na", "Ping", "Qing", "Rong", "Shan", "Ting", "Wei", "Xiao"],
+        "countries": ["CN", "TW", "HK", "MO", "SG"]
     },
     
     # ========== JAPAN ==========
-    "japanisch": {
-        „boy“: [„Haruki“, „Takeshi“, „Kenji“, „Yuki“, „Ryu“, „Akira“, „Hiroshi“,
-                „Kazuki“, „Daiki“, „Sota“, „Ren“, „Yuto“, „Kaito“, „Hayato“,
-                „Kenta“, „Shota“, „Naoki“, „Ryota“, „Tatsuya“, „Masashi“],
-        „Mädchen“: [„Sakura“, „Yuki“, „Hana“, „Akemi“, „Yui“, „Aiko“, „Emi“,
-                 „Haruka“, „Hikari“, „Kaori“, „Keiko“, „Mai“, „Mika“, „Nana“,
-                 „Rina“, „Saki“, „Tomoko“, „Yoko“, „Ayumi“, „Naomi“],
-        "Länder": ["JP"]
+    "japanese": {
+        "boy": ["Haruki", "Takeshi", "Kenji", "Yuki", "Ryu", "Akira", "Hiroshi",
+                "Kazuki", "Daiki", "Sota", "Ren", "Yuto", "Kaito", "Hayato",
+                "Kenta", "Shota", "Naoki", "Ryota", "Tatsuya", "Masashi"],
+        "girl": ["Sakura", "Yuki", "Hana", "Akemi", "Yui", "Aiko", "Emi",
+                 "Haruka", "Hikari", "Kaori", "Keiko", "Mai", "Mika", "Nana",
+                 "Rina", "Saki", "Tomoko", "Yoko", "Ayumi", "Naomi"],
+        "countries": ["JP"]
     },
     
     # ========== KOREA ==========
-    "koreanisch": {
-        „Junge“: [„Min-jun“, „Seo-jun“, „Do-yun“, „Ye-jun“, „Si-woo“, „Ha-joon“, „Ji-ho“,
-                „Jun-seo“, „Joo-won“, „Hyun-woo“, „Sung-min“, „Jin-woo“, „Tae-hyun“, „Woo-jin“],
-        "Mädchen": ["Seo-yeon", "Ha-yoon", "Ji-woo", "Seo-yun", "Min-seo", "Chae-won", "Ye-eun",
-                 „Ji-yoo“, „Yoo-na“, „Eun-bi“, „Ha-na“, „Su-bin“, „Ye-jin“, „Soo-yeon“],
-        "Länder": ["KR"]
+    "korean": {
+        "boy": ["Min-jun", "Seo-jun", "Do-yun", "Ye-jun", "Si-woo", "Ha-joon", "Ji-ho",
+                "Jun-seo", "Joo-won", "Hyun-woo", "Sung-min", "Jin-woo", "Tae-hyun", "Woo-jin"],
+        "girl": ["Seo-yeon", "Ha-yoon", "Ji-woo", "Seo-yun", "Min-seo", "Chae-won", "Ye-eun",
+                 "Ji-yoo", "Yoo-na", "Eun-bi", "Ha-na", "Su-bin", "Ye-jin", "Soo-yeon"],
+        "countries": ["KR"]
     },
     
-    # ========== INDIEN ==========
-    "indisch": {
-        „Junge“: [„Arjun“, „Krishna“, „Ravi“, „Aditya“, „Vikram“, „Raj“, „Amit“,
-                „Rahul“, „Sanjay“, „Deepak“, „Suresh“, „Rajesh“, „Anil“, „Vijay“,
-                „Shiva“, „Ganesh“, „Vishnu“, „Karan“, „Rohan“, „Varun“],
-        „Mädchen“: [„Priya“, „Ananya“, „Aisha“, „Devi“, „Lakshmi“, „Saraswati“, „Parvati“,
-                 „Sita“, „Radha“, „Maya“, „Tara“, „Uma“, „Durga“, „Rani“,
-                 „Sunita“, „Kavita“, „Anjali“, „Pooja“, „Neha“, „Meera“],
-        "Länder": ["IN", "NP", "LK", "BD"]
+    # ========== INDIA ==========
+    "indian": {
+        "boy": ["Arjun", "Krishna", "Ravi", "Aditya", "Vikram", "Raj", "Amit",
+                "Rahul", "Sanjay", "Deepak", "Suresh", "Rajesh", "Anil", "Vijay",
+                "Shiva", "Ganesh", "Vishnu", "Karan", "Rohan", "Varun"],
+        "girl": ["Priya", "Ananya", "Aisha", "Devi", "Lakshmi", "Saraswati", "Parvati",
+                 "Sita", "Radha", "Maya", "Tara", "Uma", "Durga", "Rani",
+                 "Sunita", "Kavita", "Anjali", "Pooja", "Neha", "Meera"],
+        "countries": ["IN", "NP", "LK", "BD"]
     },
     
-    # ========== ARABISCHE LÄNDER ==========
-    "arabisch": {
-        „Junge“: [„Muhammad“, „Ahmad“, „Ali“, „Hassan“, „Hussein“, „Omar“, „Khalid“,
-                „Yusuf“, „Ibrahim“, „Ismail“, „Hamza“, „Bilal“, „Tariq“, „Salim“,
-                „Karim“, „Jamal“, „Rashid“, „Samir“, „Faisal“, „Nasser“],
-        „Mädchen“: [„Fatima“, „Aisha“, „Khadija“, „Maryam“, „Zahra“, „Zainab“, „Layla“,
-                 „Noor“, „Amina“, „Sara“, „Hana“, „Yasmin“, „Rania“, „Dina“,
-                 „Lina“, „Salma“, „Farida“, „Samira“, „Jamila“, „Amira“],
-        „Länder“: [„SA“, „AE“, „QA“, „KW“, „BH“, „OM“, „EG“, „JO“, „LB“, „SY“, „IQ“, „YE“, „LY“, „TN“, „DZ“, „MA“]
+    # ========== ARAB COUNTRIES ==========
+    "arabic": {
+        "boy": ["Muhammad", "Ahmad", "Ali", "Hassan", "Hussein", "Omar", "Khalid",
+                "Yusuf", "Ibrahim", "Ismail", "Hamza", "Bilal", "Tariq", "Salim",
+                "Karim", "Jamal", "Rashid", "Samir", "Faisal", "Nasser"],
+        "girl": ["Fatima", "Aisha", "Khadija", "Maryam", "Zahra", "Zainab", "Layla",
+                 "Noor", "Amina", "Sara", "Hana", "Yasmin", "Rania", "Dina",
+                 "Lina", "Salma", "Farida", "Samira", "Jamila", "Amira"],
+        "countries": ["SA", "AE", "QA", "KW", "BH", "OM", "EG", "JO", "LB", "SY", "IQ", "YE", "LY", "TN", "DZ", "MA"]
     },
     
-    # ========== TÜRKEI ==========
-    "türkisch": {
-        „Junge“: [„Yusuf“, „Eymen“, „Omer“, „Mustafa“, „Emir“, „Ali“, „Kerem“,
-                „Ahmet“, „Mehmet“, „Can“, „Burak“, „Emre“, „Kaan“, „Efe“,
-                „Baris“, „Deniz“, „Ozan“, „Umut“, „Selim“, „Arda“],
-        „Mädchen“: [„Zeynep“, „Elif“, „Defne“, „Azra“, „Eylul“, „Nehir“, „Ecrin“,
-                 „Asya“, „Mira“, „Ela“, „Ayse“, „Fatma“, „Esra“, „Beyza“,
-                 „Merve“, „Selin“, „Ebru“, „Ceren“, „Gul“, „Naz“],
-        "Länder": ["TR", "AZ"]
+    # ========== TURKEY ==========
+    "turkish": {
+        "boy": ["Yusuf", "Eymen", "Omer", "Mustafa", "Emir", "Ali", "Kerem",
+                "Ahmet", "Mehmet", "Can", "Burak", "Emre", "Kaan", "Efe",
+                "Baris", "Deniz", "Ozan", "Umut", "Selim", "Arda"],
+        "girl": ["Zeynep", "Elif", "Defne", "Azra", "Eylul", "Nehir", "Ecrin",
+                 "Asya", "Mira", "Ela", "Ayse", "Fatma", "Esra", "Beyza",
+                 "Merve", "Selin", "Ebru", "Ceren", "Gul", "Naz"],
+        "countries": ["TR", "AZ"]
     },
     
     # ========== IRAN ==========
-    "persisch": {
-        "Junge": ["Darius", "Cyrus", "Xerxes", "Reza", "Ali", "Mohammad", "Amir",
-                „Arash“, „Babak“, „Behnam“, „Dariush“, „Farhad“, „Hossein“, „Kamran“,
-                „Kaveh“, „Mehdi“, „Nima“, „Omid“, „Parviz“, „Saeed“],
-        "Mädchen": ["Roxana", "Shirin", "Zahra", "Maryam", "Fatima", "Narges", "Leila",
-                 „Sara“, „Nazanin“, „Parisa“, „Mina“, „Neda“, „Samira“, „Setareh“,
-                 „Laleh“, „Mahsa“, „Azar“, „Golnar“, „Pari“, „Yasaman“],
-        „Länder“: [„IR“, „AF“, „TJ“]
+    "persian": {
+        "boy": ["Darius", "Cyrus", "Xerxes", "Reza", "Ali", "Mohammad", "Amir",
+                "Arash", "Babak", "Behnam", "Dariush", "Farhad", "Hossein", "Kamran",
+                "Kaveh", "Mehdi", "Nima", "Omid", "Parviz", "Saeed"],
+        "girl": ["Roxana", "Shirin", "Zahra", "Maryam", "Fatima", "Narges", "Leila",
+                 "Sara", "Nazanin", "Parisa", "Mina", "Neda", "Samira", "Setareh",
+                 "Laleh", "Mahsa", "Azar", "Golnar", "Pari", "Yasaman"],
+        "countries": ["IR", "AF", "TJ"]
     },
     
     # ========== ISRAEL ==========
-    "hebräisch": {
-        „boy“: [„David“, „Noam“, „Eitan“, „Uri“, „Yonatan“, „Itai“, „Omer“,
-                „Ariel“, „Daniel“, „Yosef“, „Moshe“, „Adam“, „Lior“, „Nadav“,
-                „Gal“, „Tal“, „Roi“, „Amit“, „Elad“, „Tomer“],
-        "Mädchen": ["Tamar", "Noa", "Shira", "Maya", "Yael", "Adel", "Talia",
-                 „Avigail“, „Naomi“, „Michal“, „Ruth“, „Hana“, „Miriam“, „Sarah“,
-                 „Rivka“, „Leah“, „Rachel“, „Esther“, „Dina“, „Ayelet“],
-        "Länder": ["IL"]
+    "hebrew": {
+        "boy": ["David", "Noam", "Eitan", "Uri", "Yonatan", "Itai", "Omer",
+                "Ariel", "Daniel", "Yosef", "Moshe", "Adam", "Lior", "Nadav",
+                "Gal", "Tal", "Roi", "Amit", "Elad", "Tomer"],
+        "girl": ["Tamar", "Noa", "Shira", "Maya", "Yael", "Adel", "Talia",
+                 "Avigail", "Naomi", "Michal", "Ruth", "Hana", "Miriam", "Sarah",
+                 "Rivka", "Leah", "Rachel", "Esther", "Dina", "Ayelet"],
+        "countries": ["IL"]
     },
     
-    # ========== ÄGYPTEN ==========
-    "ägyptisch": {
-        "Junge": ["Ramses", "Tutanchamun", "Echnaton", "Amenhotep", "Thutmosis", "Seti",
-                "Osiris", "Horus", "Anubis", "Ra", "Thoth", "Ptah", "Amun"
+    # ========== EGYPT ==========
+    "egyptian": {
+        "boy": ["Ramses", "Tutankhamun", "Akhenaten", "Amenhotep", "Thutmose", "Seti",
+                "Osiris", "Horus", "Anubis", "Ra", "Thoth", "Ptah", "Amun",
                 "Omar", "Ahmed", "Mohamed", "Mahmoud", "Youssef", "Khaled"],
-        „Mädchen“: [„Nofretete“, „Kleopatra“, „Isis“, „Hathor“, „Bastet“, „Sekhmet“,
-                 „Nefertari“, „Ankhesenamun“, „Meritaten“, „Maat“, „Nut“,
-                 „Fatma“, „Mariam“, „Nour“, „Salma“, „Yasmin“, „Hana“],
-        "Länder": ["EG"]
+        "girl": ["Nefertiti", "Cleopatra", "Isis", "Hathor", "Bastet", "Sekhmet",
+                 "Nefertari", "Ankhesenamun", "Meritaten", "Maat", "Nut",
+                 "Fatma", "Mariam", "Nour", "Salma", "Yasmin", "Hana"],
+        "countries": ["EG"]
     },
     
     # ========== HAWAII ==========
-    "hawaiianisch": {
-        „Junge“: [„Kai“, „Koa“, „Makoa“, „Keanu“, „Lani“, „Mana“, „Nalu“,
-                „Kaimana“, „Keoni“, „Ikaika“, „Kalani“, „Kawika“, „Lono“, „Maui“],
-        „Mädchen“: [„Leilani“, „Moana“, „Kaia“, „Nalani“, „Malia“, „Alana“, „Kalani“,
-                 „Lani“, „Mahina“, „Miliani“, „Noelani“, „Pua“, „Keani“, „Haunani“],
-        "Länder": ["US-HI"]
+    "hawaiian": {
+        "boy": ["Kai", "Koa", "Makoa", "Keanu", "Lani", "Mana", "Nalu",
+                "Kaimana", "Keoni", "Ikaika", "Kalani", "Kawika", "Lono", "Maui"],
+        "girl": ["Leilani", "Moana", "Kaia", "Nalani", "Malia", "Alana", "Kalani",
+                 "Lani", "Mahina", "Miliani", "Noelani", "Pua", "Keani", "Haunani"],
+        "countries": ["US-HI"]
     },
     
     # ========== THAILAND ==========
     "thai": {
-        „boy“: [„Somchai“, „Chai“, „Nat“, „Krit“, „Pong“, „Gun“, „Tong“,
-                „Boon“, „Lek“, „Nong“, „Art“, „Bank“, „Golf“, „Pop“],
-        „girl“: [„Mali“, „Ploy“, „Fern“, „Nong“, „Nan“, „Pim“, „Bua“,
-                 „Dao“, „Jai“, „Joy“, „Mint“, „Noon“, „Prae“, „Fai“],
-        "Länder": ["TH"]
+        "boy": ["Somchai", "Chai", "Nat", "Krit", "Pong", "Gun", "Tong",
+                "Boon", "Lek", "Nong", "Art", "Bank", "Golf", "Pop"],
+        "girl": ["Mali", "Ploy", "Fern", "Nong", "Nan", "Pim", "Bua",
+                 "Dao", "Jai", "Joy", "Mint", "Noon", "Prae", "Fai"],
+        "countries": ["TH"]
     },
     
     # ========== VIETNAM ==========
-    "vietnamesisch": {
-        „boy“: [„An“, „Binh“, „Cuong“, „Duc“, „Hai“, „Hung“, „Khanh“,
-                „Long“, „Minh“, „Nam“, „Phuc“, „Quang“, „Son“, „Tuan“],
-        „Mädchen“: [„Anh“, „Bich“, „Chi“, „Dung“, „Hanh“, „Hoa“, „Lan“,
-                 „Linh“, „Mai“, „Ngoc“, „Phuong“, „Thao“, „Trang“, „Van“],
-        "Länder": ["VN"]
+    "vietnamese": {
+        "boy": ["An", "Binh", "Cuong", "Duc", "Hai", "Hung", "Khanh",
+                "Long", "Minh", "Nam", "Phuc", "Quang", "Son", "Tuan"],
+        "girl": ["Anh", "Bich", "Chi", "Dung", "Hanh", "Hoa", "Lan",
+                 "Linh", "Mai", "Ngoc", "Phuong", "Thao", "Trang", "Van"],
+        "countries": ["VN"]
     },
     
-    # ========== INDONESIEN ==========
-    "indonesisch": {
-        „Junge“: [„Agus“, „Budi“, „Dewa“, „Eka“, „Fajar“, „Gunawan“, „Hendra“,
-                „Irwan“, „Joko“, „Kusuma“, „Lutfi“, „Made“, „Nyoman“, „Putu“],
-        „Mädchen“: [„Ayu“, „Bunga“, „Citra“, „Dewi“, „Fitri“, „Gita“, „Indah“,
-                 „Kartika“, „Lestari“, „Maya“, „Nadia“, „Putri“, „Ratna“, „Sri“],
-        "Länder": ["ID"]
+    # ========== INDONESIA ==========
+    "indonesian": {
+        "boy": ["Agus", "Budi", "Dewa", "Eka", "Fajar", "Gunawan", "Hendra",
+                "Irwan", "Joko", "Kusuma", "Lutfi", "Made", "Nyoman", "Putu"],
+        "girl": ["Ayu", "Bunga", "Citra", "Dewi", "Fitri", "Gita", "Indah",
+                 "Kartika", "Lestari", "Maya", "Nadia", "Putri", "Ratna", "Sri"],
+        "countries": ["ID"]
     },
     
-    # ========== LATEINISCH / RÖMISCH (Standard für Europa) ==========
-    "lateinisch": {
-        „Junge“: [„Marcus“, „Julius“, „Augustus“, „Maximus“, „Lucius“, „Gaius“, „Titus“,
-                „Aurelius“, „Cornelius“, „Claudius“, „Antonius“, „Octavius“, „Felix“,
+    # ========== LATIN / ROMAN (Default for Europe) ==========
+    "latin": {
+        "boy": ["Marcus", "Julius", "Augustus", "Maximus", "Lucius", "Gaius", "Titus",
+                "Aurelius", "Cornelius", "Claudius", "Antonius", "Octavius", "Felix",
                 "Adrian", "Dominic", "Martin", "Patrick", "Victor", "Vincent"],
-        "Mädchen": ["Aurora", "Diana", "Venus", "Juno", "Minerva", "Julia", "Livia",
-                 „Claudia“, „Aurelia“, „Cornelia“, „Octavia“, „Valentina“, „Victoria“,
-                 „Lucia“, „Cecilia“, „Camilla“, „Beatrix“, „Clara“, „Gloria“],
-        "Länder": []
+        "girl": ["Aurora", "Diana", "Venus", "Juno", "Minerva", "Julia", "Livia",
+                 "Claudia", "Aurelia", "Cornelia", "Octavia", "Valentina", "Victoria",
+                 "Lucia", "Cecilia", "Camilla", "Beatrix", "Clara", "Gloria"],
+        "countries": []
     },
     
-    # ========== BUDDHISTISCH (Tibet, Myanmar usw.) ==========
-    "buddhistisch": {
-        „Junge“: [„Bodhi“, „Dharma“, „Siddhartha“, „Ashoka“, „Ananda“, „Tenzin“,
-                „Lobsang“, „Jamyang“, „Thubten“, „Sonam“, „Dorje“, „Pema“, „Karma“],
-        „Mädchen“: [„Tara“, „Maya“, „Padma“, „Drolma“, „Pema“, „Tenzin“, „Yangchen“,
-                 „Dolma“, „Lhamo“, „Sangye“, „Chime“, „Dechen“, „Kunzang“],
-        „Länder“: [„BT“, „MM“, „LA“, „KH“]
+    # ========== BUDDHIST (Tibet, Myanmar, etc) ==========
+    "buddhist": {
+        "boy": ["Bodhi", "Dharma", "Siddhartha", "Ashoka", "Ananda", "Tenzin",
+                "Lobsang", "Jamyang", "Thubten", "Sonam", "Dorje", "Pema", "Karma"],
+        "girl": ["Tara", "Maya", "Padma", "Drolma", "Pema", "Tenzin", "Yangchen",
+                 "Dolma", "Lhamo", "Sangye", "Chime", "Dechen", "Kunzang"],
+        "countries": ["BT", "MM", "LA", "KH"]
     },
 }
 
-# Ländercodes Regionen zuordnen
+# Map country codes to regions
 def get_region_for_country(country_code: str) -> str:
-    """Ermittelt die Namensregion anhand des Ländercodes"""
-    falls kein Ländercode:
+    """Get the name region based on country code"""
+    if not country_code:
         return "latin"
     
-    Ländercode = Ländercode.upper()
+    country_code = country_code.upper()
     
-    # Hawaii speziell prüfen (US-HI)
+    # Check Hawaii specially (US-HI)
     if country_code == "US-HI":
-        Rückgabe "hawaiianisch"
+        return "hawaiian"
     
-    für Region, Daten in CHILD_NAMES_BY_REGION.items():
+    for region, data in CHILD_NAMES_BY_REGION.items():
         if country_code in data.get("countries", []):
-            Rückkehrregion
+            return region
     
-    # Standard-Fallback basierend auf Kontinent/Region
-    # Nicht aufgeführte europäische Länder -> lateinische Namen
-    europäisch = ["AD", "AL", "AM", "AZ", "BY", "BG", "GE", "HU", "LT", "LV", "MD", "MT", "RO", "EE"]
-    Wenn Ländercode europäisch ist:
+    # Default fallback based on continent/region
+    # European countries not specifically listed -> latin names
+    european = ["AD", "AL", "AM", "AZ", "BY", "BG", "GE", "HU", "LT", "LV", "MD", "MT", "RO", "EE"]
+    if country_code in european:
         return "latin"
     
-    return "latin" # Standardwert
+    return "latin"  # Default
 
 def get_names_for_region(region: str, gender: str) -> list:
-    "Namen für eine bestimmte Region und ein bestimmtes Geschlecht abrufen"
-    falls Region in CHILD_NAMES_BY_REGION enthalten ist:
+    """Get names for a specific region and gender"""
+    if region in CHILD_NAMES_BY_REGION:
         return CHILD_NAMES_BY_REGION[region].get(gender, [])
     return CHILD_NAMES_BY_REGION["latin"].get(gender, [])
 
 def get_chinese_zodiac(year: int) -> dict:
-    "Ermittle dein chinesisches Tierkreiszeichen basierend auf dem Jahr"
-    Das chinesische Neujahrsfest variiert, daher sind dies nur ungefähre Angaben.
-    Index = (Jahr - 1924) % 12
+    """Get Chinese zodiac based on year"""
+    # Chinese New Year varies, so this is approximate
+    index = (year - 1924) % 12
     return CHINESE_ZODIAC[index]
 
 def get_chinese_zodiac_translated(year: int, lang: str = "en") -> dict:
-    """Chinesisches Tierkreiszeichen mit übersetztem Namen"""
-    Tierkreiszeichen = get_chinese_zodiac(Jahr)
+    """Get Chinese zodiac with translated name"""
+    zodiac = get_chinese_zodiac(year)
     index = CHINESE_ZODIAC.index(zodiac)
     translations = CHINESE_ZODIAC_TRANSLATIONS.get(lang, CHINESE_ZODIAC_TRANSLATIONS["en"])
-    zurückkehren {
-        "Name": Übersetzungen[Index],
+    return {
+        "name": translations[index],
         "english_name": zodiac["name"],
-        "Symbol": Tierkreiszeichen["Symbol"]
+        "symbol": zodiac["symbol"]
     }
 
 def get_zodiac_translated(sign_name: str, lang: str = "en") -> str:
-    "Übersetzter Sternzeichenname"
-    Sternzeichen = ["Widder", "Stier", "Zwillinge", "Krebs", "Löwe", "Jungfrau",
-                  "Waage", "Skorpion", "Schütze", "Steinbock", "Wassermann", "Fische"]
+    """Get translated zodiac name"""
+    sign_names = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", 
+                  "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"]
     if sign_name in sign_names:
         index = sign_names.index(sign_name)
         translations = ZODIAC_TRANSLATIONS.get(lang, ZODIAC_TRANSLATIONS["en"])
@@ -1044,216 +1045,216 @@ def get_zodiac_translated(sign_name: str, lang: str = "en") -> str:
     return sign_name
 
 def get_zodiac_compatibility(sign1: str, sign2: str) -> int:
-    """Kompatibilitätswert zwischen zwei Sternzeichen ermitteln (1-10)""
-    # Prüfen Sie beide Reihenfolgen, da die Matrix möglicherweise nicht beide enthält.
+    """Get compatibility score between two zodiac signs (1-10)"""
+    # Check both orders since matrix might not have both
     if (sign1, sign2) in ZODIAC_COMPATIBILITY:
         return ZODIAC_COMPATIBILITY[(sign1, sign2)]
     if (sign2, sign1) in ZODIAC_COMPATIBILITY:
         return ZODIAC_COMPATIBILITY[(sign2, sign1)]
-    return 5 # Standard-Mittelwert
+    return 5  # Default middle score
 
 def get_parent_compatibility_analysis(parent1_sign: str, parent2_sign: str, lang: str = "en") -> dict:
-    """Detaillierte Kompatibilitätsanalyse zwischen den Eltern""
-    Score = get_zodiac_compatibility(parent1_sign, parent2_sign)
+    """Detailed compatibility analysis between parents"""
+    score = get_zodiac_compatibility(parent1_sign, parent2_sign)
     
-    # Profile abrufen
+    # Get profiles
     profile1 = ZODIAC_PROFILES.get(parent1_sign, {})
     profile2 = ZODIAC_PROFILES.get(parent2_sign, {})
     
-    # Kompatibilitätsgrad-Text
-    Wenn die Punktzahl >= 9 ist:
-        Niveau = "Perfekt"
-        description_en = "Eine außergewöhnliche kosmische Verbindung! Eure Energien harmonieren wunderbar."
+    # Compatibility level text
+    if score >= 9:
+        level = "Perfect"
+        description_en = "An exceptional cosmic connection! Your energies harmonize beautifully."
     elif score >= 7:
-        Niveau = "Ausgezeichnet"
-        description_en = "Eine starke und kompatible Partnerschaft mit großem Potenzial."
+        level = "Excellent"
+        description_en = "A strong and compatible union with great potential."
     elif score >= 5:
-        Niveau = "Gut"
-        description_en = "Eine ausgewogene Beziehung mit Raum für gemeinsames Wachstum."
-    anders:
-        Schwierigkeitsgrad = "Anspruchsvoll"
-        description_en = "Unterschiedliche Energien, die sich durch Anstrengung ergänzen können."
+        level = "Good"
+        description_en = "A balanced relationship with room for growth together."
+    else:
+        level = "Challenging"
+        description_en = "Different energies that can complement each other with effort."
     
-    # Kompatibilitätsbeschreibungen übersetzen
-    Beschreibungen = {
+    # Translate compatibility descriptions
+    descriptions = {
         "en": description_en,
         "de": {
-            „Perfekt“: „Eine außergewöhnliche kosmische Verbindung! Eure Energien harmonieren wunderbar.“,
-            „Ausgezeichnet“: „Eine starke und kompatible Verbindung mit großem Potenzial.“,
-            „Gut“: „Eine Balance mit Raum für gemeinsames Wachstum.“,
-            „Herausfordernd“: „Unterschiedliche Energien, die sich mit Mühe ergänzen können.“
+            "Perfect": "Eine außergewöhnliche kosmische Verbindung! Eure Energien harmonieren wunderbar.",
+            "Excellent": "Eine starke und kompatible Verbindung mit großem Potenzial.",
+            "Good": "Eine ausgewogene Beziehung mit Raum für gemeinsames Wachstum.",
+            "Challenging": "Unterschiedliche Energien, die sich mit Mühe ergänzen können."
         },
         "el": {
-            „Perfekt“: „Das ist nicht der Fall! τέλεια.“,
-            „Ausgezeichnet“: „Μια δυνατή και συμβατή ένωση με μεγάλο δυναμικό.“,
-            „Gut“: „Μια ισορροπημένη σχέση με χώρο για κοινή ανάπτυξη.“,
-            „Herausfordernd“: „Διαφοργ προσπάθεια.
+            "Perfect": "Μια εξαιρετική κοσμική σύνδεση! Οι ενέργειές σας αρμονούν τέλεια.",
+            "Excellent": "Μια δυνατή και συμβατή ένωση με μεγάλο δυναμικό.",
+            "Good": "Μια ισορροπημένη σχέση με χώρο για κοινή ανάπτυξη.",
+            "Challenging": "Διαφορετικές ενέργειες που μπορούν να αλληλοσυμπληρωθούν με προσπάθεια."
         },
         "es": {
-            „Perfekt“: „Eine außergewöhnliche kosmische Verbindung! Ihre Energie ist wunderbar.“,
-            „Ausgezeichnet“: „Eine gute und kompatible Einheit mit großem Potenzial.“,
-            „Gut“: „Eine ausgeglichene Beziehung mit Raum für gemeinsames Wachstum.“,
-            „Herausfordernd“: „Unterschiedliche Energien, die sich mit dem Spiel ergänzen können.“
+            "Perfect": "¡Una conexión cósmica excepcional! Sus energías armonizan bellamente.",
+            "Excellent": "Una unión fuerte y compatible con gran potencial.",
+            "Good": "Una relación equilibrada con espacio para crecer juntos.",
+            "Challenging": "Energías diferentes que pueden complementarse con esfuerzo."
         },
         "fr": {
-            „Perfekt“: „Eine außergewöhnliche kosmische Verbindung! Ihre Energien harmonisieren großartig.“,
-            „Ausgezeichnet“: „Eine starke und kompatible Einheit mit großem Potenzial.“,
-            „Gut“: „Eine ausgeglichene Beziehung zum Ort für ein großartiges Ensemble.“,
-            „Herausfordernd“: „Unterschiedliche Energien können mit Anstrengung vollständig sein.“
+            "Perfect": "Une connexion cosmique exceptionnelle! Vos énergies s'harmonisent magnifiquement.",
+            "Excellent": "Une union forte et compatible avec un grand potentiel.",
+            "Good": "Une relation équilibrée avec de la place pour grandir ensemble.",
+            "Challenging": "Des énergies différentes qui peuvent se compléter avec effort."
         },
-        "Es": {
-            „Perfekt“: „Eine besondere kosmische Verbindung! Ihre Energie ist großartig.“,
-            „Ausgezeichnet“: „Eine starke und kompatible Einheit mit großem Potenzial.“,
-            „Gut“: „Eine ausgeglichene Beziehung mit dem Raum, um im Laufe der Zeit zu wachsen.“,
-            „Herausfordernd“: „Vielfältige Energie, die vollständig im Spiel ist.“
+        "it": {
+            "Perfect": "Una connessione cosmica eccezionale! Le vostre energie si armonizzano splendidamente.",
+            "Excellent": "Un'unione forte e compatibile con grande potenziale.",
+            "Good": "Una relazione equilibrata con spazio per crescere insieme.",
+            "Challenging": "Energie diverse che possono completarsi con impegno."
         },
         "ru": {
-            „Perfekt“: „Kosmetisch wirksam!
-            „Ausgezeichnet“: „Sehr gutes und sicheres Ergebnis mit großem Potenzial.“,
-            „Gut“: „Eine gute Lösung für die Sicherheit Ihres Zuhauses.“,
-            „Herausfordernd“: „Eine Menge Energie, die Sie auf andere Weise nutzen können.“
+            "Perfect": "Исключительная космическая связь! Ваши энергии прекрасно гармонируют.",
+            "Excellent": "Сильный и совместимый союз с большим потенциалом.",
+            "Good": "Сбалансированные отношения с возможностью для совместного роста.",
+            "Challenging": "Разные энергии, которые могут дополнять друг друга при усилии."
         },
         "zh": {
-            „Perfekt“: „非凡的宇宙连接！你们的能量完美和谐。“,
-            „Ausgezeichnet“: „强大而兼容的结合，具有巨大的潜力。“,
-            „Gut“: „平衡的关系，有共同成长的空间。“,
-            „Herausfordernd“: „不同的能量，通过努力可以互补。“
+            "Perfect": "非凡的宇宙连接！你们的能量完美和谐。",
+            "Excellent": "强大而兼容的结合，具有巨大的潜力。",
+            "Good": "平衡的关系，有共同成长的空间。",
+            "Challenging": "不同的能量，通过努力可以互补。"
         },
         "ja": {
-            „Perfekt“: „素晴らしい宇宙的つながり！エネルギーが美しく調和しています。“,
-            „Ausgezeichnet“: „大きな可能性を秘めた強力で相性の良い結合。“,
-            „Gut“: „一緒に成長する余地のあるバランスの取れた関係。“,
-            „Herausfordernd“: „努力すれば異なるエネルギー“.
+            "Perfect": "素晴らしい宇宙的つながり！エネルギーが美しく調和しています。",
+            "Excellent": "大きな可能性を秘めた強力で相性の良い結合。",
+            "Good": "一緒に成長する余地のあるバランスの取れた関係。",
+            "Challenging": "努力すれば補い合える異なるエネルギー。"
         },
     }
     
-    # Übersetzung der Beschreibung abrufen
+    # Get translated description
     if lang in descriptions and isinstance(descriptions[lang], dict):
         final_description = descriptions[lang].get(level, description_en)
-    anders:
+    else:
         final_description = description_en
     
-    zurückkehren {
-        "Punktzahl": Punktzahl,
-        "score_percentage": Punktzahl * 10,
-        "Level": Level,
-        "Beschreibung": final_description,
+    return {
+        "score": score,
+        "score_percentage": score * 10,
+        "level": level,
+        "description": final_description,
         "parent1_strengths": profile1.get("strengths", [])[:3],
         "parent2_strengths": profile2.get("strengths", [])[:3],
     }
 
 def get_language_from_country(country_code: str) -> str:
-    """Landescode dem Sprachcode zuordnen""
+    """Map country code to language code"""
     country_to_lang = {
         "GR": "el", "CY": "el",
-        „DE“: „de“, „AT“: „de“, „CH“: „de“,
-        "IT": "es", "SM": "es",
-        „ES“: „es“, „MX“: „es“, „AR“: „es“, „CO“: „es“, „PE“: „es“,
+        "DE": "de", "AT": "de", "CH": "de",
+        "IT": "it", "SM": "it",
+        "ES": "es", "MX": "es", "AR": "es", "CO": "es", "PE": "es",
         "PT": "pt", "BR": "pt",
-        „FR“: „fr“, „BE“: „fr“, „CA“: „fr“,
+        "FR": "fr", "BE": "fr", "CA": "fr",
         "RU": "ru", "BY": "ru", "UA": "ru",
-        „CN“: „zh“, „TW“: „zh“, „HK“: „zh“,
+        "CN": "zh", "TW": "zh", "HK": "zh",
         "JP": "ja",
         "KR": "ko",
         "IN": "hi",
-        „SA“: „ar“, „AE“: „ar“, „EG“: „ar“, „QA“: „ar“,
+        "SA": "ar", "AE": "ar", "EG": "ar", "QA": "ar",
         "TR": "tr",
         "IR": "fa",
         "PL": "pl",
         "CZ": "cs", "SK": "cs",
         "RS": "sr", "HR": "sr",
-        „SE“: „sv“, „NO“: „sv“, „DK“: „sv“,
-        „US“: „en“, „GB“: „en“, „AU“: „en“, „NZ“: „en“,
+        "SE": "sv", "NO": "sv", "DK": "sv",
+        "US": "en", "GB": "en", "AU": "en", "NZ": "en",
     }
     return country_to_lang.get(country_code, "en")
 
 def get_zodiac_sign(month: int, day: int) -> dict:
-    Für die Anmeldung bei ZODIAC_SIGNS:
+    for sign in ZODIAC_SIGNS:
         start_month, start_day = sign["start"]
         end_month, end_day = sign["end"]
         
         if sign["name"] == "Capricorn":
             if (month == 12 and day >= 22) or (month == 1 and day <= 19):
-                Rückzeichen
+                return sign
         elif (month == start_month and day >= start_day) or (month == end_month and day <= end_day):
-            Rückzeichen
+            return sign
     return ZODIAC_SIGNS[0]
 
 def calculate_numerology(date1: date, date2: date) -> int:
     total = sum(int(d) for d in date1.isoformat().replace("-", ""))
     total += sum(int(d) for d in date2.isoformat().replace("-", ""))
-    solange die Gesamtzahl > 9 ist:
+    while total > 9:
         total = sum(int(d) for d in str(total))
-    Gesamtertrag
+    return total
 
 def predict_child(parent1_birthday: date, parent2_birthday: date, country_code: str = None) -> dict:
     seed = int(parent1_birthday.toordinal() * parent2_birthday.toordinal())
     random.seed(seed)
     
     numerology_number = calculate_numerology(parent1_birthday, parent2_birthday)
-    Geschlecht = "Junge", wenn numerologische Zahl % 2 == 1, sonst "Mädchen"
+    gender = "boy" if numerology_number % 2 == 1 else "girl"
     
-    heute = datetime.now(timezone.utc).date()
+    today = datetime.now(timezone.utc).date()
     base_months = random.randint(9, 18)
-    vorhergesagtes_Datum = Datum(
-        heute.Jahr + (heute.Monat + Basismonate - 1) // 12,
+    predicted_date = date(
+        today.year + (today.month + base_months - 1) // 12,
         (today.month + base_months - 1) % 12 + 1,
         random.randint(1, 28)
     )
     
-    # Sternzeichen herausfinden
-    kind_zodiac = get_zodiac_sign(predicted_date.month, predicted_date.day)
+    # Get zodiac signs
+    child_zodiac = get_zodiac_sign(predicted_date.month, predicted_date.day)
     parent1_zodiac = get_zodiac_sign(parent1_birthday.month, parent1_birthday.day)
-    parent2_zodiac = get_zodiac_sign(parent2_birthday.month , parent2_birthday.day)
+    parent2_zodiac = get_zodiac_sign(parent2_birthday.month, parent2_birthday.day)
     
-    # Sprache aus dem Land abrufen
+    # Get language from country
     lang = get_language_from_country(country_code) if country_code else "en"
     
-    # Übersetzte Sternzeichennamen
+    # Translated zodiac names
     child_zodiac_translated = get_zodiac_translated(child_zodiac["name"], lang)
     parent1_zodiac_translated = get_zodiac_translated(parent1_zodiac["name"], lang)
     parent2_zodiac_translated = get_zodiac_translated(parent2_zodiac["name"], lang)
     
-    # Chinesischer Tierkreis für das vorhergesagte Geburtsjahr
+    # Chinese zodiac for predicted birth year
     chinese_zodiac = get_chinese_zodiac_translated(predicted_date.year, lang)
     parent1_chinese = get_chinese_zodiac_translated(parent1_birthday.year, lang)
     parent2_chinese = get_chinese_zodiac_translated(parent2_birthday.year, lang)
     
-    # Erweiterte Persönlichkeitsmerkmale (8 Merkmale statt 5)
-    Elemente = [parent1_zodiac["element"], parent2_zodiac["element"], child_zodiac["element"]]
-    Merkmale = []
-    für Element in Menge(Elemente):
+    # Extended personality traits (8 traits instead of 5)
+    elements = [parent1_zodiac["element"], parent2_zodiac["element"], child_zodiac["element"]]
+    traits = []
+    for element in set(elements):
         traits.extend(random.sample(PERSONALITY_TRAITS[element], 4))
     random.shuffle(traits)
-    Merkmale = Merkmale[:8]
+    traits = traits[:8]
     
-    # Namen basierend auf Land/Region abrufen
+    # Get names based on country/region
     region = get_region_for_country(country_code)
     names_list = get_names_for_region(region, gender)
-    falls nicht names_list:
+    if not names_list:
         names_list = CHILD_NAMES_BY_REGION["latin"].get(gender, ["Alex"])
-    vorgeschlagener Name = Zufallsauswahl(Namensliste)
+    suggested_name = random.choice(names_list)
     
-    # Analyse der Elternkompatibilität
+    # Parent compatibility analysis
     parent_compatibility = get_parent_compatibility_analysis(
-        parent1_zodiac["name"],
+        parent1_zodiac["name"], 
         parent2_zodiac["name"],
         lang
     )
     
-    # Sternzeichenprofil für Kind abrufen
+    # Get zodiac profile for child
     child_profile = ZODIAC_PROFILES.get(child_zodiac["name"], {})
     
-    # Elementharmonie
+    # Element harmony
     element_harmony = {
-        ("Feuer", "Luft"): 90, ("Luft", "Feuer"): 90,
-        ("Erde", "Wasser"): 85, ("Wasser", "Erde"): 85,
-        ("Feuer", "Feuer"): 80, ("Luft", "Luft"): 80,
-        ("Erde", "Erde"): 75, ("Wasser", "Wasser"): 75,
-        ("Feuer", "Erde"): 60, ("Erde", "Feuer"): 60,
-        ("Luft", "Wasser"): 55, ("Wasser", "Luft"): 55,
-        ("Feuer", "Wasser"): 50, ("Wasser", "Feuer"): 50,
-        ("Luft", "Erde"): 45, ("Erde", "Luft"): 45,
+        ("Fire", "Air"): 90, ("Air", "Fire"): 90,
+        ("Earth", "Water"): 85, ("Water", "Earth"): 85,
+        ("Fire", "Fire"): 80, ("Air", "Air"): 80,
+        ("Earth", "Earth"): 75, ("Water", "Water"): 75,
+        ("Fire", "Earth"): 60, ("Earth", "Fire"): 60,
+        ("Air", "Water"): 55, ("Water", "Air"): 55,
+        ("Fire", "Water"): 50, ("Water", "Fire"): 50,
+        ("Air", "Earth"): 45, ("Earth", "Air"): 45,
     }
     
     base_harmony = element_harmony.get(
@@ -1261,30 +1262,30 @@ def predict_child(parent1_birthday: date, parent2_birthday: date, country_code: 
     )
     cosmic_harmony = min(100, base_harmony + random.randint(-5, 15))
     
-    # Glückselemente aus dem Tierkreisprofil mit Übersetzungen
+    # Lucky elements from zodiac profile with translations
     lucky_colors_en = child_profile.get("lucky_colors", ["Purple", "Gold"])
     lucky_numbers = child_profile.get("lucky_numbers", [numerology_number])
     lucky_day_en = child_profile.get("lucky_day", "Monday")
     
-    # Farben und Tag übersetzen
+    # Translate colors and day
     lucky_colors_translated = [translate_lucky_color(c, lang) for c in lucky_colors_en]
     lucky_day_translated = translate_lucky_day(lucky_day_en, lang)
     
-    # Hol dir deinen Glücksstein
+    # Get lucky gemstone
     lucky_gemstone = get_lucky_gemstone(child_zodiac["name"], lang)
     
-    # Shopping-Links abrufen
+    # Get shopping links
     primary_color = lucky_colors_en[0] if lucky_colors_en else "Gold"
     shopping_links = get_shopping_links(
-        Kind_Sternzeichen["Name"],
+        child_zodiac["name"],
         lucky_gemstone["english_name"],
-        Primärfarbe
+        primary_color
     )
     
-    zurückkehren {
+    return {
         "predicted_birth_date": predicted_date.isoformat(),
-        "vorhergesagtes_Geschlecht": Geschlecht,
-        "Sternzeichen": {
+        "predicted_gender": gender,
+        "zodiac_sign": {
             "name": child_zodiac["name"],
             "translated_name": child_zodiac_translated,
             "symbol": child_zodiac["symbol"],
@@ -1292,16 +1293,16 @@ def predict_child(parent1_birthday: date, parent2_birthday: date, country_code: 
             "ruling_planet": child_profile.get("ruling_planet", "Unknown"),
             "description": child_profile.get("description", ""),
             "strengths": child_profile.get("strengths", []),
-            "Schwächen": child_profile.get("Schwächen", []),
+            "weaknesses": child_profile.get("weaknesses", []),
             "best_match": child_profile.get("best_match", [])
         },
         "chinese_zodiac": {
             "name": chinese_zodiac["name"],
             "english_name": chinese_zodiac["english_name"],
-            "Symbol": chinese_zodiac["Symbol"]
+            "symbol": chinese_zodiac["symbol"]
         },
-        "persönlichkeitsmerkmale": Merkmale,
-        "suggested_name": proposed_name,
+        "personality_traits": traits,
+        "suggested_name": suggested_name,
         "cosmic_harmony_score": cosmic_harmony,
         "parent1_zodiac": {
             "name": parent1_zodiac["name"],
@@ -1320,58 +1321,58 @@ def predict_child(parent1_birthday: date, parent2_birthday: date, country_code: 
         "parent_compatibility": parent_compatibility,
         "numerology_number": numerology_number,
         "lucky_elements": {
-            "Farben": lucky_colors_translated,
+            "colors": lucky_colors_translated,
             "colors_en": lucky_colors_en,
             "numbers": lucky_numbers,
-            "Tag": lucky_day_translated,
+            "day": lucky_day_translated,
             "day_en": lucky_day_en,
-            "Edelstein": Glücksedelstein
+            "gemstone": lucky_gemstone
         },
         "shopping_links": shopping_links,
-        "Region": Region,
-        "Sprache": lang
+        "region": region,
+        "language": lang
     }
 
-# Pydantische Modelle
+# Pydantic Models
 class UserCreate(BaseModel):
-    E-Mail: str
-    Passwort: str
-    Name: str
+    email: str
+    password: str
+    name: str
 
 class UserLogin(BaseModel):
-    E-Mail: str
-    Passwort: str
+    email: str
+    password: str
 
 class UserResponse(BaseModel):
     user_id: str
-    E-Mail: str
-    Name: str
-    Bild: Optional[str] = None
+    email: str
+    name: str
+    picture: Optional[str] = None
     has_active_subscription: bool = False
     prediction_used: bool = False
 
 class PredictionRequest(BaseModel):
-    parent1_birthday: Datum
-    parent2_birthday: Datum
-    Ländercode: Optional[str] = None
+    parent1_birthday: date
+    parent2_birthday: date
+    country_code: Optional[str] = None
 
 class PredictionResponse(BaseModel):
     id: str
-    vorhergesagtes_Geburtsdatum: str
-    vorhergesagtes_Geschlecht: str
+    predicted_birth_date: str
+    predicted_gender: str
     zodiac_sign: dict
-    Persönlichkeitsmerkmale: Liste[str]
-    vorgeschlagener_Name: str
+    personality_traits: List[str]
+    suggested_name: str
     cosmic_harmony_score: int
     parent1_zodiac: dict
     parent2_zodiac: dict
-    Numerologie-Zahl: int
+    numerology_number: int
     lucky_elements: dict
     shopping_links: Optional[dict] = None
     chinese_zodiac: Optional[dict] = None
     parent_compatibility: Optional[dict] = None
     region: Optional[str] = None
-    Sprache: Optional[str] = None
+    language: Optional[str] = None
     created_at: str
 
 class CheckoutRequest(BaseModel):
@@ -1380,54 +1381,54 @@ class CheckoutRequest(BaseModel):
 
 class PackageInfo(BaseModel):
     id: str
-    Name: str
-    Betrag: Gleitkomma
+    name: str
+    amount: float
     duration_months: int
 
-# Authentifizierungshelfer
+# Auth helper
 async def get_current_user(request: Request) -> dict:
-    # Probieren Sie zuerst den Keks
+    # Try cookie first
     session_token = request.cookies.get("session_token")
     
-    # Versuchen Sie dann den Autorisierungsheader
-    falls kein Sitzungstoken:
+    # Then try Authorization header
+    if not session_token:
         auth_header = request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
             session_token = auth_header.split(" ")[1]
     
-    falls kein Sitzungstoken:
-        raise HTTPException(status_code=401, detail="Nicht authentifiziert")
+    if not session_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
     
-    # Sitzung suchen
+    # Find session
     session_doc = await db.user_sessions.find_one(
         {"session_token": session_token},
         {"_id": 0}
     )
     
-    falls nicht session_doc:
-        raise HTTPException(status_code=401, detail="Ungültige Sitzung")
+    if not session_doc:
+        raise HTTPException(status_code=401, detail="Invalid session")
     
-    # Ablaufdatum prüfen
+    # Check expiry
     expires_at = session_doc.get("expires_at")
     if isinstance(expires_at, str):
         expires_at = datetime.fromisoformat(expires_at)
     if expires_at.tzinfo is None:
         expires_at = expires_at.replace(tzinfo=timezone.utc)
     if expires_at < datetime.now(timezone.utc):
-        raise HTTPException(status_code=401, detail="Sitzung abgelaufen")
+        raise HTTPException(status_code=401, detail="Session expired")
     
-    # Benutzer abrufen
+    # Get user
     user_doc = await db.users.find_one(
         {"user_id": session_doc["user_id"]},
         {"_id": 0}
     )
     
-    falls nicht user_doc:
-        raise HTTPException(status_code=401, detail="Benutzer nicht gefunden")
+    if not user_doc:
+        raise HTTPException(status_code=401, detail="User not found")
     
-    # Abonnementstatus prüfen
+    # Check subscription status
     subscription = await db.subscriptions.find_one(
-        {"user_id": user_doc["user_id"], "status": "aktiv"},
+        {"user_id": user_doc["user_id"], "status": "active"},
         {"_id": 0}
     )
     
@@ -1436,54 +1437,54 @@ async def get_current_user(request: Request) -> dict:
     
     return user_doc
 
-# ===================== AUTORISIERUNGSWEGE =====================
+# ===================== AUTH ROUTES =====================
 
 @api_router.post("/auth/register")
 async def register(user_data: UserCreate, response: Response):
-    # Prüfen, ob der Benutzer existiert
+    # Check if user exists
     existing = await db.users.find_one({"email": user_data.email}, {"_id": 0})
-    falls vorhanden:
-        raise HTTPException(status_code=400, detail="E-Mail bereits registriert")
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Hash-Passwort
+    # Hash password
     import hashlib
     password_hash = hashlib.sha256(user_data.password.encode()).hexdigest()
     
     user_id = f"user_{uuid.uuid4().hex[:12]}"
     
     await db.users.insert_one({
-        "user_id": Benutzer-ID,
-        "E-Mail": user_data.email,
+        "user_id": user_id,
+        "email": user_data.email,
         "name": user_data.name,
         "password_hash": password_hash,
-        "Bild": Keines,
+        "picture": None,
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
-    # Sitzung erstellen
+    # Create session
     session_token = f"session_{uuid.uuid4().hex}"
     expires_at = datetime.now(timezone.utc) + timedelta(days=7)
     
     await db.user_sessions.insert_one({
-        "user_id": Benutzer-ID,
+        "user_id": user_id,
         "session_token": session_token,
         "expires_at": expires_at.isoformat(),
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
     response.set_cookie(
-        Schlüssel="session_token",
-        Wert=Sitzungstoken,
+        key="session_token",
+        value=session_token,
         httponly=True,
         secure=True,
         samesite="none",
-        Pfad="/",
+        path="/",
         max_age=7*24*60*60
     )
     
-    zurückkehren {
-        "user_id": Benutzer-ID,
-        "E-Mail": user_data.email,
+    return {
+        "user_id": user_id,
+        "email": user_data.email,
         "name": user_data.name,
         "has_active_subscription": False,
         "prediction_used": False
@@ -1499,10 +1500,10 @@ async def login(user_data: UserLogin, response: Response):
         {"_id": 0}
     )
     
-    falls nicht Benutzer:
-        raise HTTPException(status_code=401, detail="Ungültige Anmeldeinformationen")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    # Sitzung erstellen
+    # Create session
     session_token = f"session_{uuid.uuid4().hex}"
     expires_at = datetime.now(timezone.utc) + timedelta(days=7)
     
@@ -1514,55 +1515,55 @@ async def login(user_data: UserLogin, response: Response):
     })
     
     response.set_cookie(
-        Schlüssel="session_token",
-        Wert=Sitzungstoken,
+        key="session_token",
+        value=session_token,
         httponly=True,
         secure=True,
         samesite="none",
-        Pfad="/",
+        path="/",
         max_age=7*24*60*60
     )
     
-    # Abonnement prüfen
+    # Check subscription
     subscription = await db.subscriptions.find_one(
-        {"user_id": user["user_id"], "status": "aktiv"},
+        {"user_id": user["user_id"], "status": "active"},
         {"_id": 0}
     )
     
-    zurückkehren {
+    return {
         "user_id": user["user_id"],
         "email": user["email"],
-        "name": Benutzer["name"],
+        "name": user["name"],
         "picture": user.get("picture"),
-        "has_active_subscription": Abonnement ist nicht None,
+        "has_active_subscription": subscription is not None,
         "prediction_used": subscription.get("prediction_used", False) if subscription else False
     }
 
 @api_router.get("/auth/session")
 async def google_auth_session(request: Request, response: Response):
-    """Google OAuth-Sitzungsaustausch verwalten""
+    """Handle Google OAuth session exchange"""
     session_id = request.headers.get("X-Session-ID")
-    falls nicht session_id:
-        raise HTTPException(status_code=400, detail="Keine Sitzungs-ID angegeben")
+    if not session_id:
+        raise HTTPException(status_code=400, detail="No session ID provided")
     
-    # Austausch der session_id mit der Notfallauthentifizierung
-    async mit httpx.AsyncClient() als Client:
+    # Exchange session_id with Emergent Auth
+    async with httpx.AsyncClient() as client:
         auth_response = await client.get(
             "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
             headers={"X-Session-ID": session_id}
         )
         
         if auth_response.status_code != 200:
-            raise HTTPException(status_code=401, detail="Ungültige Sitzungs-ID")
+            raise HTTPException(status_code=401, detail="Invalid session ID")
         
         auth_data = auth_response.json()
     
-    # Prüfen, ob der Benutzer existiert
+    # Check if user exists
     existing_user = await db.users.find_one({"email": auth_data["email"]}, {"_id": 0})
     
-    falls ein Benutzer existiert:
+    if existing_user:
         user_id = existing_user["user_id"]
-        # Benutzerinformationen aktualisieren
+        # Update user info
         await db.users.update_one(
             {"user_id": user_id},
             {"$set": {
@@ -1570,55 +1571,55 @@ async def google_auth_session(request: Request, response: Response):
                 "picture": auth_data.get("picture")
             }}
         )
-    anders:
+    else:
         user_id = f"user_{uuid.uuid4().hex[:12]}"
         await db.users.insert_one({
-            "user_id": Benutzer-ID,
+            "user_id": user_id,
             "email": auth_data["email"],
             "name": auth_data["name"],
             "picture": auth_data.get("picture"),
             "created_at": datetime.now(timezone.utc).isoformat()
         })
     
-    # Sitzung erstellen
+    # Create session
     session_token = auth_data.get("session_token") or f"session_{uuid.uuid4().hex}"
     expires_at = datetime.now(timezone.utc) + timedelta(days=7)
     
     await db.user_sessions.insert_one({
-        "user_id": Benutzer-ID,
+        "user_id": user_id,
         "session_token": session_token,
         "expires_at": expires_at.isoformat(),
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
     response.set_cookie(
-        Schlüssel="session_token",
-        Wert=Sitzungstoken,
+        key="session_token",
+        value=session_token,
         httponly=True,
         secure=True,
         samesite="none",
-        Pfad="/",
+        path="/",
         max_age=7*24*60*60
     )
     
-    # Abonnement prüfen
+    # Check subscription
     subscription = await db.subscriptions.find_one(
-        {"user_id": Benutzer-ID, "status": "aktiv"},
+        {"user_id": user_id, "status": "active"},
         {"_id": 0}
     )
     
-    zurückkehren {
-        "user_id": Benutzer-ID,
+    return {
+        "user_id": user_id,
         "email": auth_data["email"],
         "name": auth_data["name"],
         "picture": auth_data.get("picture"),
-        "has_active_subscription": Abonnement ist nicht None,
+        "has_active_subscription": subscription is not None,
         "prediction_used": subscription.get("prediction_used", False) if subscription else False
     }
 
 @api_router.get("/auth/me")
 async def get_me(user: dict = Depends(get_current_user)):
-    zurückkehrender Benutzer
+    return user
 
 @api_router.post("/auth/logout")
 async def logout(request: Request, response: Response):
@@ -1627,74 +1628,74 @@ async def logout(request: Request, response: Response):
         await db.user_sessions.delete_one({"session_token": session_token})
     
     response.delete_cookie(key="session_token", path="/")
-    return {"message": "Erfolgreich abgemeldet"}
+    return {"message": "Logged out successfully"}
 
-# ===================== ABONNEMENT-WEGE =====================
+# ===================== SUBSCRIPTION ROUTES =====================
 
 @api_router.get("/packages", response_model=List[PackageInfo])
 async def get_packages():
-    """Verfügbare Abonnementpakete ansehen""
-    zurückkehren [
+    """Get available subscription packages"""
+    return [
         PackageInfo(id=key, **value) for key, value in SUBSCRIPTION_PACKAGES.items()
     ]
 
 @api_router.post("/checkout/create")
 async def create_checkout(
     checkout_data: CheckoutRequest,
-    Anfrage: Anfrage,
-    Benutzer: dict = Depends(get_current_user)
+    request: Request,
+    user: dict = Depends(get_current_user)
 ):
-    """Stripe-Checkout-Sitzung erstellen""
-    Falls checkout_data.package_id nicht in SUBSCRIPTION_PACKAGES enthalten ist:
-        raise HTTPException(status_code=400, detail="Ungültiges Paket")
+    """Create Stripe checkout session"""
+    if checkout_data.package_id not in SUBSCRIPTION_PACKAGES:
+        raise HTTPException(status_code=400, detail="Invalid package")
     
-    Paket = SUBSCRIPTION_PACKAGES[checkout_data.package_id]
+    package = SUBSCRIPTION_PACKAGES[checkout_data.package_id]
     
-    # URLs aus dem angegebenen Ursprung erstellen
+    # Build URLs from provided origin
     success_url = f"{checkout_data.origin_url}/payment-success?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = f"{checkout_data.origin_url}/subscribe"
     
-    # Erstellen einer Checkout-Session mithilfe des offiziellen Stripe SDK
-    # Mehrere Zahlungsmethoden für internationale Kunden aktivieren
+    # Create checkout session using official Stripe SDK
+    # Enable multiple payment methods for international customers
     session = stripe.checkout.Session.create(
         payment_method_types=[
-            "Karte", # Visa, Mastercard, Amex (+ Google Pay, Apple Pay automatisch)
-            "paypal", # PayPal
-            "sepa_debit", # SEPA-Lastschrift (Europa)
-            "ideal", # iDEAL (Niederlande)
-            "giropay", # Giropay (Deutschland)
-            "p24", # Przelewy24 (Polen)
-            „bancontact“, # Bancontact (Belgien)
+            "card",           # Visa, Mastercard, Amex (+ Google Pay, Apple Pay automatic)
+            "paypal",         # PayPal
+            "sepa_debit",     # SEPA Direct Debit (Europe)
+            "ideal",          # iDEAL (Netherlands)
+            "giropay",        # Giropay (Germany)
+            "p24",            # Przelewy24 (Poland)
+            "bancontact",     # Bancontact (Belgium)
         ],
         line_items=[{
             "price_data": {
-                "Währung": "Euro",
+                "currency": "eur",
                 "product_data": {
                     "name": f"A BabyWish - {package['name']}",
-                    "description": f"Abonnement {package['duration_months']} Monate"
+                    "description": f"Subscription {package['duration_months']} months"
                 },
-                "unit_amount": int(package["amount"] * 100), # Stripe verwendet Cent
+                "unit_amount": int(package["amount"] * 100),  # Stripe uses cents
             },
-            "Menge": 1,
+            "quantity": 1,
         }],
-        Modus="Zahlung",
+        mode="payment",
         success_url=success_url,
         cancel_url=cancel_url,
-        Metadaten={
+        metadata={
             "user_id": user["user_id"],
             "package_id": checkout_data.package_id,
             "duration_months": str(package["duration_months"])
         }
     )
     
-    # Zahlungsdatensatz erstellen
+    # Create payment transaction record
     await db.payment_transactions.insert_one({
         "session_id": session.id,
         "user_id": user["user_id"],
         "package_id": checkout_data.package_id,
         "amount": package["amount"],
-        "Währung": "Euro",
-        "payment_status": "ausstehend",
+        "currency": "eur",
+        "payment_status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
@@ -1703,46 +1704,46 @@ async def create_checkout(
 @api_router.get("/checkout/status/{session_id}")
 async def get_checkout_status(
     session_id: str,
-    Anfrage: Anfrage,
-    Benutzer: dict = Depends(get_current_user)
+    request: Request,
+    user: dict = Depends(get_current_user)
 ):
-    """Prüfen Sie den Zahlungsstatus und aktivieren Sie das Abonnement, falls bezahlt."""
-    # Sitzung von Stripe abrufen
+    """Check payment status and activate subscription if paid"""
+    # Retrieve session from Stripe
     session = stripe.checkout.Session.retrieve(session_id)
     
-    payment_status = session.payment_status # "paid", "unpaid", or "no_payment_required"
-    Status = Sitzungsstatus # "abgeschlossen", "abgelaufen", oder "offen"
+    payment_status = session.payment_status  # "paid", "unpaid", or "no_payment_required"
+    status = session.status  # "complete", "expired", or "open"
     
-    # Transaktion aktualisieren
+    # Update transaction
     await db.payment_transactions.update_one(
         {"session_id": session_id},
         {"$set": {
             "payment_status": payment_status,
-            "Status": Status,
+            "status": status,
             "updated_at": datetime.now(timezone.utc).isoformat()
         }}
     )
     
-    # Falls kostenpflichtig, Abonnement erstellen
-    if payment_status == "bezahlt":
-        # Prüfen, ob für diese Sitzung bereits ein Abonnement erstellt wurde
+    # If paid, create subscription
+    if payment_status == "paid":
+        # Check if subscription already created for this session
         existing_sub = await db.subscriptions.find_one(
             {"payment_session_id": session_id},
             {"_id": 0}
         )
         
-        falls nicht vorhanden_sub:
-            Metadaten = Sitzung.Metadaten
+        if not existing_sub:
+            metadata = session.metadata
             package_id = metadata.get("package_id")
             duration_months = int(metadata.get("duration_months", 3))
             
-            # Deaktivieren Sie alle bestehenden Abonnements
+            # Deactivate any existing subscription
             await db.subscriptions.update_many(
-                {"user_id": user["user_id"], "status": "aktiv"},
+                {"user_id": user["user_id"], "status": "active"},
                 {"$set": {"status": "replaced"}}
             )
             
-            # Neues Abonnement erstellen
+            # Create new subscription
             expires_at = datetime.now(timezone.utc) + timedelta(days=duration_months * 30)
             subscription_id = f"sub_{uuid.uuid4().hex[:12]}"
             
@@ -1751,107 +1752,107 @@ async def get_checkout_status(
                 "user_id": user["user_id"],
                 "package_id": package_id,
                 "payment_session_id": session_id,
-                "Status": "aktiv",
+                "status": "active",
                 "prediction_used": False,
                 "expires_at": expires_at.isoformat(),
                 "created_at": datetime.now(timezone.utc).isoformat()
             })
             
-            # E-Mail-Benachrichtigung an den Administrator senden
+            # Send email notification to admin
             package_info = SUBSCRIPTION_PACKAGES.get(package_id, {})
             await send_subscription_notification(
                 user_email=user.get("email", "N/A"),
                 user_name=user.get("name", user.get("email", "Unknown")),
                 package_id=package_id,
                 amount=package_info.get("amount", 0),
-                Abonnement-ID=Abonnement-ID
+                subscription_id=subscription_id
             )
     
-    zurückkehren {
-        "Status": Status,
+    return {
+        "status": status,
         "payment_status": payment_status,
         "amount_total": session.amount_total,
-        "Währung": Sitzung.Währung
+        "currency": session.currency
     }
 
 @api_router.post("/webhook/stripe")
 async def stripe_webhook(request: Request):
-    """Stripe-Webhooks verarbeiten""
+    """Handle Stripe webhooks"""
     body = await request.body()
-    Signatur = request.headers.get("Stripe-Signatur")
+    signature = request.headers.get("Stripe-Signature")
     
-    # Webhook-Geheimnis aus der Umgebungsvariablen abrufen (optional, aber für den Produktivbetrieb empfohlen)
+    # Get webhook secret from env (optional, but recommended for production)
     webhook_secret = os.environ.get('STRIPE_WEBHOOK_SECRET')
     
-    versuchen:
+    try:
         if webhook_secret:
             event = stripe.Webhook.construct_event(body, signature, webhook_secret)
-        anders:
-            # Ohne Webhook-Geheimnis wird das Ereignis einfach analysiert (weniger sicher)
+        else:
+            # Without webhook secret, just parse the event (less secure)
             import json
             event = stripe.Event.construct_from(json.loads(body), stripe.api_key)
         
-        # Behandelt das Ereignis checkout.session.completed
+        # Handle checkout.session.completed event
         if event.type == "checkout.session.completed":
-            Sitzung = Ereignis.Datenobjekt
+            session = event.data.object
             
             if session.payment_status == "paid":
-                # Transaktion aktualisieren
+                # Update transaction
                 await db.payment_transactions.update_one(
                     {"session_id": session.id},
                     {"$set": {
-                        "payment_status": "bezahlt",
+                        "payment_status": "paid",
                         "updated_at": datetime.now(timezone.utc).isoformat()
                     }}
                 )
         
         return {"status": "ok"}
-    außer Ausnahme als e:
-        logging.error(f"Webhook-Fehler: {e}")
+    except Exception as e:
+        logging.error(f"Webhook error: {e}")
         return {"status": "error", "message": str(e)}
 
-# ===================== NAMENSVORSTELLUNG =====================
+# ===================== NAME SHOWCASE =====================
 
 @api_router.get("/names/showcase")
 async def get_names_showcase(request: Request):
-    "Namen basierend auf dem Standort des Benutzers für die Showcase-Seite abrufen"
-    # IP-Adresse und Land des Benutzers abrufen
-    Ländercode = "US"
-    country_name = "Vereinigte Staaten"
+    """Get names based on user's location for the showcase page"""
+    # Get user's IP and country
+    country_code = "US"
+    country_name = "United States"
     
-    # Versuche, das Land aus den Headern zu ermitteln (wird durch die Geolokalisierung festgelegt)
+    # Try to get country from headers (set by geolocation)
     forwarded_for = request.headers.get("x-forwarded-for", "")
     client_ip = forwarded_for.split(",")[0].strip() if forwarded_for else request.client.host
     
-    # Land anhand der IP-Adresse mit ipapi ermitteln
-    versuchen:
-        async mit httpx.AsyncClient() als Client:
+    # Get country from IP using ipapi
+    try:
+        async with httpx.AsyncClient() as client:
             response = await client.get(f"https://ipapi.co/{client_ip}/json/", timeout=5.0)
             if response.status_code == 200:
                 data = response.json()
                 country_code = data.get("country_code", "US")
                 country_name = data.get("country_name", "United States")
-    außer Ausnahme als e:
-        logging.warning(f"Konnte den Geostandort nicht abrufen: {e}")
+    except Exception as e:
+        logging.warning(f"Could not get geolocation: {e}")
     
-    # Region und Namen abrufen
+    # Get region and names
     region = get_region_for_country(country_code)
-    Jungennamen = get_names_for_region(region, "Junge")
-    Mädchennamen = get_names_for_region(region, "Mädchen")
+    boy_names = get_names_for_region(region, "boy")
+    girl_names = get_names_for_region(region, "girl")
     
-    # Maximal 12 Namen pro Gruppe, anschließend mischen, um Abwechslung zu gewährleisten
+    # Limit to 12 names each and shuffle for variety
     random.shuffle(boy_names)
     random.shuffle(girl_names)
     
-    zurückkehren {
+    return {
         "boy_names": boy_names[:12],
         "girl_names": girl_names[:12],
-        "Region": Region,
-        "Land": Ländername,
-        "country_code": Ländercode
+        "region": region,
+        "country": country_name,
+        "country_code": country_code
     }
 
-# ===================== VORHERSAGE-ROUTEN =====================
+# ===================== PREDICTION ROUTES =====================
 
 @api_router.get("/")
 async def root():
@@ -1860,30 +1861,30 @@ async def root():
 @api_router.post("/predict", response_model=dict)
 async def create_prediction(
     request_data: PredictionRequest,
-    Benutzer: dict = Depends(get_current_user)
+    user: dict = Depends(get_current_user)
 ):
-    """Vorhersage erstellen – erfordert ein aktives Abonnement mit ungenutzten Vorhersagen
-    HINWEIS: Vorhersagen werden als „ausstehend“ gespeichert und müssen vom Administrator genehmigt werden, bevor sie dem Benutzer angezeigt werden.
+    """Create prediction - requires active subscription with unused prediction
+    NOTE: Predictions are saved as 'pending' and require admin approval before being shown to user
     """
-    # Abonnement prüfen
+    # Check subscription
     subscription = await db.subscriptions.find_one(
-        {"user_id": user["user_id"], "status": "aktiv"},
+        {"user_id": user["user_id"], "status": "active"},
         {"_id": 0}
     )
     
-    Falls kein Abonnement besteht:
+    if not subscription:
         raise HTTPException(
-            Statuscode=403
+            status_code=403,
             detail="Απαιτείται ενεργή συνδρομή για πρόβλεψη"
         )
     
     if subscription.get("prediction_used", False):
         raise HTTPException(
-            Statuscode=403
+            status_code=403,
             detail="Έχετε ήδη χρησιμοποιήσει την πρόβλεψή σας. Αγοράστε νέα συνδρομή."
         )
     
-    # Ablaufdatum prüfen
+    # Check expiry
     expires_at = subscription.get("expires_at")
     if isinstance(expires_at, str):
         expires_at = datetime.fromisoformat(expires_at)
@@ -1892,16 +1893,16 @@ async def create_prediction(
     if expires_at < datetime.now(timezone.utc):
         await db.subscriptions.update_one(
             {"subscription_id": subscription["subscription_id"]},
-            {"$set": {"status": "abgelaufen"}}
+            {"$set": {"status": "expired"}}
         )
         raise HTTPException(
-            Statuscode=403
+            status_code=403,
             detail="Η συνδρομή σας έχει λήξει. Αγοράστε νέα συνδρομή."
         )
     
-    # Vorhersage erstellen (KI-Analyse)
-    Vorhersage = predict_child(
-        request_data.parent1_birthday,
+    # Create prediction (AI analysis)
+    prediction = predict_child(
+        request_data.parent1_birthday, 
         request_data.parent2_birthday,
         request_data.country_code
     )
@@ -1909,66 +1910,66 @@ async def create_prediction(
     prediction_id = str(uuid.uuid4())
     created_at = datetime.now(timezone.utc).isoformat()
     
-    # Benutzer-E-Mail für Benachrichtigungen abrufen
+    # Get user email for notification
     user_doc = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0, "email": 1, "name": 1})
     user_email = user_doc.get("email", "") if user_doc else ""
-    Benutzername = Benutzerdokument.get("Name", "") falls Benutzerdokument sonst ""
+    user_name = user_doc.get("name", "") if user_doc else ""
     
-    # Speichervorhersage mit dem Status "Ausstehend" - erfordert Administratorgenehmigung
+    # Store prediction with PENDING status - requires admin approval
     doc = {
         "id": prediction_id,
-        **Vorhersage,
+        **prediction,
         "user_id": user["user_id"],
         "user_email": user_email,
-        "user_name": Benutzername,
+        "user_name": user_name,
         "parent1_birthday": request_data.parent1_birthday.isoformat(),
         "parent2_birthday": request_data.parent2_birthday.isoformat(),
         "created_at": created_at,
-        "Status": "Ausstehend", # Genehmigung ausstehend
-        "approved_at": Keine,
-        "genehmigt von": Keine
+        "status": "pending",  # PENDING APPROVAL
+        "approved_at": None,
+        "approved_by": None
     }
     await db.predictions.insert_one(doc)
     
-    # Vorhersage als verwendet markieren
+    # Mark prediction as used
     await db.subscriptions.update_one(
         {"subscription_id": subscription["subscription_id"]},
         {"$set": {"prediction_used": True}}
     )
     
-    # Gibt den Status "ausstehend" anstelle der tatsächlichen Vorhersage zurück.
-    zurückkehren {
+    # Return pending status instead of actual prediction
+    return {
         "id": prediction_id,
-        "Status": "ausstehend",
-        „message“: „Sie haben Ihre E-Mail-Nachricht noch einmal gesendet! σας εντός 24 ωρών.“,
-        "message_en": "Ihre Vorhersage wurde erfolgreich übermittelt! Sie erhalten das Ergebnis innerhalb von 24 Stunden per E-Mail."
+        "status": "pending",
+        "message": "Η πρόβλεψή σας υποβλήθηκε επιτυχώς! Θα λάβετε το αποτέλεσμα στο email σας εντός 24 ωρών.",
+        "message_en": "Your prediction has been submitted successfully! You will receive the result in your email within 24 hours.",
         "created_at": created_at
     }
 
 @api_router.get("/my-prediction")
 async def get_my_prediction(user: dict = Depends(get_current_user)):
-    "Genehmigte Vorhersage des Benutzers abrufen, falls vorhanden"
-    # Zuerst prüfen, ob die Vorhersage genehmigt wurde
+    """Get user's approved prediction if exists"""
+    # First check for approved prediction
     prediction = await db.predictions.find_one(
         {"user_id": user["user_id"], "status": "approved"},
         {"_id": 0}
     )
     
-    Vorhersage:
-        Renditeprognose
+    if prediction:
+        return prediction
     
-    # Prüfen, ob eine Vorhersage aussteht
+    # Check if there's a pending prediction
     pending = await db.predictions.find_one(
         {"user_id": user["user_id"], "status": "pending"},
         {"_id": 0, "id": 1, "status": 1, "created_at": 1}
     )
     
-    falls ausstehend:
-        zurückkehren {
+    if pending:
+        return {
             "id": pending.get("id"),
-            "Status": "ausstehend",
-            „message“: „Sie haben die E-Mail-Nachricht noch einmal gesendet σας σύντομα.",
-            "message_en": "Ihre Vorhersage wird verarbeitet. Sie erhalten das Ergebnis in Kürze per E-Mail."
+            "status": "pending",
+            "message": "Η πρόβλεψή σας είναι υπό επεξεργασία. Θα λάβετε το αποτέλεσμα στο email σας σύντομα.",
+            "message_en": "Your prediction is being processed. You will receive the result in your email soon.",
             "created_at": pending.get("created_at")
         }
     
@@ -1976,235 +1977,235 @@ async def get_my_prediction(user: dict = Depends(get_current_user)):
 
 @api_router.get("/my-predictions")
 async def get_my_predictions(user: dict = Depends(get_current_user)):
-    "Alle Vorhersagen für einen Benutzer abrufen (Verlauf) - nur die bestätigten"
+    """Get all predictions for a user (history) - only approved ones"""
     predictions = await db.predictions.find(
         {"user_id": user["user_id"], "status": "approved"},
         {"_id": 0}
     ).sort("created_at", -1).to_list(length=50)
     
-    Renditeprognosen
+    return predictions
 
-# ===================== Genehmigung der Vorhersage durch die Verwaltung =====================
+# ===================== ADMIN PREDICTION APPROVAL =====================
 
 ADMIN_EMAILS = ["owner@getbabywish.com", "getbabywish@protonmail.com", "getbabywish@hotmail.com"]
 
 async def get_admin_user(user: dict = Depends(get_current_user)):
-    """Prüfen, ob der Benutzer Administratorrechte hat"""
+    """Check if user is admin"""
     user_doc = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0, "email": 1})
     if not user_doc or user_doc.get("email") not in ADMIN_EMAILS:
         raise HTTPException(status_code=403, detail="Admin access required")
-    zurückkehrender Benutzer
+    return user
 
 @api_router.get("/admin/pending-predictions")
 async def get_pending_predictions(admin: dict = Depends(get_admin_user)):
-    "Alle ausstehenden Vorhersagen zur Überprüfung durch den Administrator abrufen"
+    """Get all pending predictions for admin review"""
     predictions = await db.predictions.find(
         {"status": "pending"},
         {"_id": 0}
     ).sort("created_at", -1).to_list(length=100)
     
-    Renditeprognosen
+    return predictions
 
 @api_router.get("/admin/all-predictions")
 async def get_all_predictions(admin: dict = Depends(get_admin_user)):
-    "Alle Vorhersagen für die Administratoransicht abrufen"
+    """Get all predictions for admin view"""
     predictions = await db.predictions.find(
         {},
         {"_id": 0}
     ).sort("created_at", -1).to_list(length=500)
     
-    Renditeprognosen
+    return predictions
 
 @api_router.post("/admin/approve-prediction/{prediction_id}")
 async def approve_prediction(prediction_id: str, admin: dict = Depends(get_admin_user)):
-    "Eine ausstehende Vorhersage genehmigen und den Benutzer benachrichtigen"
-    # Finde die Vorhersage
+    """Approve a pending prediction and notify user"""
+    # Find the prediction
     prediction = await db.predictions.find_one(
         {"id": prediction_id},
         {"_id": 0}
     )
     
-    wenn nicht Vorhersage:
-        raise HTTPException(status_code=404, detail="Vorhersage nicht gefunden")
+    if not prediction:
+        raise HTTPException(status_code=404, detail="Prediction not found")
     
     if prediction.get("status") == "approved":
-        raise HTTPException(status_code=400, detail="Vorhersage bereits genehmigt")
+        raise HTTPException(status_code=400, detail="Prediction already approved")
     
-    # Status auf „Genehmigt“ aktualisieren
+    # Update status to approved
     approved_at = datetime.now(timezone.utc).isoformat()
     await db.predictions.update_one(
         {"id": prediction_id},
         {"$set": {
-            "Status": "genehmigt",
+            "status": "approved",
             "approved_at": approved_at,
-            "genehmigt von": admin["Benutzer-ID"]
+            "approved_by": admin["user_id"]
         }}
     )
     
-    # E-Mail-Benachrichtigung an den Benutzer senden
+    # Send email notification to user
     user_email = prediction.get("user_email")
-    Benutzername = prediction.get("Benutzername", "")
-    Geschlecht = prediction.get("Geschlecht", "Unbekannt")
-    vorgeschlagener_Name = Vorhersage.get("vorgeschlagener_Name", "")
+    user_name = prediction.get("user_name", "")
+    gender = prediction.get("gender", "Unknown")
+    suggested_name = prediction.get("suggested_name", "")
     
-    falls Benutzer-E-Mail:
-        versuchen:
-            E-Mail-Betreff = "🎉 Ihre A BabyWish-Vorhersage ist fertig!"
+    if user_email:
+        try:
+            email_subject = "🎉 Your A BabyWish Prediction is Ready!"
             email_html = f"""
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <h1 style="color: #8b5cf6; text-align: center;">🎉 Ihre Vorhersage ist fertig!</h1>
-                <p>Sehr geehrte/r {user_name or 'Parent'},</p>
-                <p>Tolle Neuigkeiten! Die Vorhersage des Babygeschlechts wurde verarbeitet und ist jetzt verfügbar.</p>
+                <h1 style="color: #8b5cf6; text-align: center;">🎉 Your Prediction is Ready!</h1>
+                <p>Dear {user_name or 'Parent'},</p>
+                <p>Great news! Your baby gender prediction has been processed and is now available.</p>
                 
                 <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; text-align: center; margin: 20px 0;">
-                    <h2 style="color: white; margin: 0;">Vorhergesagtes Geschlecht: {gender}</h2>
-                    <p style="color: white; margin: 10px 0;">Vorgeschlagener Name: {suggested_name}</p>
+                    <h2 style="color: white; margin: 0;">Predicted Gender: {gender}</h2>
+                    <p style="color: white; margin: 10px 0;">Suggested Name: {suggested_name}</p>
                 </div>
                 
-                <p>Melden Sie sich in Ihrem Dashboard an, um die vollständige Vorhersage zu sehen, einschließlich:</p>
+                <p>Log in to your dashboard to see the full prediction including:</p>
                 <ul>
-                    <li>Sternzeichen & Persönlichkeit</li>
-                    <li>Glückselemente</li>
-                    Und vieles mehr!
+                    <li>Zodiac Sign & Personality</li>
+                    <li>Lucky Elements</li>
+                    <li>And more!</li>
                 </ul>
                 
                 <p style="text-align: center;">
-                    <a href="https://getbabywish.com/dashboard" style="background: #8b5cf6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; display: inline-block;">Vollständige Vorhersage anzeigen</a>
+                    <a href="https://getbabywish.com/dashboard" style="background: #8b5cf6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; display: inline-block;">View Full Prediction</a>
                 </p>
                 
                 <p style="color: #666; font-size: 12px; margin-top: 30px;">
-                    Vielen Dank, dass Sie sich für A BabyWish entschieden haben!<br>
-                    In Liebe, das A BabyWish Team 💜
+                    Thank you for choosing A BabyWish!<br>
+                    With love, The A BabyWish Team 💜
                 </p>
             </div>
             """
             
             await send_email_resend(user_email, email_subject, email_html)
-        außer Ausnahme als e:
-            print(f"Fehler beim Senden der Genehmigungs-E-Mail: {e}")
+        except Exception as e:
+            print(f"Failed to send approval email: {e}")
     
-    zurückkehren {
-        "Erfolg": Wahr,
-        "Nachricht": f"Vorhersage genehmigt und Benutzer unter {user_email} benachrichtigt",
+    return {
+        "success": True,
+        "message": f"Prediction approved and user notified at {user_email}",
         "prediction_id": prediction_id,
         "approved_at": approved_at
     }
 
 @api_router.post("/admin/reject-prediction/{prediction_id}")
 async def reject_prediction(prediction_id: str, reason: str = "", admin: dict = Depends(get_admin_user)):
-    """Vorhersage ablehnen (Rückerstattungsfall)""
+    """Reject a prediction (refund case)"""
     prediction = await db.predictions.find_one(
         {"id": prediction_id},
         {"_id": 0}
     )
     
-    wenn nicht Vorhersage:
-        raise HTTPException(status_code=404, detail="Vorhersage nicht gefunden")
+    if not prediction:
+        raise HTTPException(status_code=404, detail="Prediction not found")
     
-    # Status auf „Abgelehnt“ aktualisieren
+    # Update status to rejected
     await db.predictions.update_one(
         {"id": prediction_id},
         {"$set": {
-            "Status": "abgelehnt",
+            "status": "rejected",
             "rejected_at": datetime.now(timezone.utc).isoformat(),
             "rejected_by": admin["user_id"],
-            "Ablehnungsgrund": Grund
+            "rejection_reason": reason
         }}
     )
     
-    zurückkehren {
-        "Erfolg": Wahr,
-        "Nachricht": "Vorhersage abgelehnt",
+    return {
+        "success": True,
+        "message": "Prediction rejected",
         "prediction_id": prediction_id
     }
 
-# ===================== PROMO-ANTRÄGE =====================
+# ===================== PROMO APPLICATIONS =====================
 
-Klasse PromoApplicationRequest(BaseModel):
-    E-Mail: str
-    offer_type: str # 'launch50' or 'freepass100'
-    video_links: Liste[str]
+class PromoApplicationRequest(BaseModel):
+    email: str
+    offer_type: str  # 'launch50' or 'freepass100'
+    video_links: List[str]
     review_link: str
-    social_platform: str # 'tiktok', 'facebook', 'instagram'
+    social_platform: str  # 'tiktok', 'facebook', 'instagram'
 
 @api_router.post("/promo/apply")
 async def submit_promo_application(request: PromoApplicationRequest):
-    "Reichen Sie einen Aktionsantrag für 50 % oder 100 % Rabatt ein."
+    """Submit a promo application for 50% or 100% discount"""
     
-    # Angebotstyp prüfen
+    # Validate offer type
     if request.offer_type not in ['launch50', 'freepass100']:
-        raise HTTPException(status_code=400, detail="Ungültiger Angebotstyp")
+        raise HTTPException(status_code=400, detail="Invalid offer type")
     
-    # Videoanzahl überprüfen
+    # Validate video count
     required_videos = 5 if request.offer_type == 'launch50' else 9
     if len(request.video_links) < required_videos:
         raise HTTPException(
-            Statuscode=400
-            detail = f
+            status_code=400, 
+            detail=f"Απαιτούνται τουλάχιστον {required_videos} videos για αυτή την προσφορά"
         )
     
-    # Prüfen, ob bereits ein Antrag mit derselben E-Mail-Adresse vorliegt
-    existierend = await db.promo_applications.find_one({
-        "E-Mail": request.email.lower(),
-        "Status": "Ausstehend"
+    # Check for existing pending application with same email
+    existing = await db.promo_applications.find_one({
+        "email": request.email.lower(),
+        "status": "pending"
     })
     
-    falls vorhanden:
+    if existing:
         raise HTTPException(
-            Statuscode=400
-            detail="Eine E-Mail senden"
+            status_code=400, 
+            detail="Υπάρχει ήδη εκκρεμής αίτηση με αυτό το email"
         )
     
-    # Anwendung erstellen
-    Anwendung = {
+    # Create application
+    application = {
         "id": str(uuid.uuid4()),
-        "E-Mail": request.email.lower(),
+        "email": request.email.lower(),
         "offer_type": request.offer_type,
         "video_links": request.video_links,
         "review_link": request.review_link,
         "social_platform": request.social_platform,
-        "Status": "Ausstehend", # ausstehend, genehmigt, abgelehnt
+        "status": "pending",  # pending, approved, rejected
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "promo_code": Keine Angabe, # Wird nach Genehmigung festgelegt
-        "reviewed_at": Keine Angabe,
-        "reviewed_by": Keine Angabe
+        "promo_code": None,  # Will be set when approved
+        "reviewed_at": None,
+        "reviewed_by": None
     }
     
     await db.promo_applications.insert_one(application)
     
-    # Benachrichtigungs-E-Mail an Administrator senden
-    versuchen:
-        Rabatt = "50%" wenn request.offer_type == 'launch50' sonst "100%"
+    # Send notification email to admin
+    try:
+        discount = "50%" if request.offer_type == 'launch50' else "100%"
         resend.Emails.send({
-            "von": f"Ein BabyWish <{SENDER_EMAIL}>",
+            "from": f"A BabyWish <{SENDER_EMAIL}>",
             "to": [NOTIFICATION_EMAIL],
-            „subject“: f“🎁 Νέα Αίτηση Προσφοράς {Rabatt}“,
+            "subject": f"🎁 Νέα Αίτηση Προσφοράς {discount}",
             "html": f"""
             <h2>Νέα Αίτηση Προσφοράς</h2>
-            <p><strong>E-Mail:</strong> {request.email}</p>
-            <p><strong>Angebot:</strong> {discount} ({request.offer_type})</p>
-            <p><strong>Einstellungen:</strong> {request.social_platform</p>
-            <p><strong>Videolinks:</strong></p>
+            <p><strong>Email:</strong> {request.email}</p>
+            <p><strong>Προσφορά:</strong> {discount} ({request.offer_type})</p>
+            <p><strong>Πλατφόρμα:</strong> {request.social_platform}</p>
+            <p><strong>Video Links:</strong></p>
             <ul>
                 {"".join(f'<li><a href="{link}">{link}</a></li>' for link in request.video_links)}
             </ul>
-            <p><strong>Link zur Bewertung:</strong> <a href="{request.review_link}">{request.review_link}</a></p>
+            <p><strong>Review Link:</strong> <a href="{request.review_link}">{request.review_link}</a></p>
             <hr>
-            <p>Neue Version des Admin-Dashboards.</p>
+            <p>Ελέγξτε την αίτηση στο Admin Dashboard.</p>
             """
         })
-    außer Ausnahme als e:
-        logging.error(f"Fehler beim Senden der Werbebenachrichtigungs-E-Mail: {e}")
+    except Exception as e:
+        logging.error(f"Failed to send promo notification email: {e}")
     
-    zurückkehren {
-        "Erfolg": Wahr,
-        „message“: „Das ist nicht der Fall!“,
+    return {
+        "success": True,
+        "message": "Η αίτησή σας υποβλήθηκε επιτυχώς!",
         "application_id": application["id"]
     }
 
 @api_router.get("/admin/promo-applications")
 async def get_promo_applications(admin: dict = Depends(get_admin_user)):
-    "Alle Werbeanträge zur Überprüfung durch den Administrator abrufen"
+    """Get all promo applications for admin review"""
     applications = await db.promo_applications.find(
         {},
         {"_id": 0}
@@ -2214,487 +2215,487 @@ async def get_promo_applications(admin: dict = Depends(get_admin_user)):
 
 @api_router.post("/admin/promo/approve/{application_id}")
 async def approve_promo_application(
-    application_id: str,
-    Promo-Code: str = "",
+    application_id: str, 
+    promo_code: str = "",
     admin: dict = Depends(get_admin_user)
 ):
-    "Genehmigen Sie einen Aktionsantrag und weisen Sie einen Stripe-Aktionscode zu."
+    """Approve a promo application and assign a Stripe promo code"""
     application = await db.promo_applications.find_one(
         {"id": application_id},
         {"_id": 0}
     )
     
-    falls keine Bewerbung:
-        raise HTTPException(status_code=404, detail="Anwendung nicht gefunden")
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
     
     if application["status"] != "pending":
-        raise HTTPException(status_code=400, detail="Anwendung bereits verarbeitet")
+        raise HTTPException(status_code=400, detail="Application already processed")
     
-    # Anwendung aktualisieren
+    # Update application
     await db.promo_applications.update_one(
         {"id": application_id},
         {"$set": {
-            "Status": "genehmigt",
-            "promo_code": Promo-Code,
+            "status": "approved",
+            "promo_code": promo_code,
             "reviewed_at": datetime.now(timezone.utc).isoformat(),
             "reviewed_by": admin["user_id"]
         }}
     )
     
-    # Bestätigungs-E-Mail an den Benutzer senden
-    versuchen:
-        Rabatt = "50%" wenn application["offer_type"] == 'launch50' sonst "100%"
+    # Send approval email to user
+    try:
+        discount = "50%" if application["offer_type"] == 'launch50' else "100%"
         resend.Emails.send({
-            "von": f"Ein BabyWish <{SENDER_EMAIL}>",
+            "from": f"A BabyWish <{SENDER_EMAIL}>",
             "to": [application["email"]],
-            „Betreff“: f“✅ Η Αίτησή σας Εγκρίθηκε! Κωδικός {Rabatt}“,
+            "subject": f"✅ Η Αίτησή σας Εγκρίθηκε! Κωδικός {discount}",
             "html": f"""
             <h2>🎉 Συγχαρητήρια!</h2>
-            <p>Sie können {discount} sofort kaufen!</p>
-            <p><strong>Die Antwort lautet:</strong></p>
+            <p>Η αίτησή σας για έκπτωση {discount} εγκρίθηκε!</p>
+            <p><strong>Ο κωδικός έκπτωσής σας είναι:</strong></p>
             <div style="background: #f0f0f0; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 2px; margin: 20px 0;">
-                {Aktionscode}
+                {promo_code}
             </div>
-            <p>Sie können Ihr Kind auf <a href="https://getbabywish.com">getbabywish.com</a></p> umstellen
-            <p>Ein BabyWish! 💕</p>
+            <p>Χρησιμοποιήστε τον κατά την αγορά στο <a href="https://getbabywish.com">getbabywish.com</a></p>
+            <p>Ευχαριστούμε που διαδώσατε το A BabyWish! 💕</p>
             """
         })
-    außer Ausnahme als e:
-        logging.error(f"Fehler beim Senden der Genehmigungs-E-Mail für die Werbeaktion: {e}")
+    except Exception as e:
+        logging.error(f"Failed to send promo approval email: {e}")
     
-    zurückkehren {
-        "Erfolg": Wahr,
-        "Nachricht": "Antrag genehmigt",
+    return {
+        "success": True,
+        "message": "Application approved",
         "application_id": application_id
     }
 
 @api_router.post("/admin/promo/reject/{application_id}")
 async def reject_promo_application(
-    application_id: str,
-    Grund: str = "",
+    application_id: str, 
+    reason: str = "",
     admin: dict = Depends(get_admin_user)
 ):
-    """Eine Werbeaktion ablehnen""
+    """Reject a promo application"""
     application = await db.promo_applications.find_one(
         {"id": application_id},
         {"_id": 0}
     )
     
-    falls keine Bewerbung:
-        raise HTTPException(status_code=404, detail="Anwendung nicht gefunden")
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
     
     await db.promo_applications.update_one(
         {"id": application_id},
         {"$set": {
-            "Status": "abgelehnt",
-            "rejection_reason": Grund,
+            "status": "rejected",
+            "rejection_reason": reason,
             "reviewed_at": datetime.now(timezone.utc).isoformat(),
             "reviewed_by": admin["user_id"]
         }}
     )
     
-    zurückkehren {
-        "Erfolg": Wahr,
-        "Nachricht": "Antrag abgelehnt",
+    return {
+        "success": True,
+        "message": "Application rejected",
         "application_id": application_id
     }
 
-# Tägliche Horoskopbotschaften nach Sternzeichen, Element und Stimmung
-HOROSKOP_VORLAGEN = {
-    "Feuer": {
-        "positiv": [
-            „Deine Energie ist heute anziehend. Handle mutig, um deine Träume zu verwirklichen.“
-            „Das Abenteuer ruft! Vertraue deinem Instinkt und nutze neue Möglichkeiten.“
-            „Deine Leidenschaft entfacht alles um dich herum. Führe mit Zuversicht.“
-            „Heute bietet aufregende Möglichkeiten. Dein Mut wird belohnt werden.“
-            „Das Universum unterstützt deine Ambitionen. Verfolge deine Ziele!“
+# Daily horoscope messages by zodiac element and mood
+HOROSCOPE_TEMPLATES = {
+    "Fire": {
+        "positive": [
+            "Your energy is magnetic today. Take bold action on your dreams.",
+            "Adventure calls! Trust your instincts and embrace new opportunities.",
+            "Your passion ignites everything around you. Lead with confidence.",
+            "Today brings exciting possibilities. Your courage will be rewarded.",
+            "The universe supports your ambitions. Go after what you want!",
         ],
         "neutral": [
-            „Halte dein Feuer mit Geduld im Gleichgewicht. Gut Ding will Weile haben.“
-            „Konzentriere deine Energie auf das, was heute wirklich zählt.“
-            „Dein Enthusiasmus ist inspirierend, aber teile dir deine Kräfte weise ein.“
-            „Lenken Sie Ihre Leidenschaft in produktive Tätigkeiten um.“
-            „Nehmen Sie sich Zeit zum Planen, bevor Sie heute handeln.“
+            "Balance your fire with patience. Good things take time.",
+            "Focus your energy on what truly matters today.",
+            "Your enthusiasm is inspiring, but pace yourself wisely.",
+            "Channel your passion into productive pursuits.",
+            "Take time to plan before you act today.",
         ],
-        "herausfordernd": [
-            "Beherrsche dein Temperament und denke nach, bevor du reagierst."
-            „Entschleunige und berücksichtige die Sichtweisen anderer.“
-            „Geduld ist deine heutige Lektion. Atme tief durch.“
-            „Verwandle Frustration in kreative Energie.“
-            „Ruhe dich aus und tanke neue Kraft für deinen feurigen Geist.“
+        "challenging": [
+            "Control your temper and think before reacting.",
+            "Slow down and consider others' perspectives.",
+            "Patience is your lesson today. Breathe deeply.",
+            "Transform frustration into creative energy.",
+            "Rest and recharge your fiery spirit.",
         ]
     },
-    "Erde": {
-        "positiv": [
-            „Ihre harte Arbeit zahlt sich aus. Sie können bald mit Belohnungen rechnen.“
-            „Finanzielle Chancen zeichnen sich ab. Bleiben Sie realistisch.“
-            „Ihre pragmatische Herangehensweise führt zum Erfolg. Vertrauen Sie Ihren Methoden.“
-            „Stabilität und Wachstum gehören Ihnen. Genießen Sie Ihre Erfolge.“
-            "Die Natur schenkt Ihnen heute Frieden und Klarheit."
+    "Earth": {
+        "positive": [
+            "Your hard work is paying off. Expect rewards soon.",
+            "Financial opportunities are on the horizon. Stay grounded.",
+            "Your practical approach wins the day. Trust your methods.",
+            "Stability and growth are yours. Enjoy your accomplishments.",
+            "Nature brings you peace and clarity today.",
         ],
         "neutral": [
-            „Konzentrieren Sie sich heute darauf, ein solides Fundament zu schaffen.“
-            „Kleine Schritte führen zu großen Erfolgen. Mach weiter.“
-            „Erst die praktischen Angelegenheiten regeln, dann groß träumen.“
-            „Ihre Zuverlässigkeit ist Ihre Stärke. Setzen Sie sie weise ein.“
-            „Organisieren und planen Sie für den zukünftigen Erfolg.“
+            "Focus on building solid foundations today.",
+            "Small steps lead to big achievements. Keep going.",
+            "Take care of practical matters before dreaming big.",
+            "Your reliability is your strength. Use it wisely.",
+            "Organize and plan for future success.",
         ],
-        "herausfordernd": [
-            „Flexibilität ist heute gefragt. Passen Sie sich den Veränderungen an.“
-            „Legt eure Sturheit ab und seid offen für neue Ideen.“
-            „Materielle Sorgen können Sie belasten. Finden Sie die Balance.“
-            Lass dich von Sorgen nicht aufhalten.
-            „Manchmal ist der beste Weg nicht der sicherste.“
+        "challenging": [
+            "Flexibility is needed today. Adapt to changes.",
+            "Let go of stubbornness and embrace new ideas.",
+            "Material concerns may weigh on you. Find balance.",
+            "Don't let worry stop your progress.",
+            "Sometimes the best path isn't the safest one.",
         ]
     },
-    "Luft": {
-        "positiv": [
-            „Heute sprudeln die brillanten Ideen nur so aus dir heraus. Teile sie mit uns!“
-            „Kommunikation schafft wunderbare Verbindungen.“
-            „Deine intellektuellen Gaben leuchten. Drück dich frei aus.“
-            „Soziale Kontakte bieten sich in Hülle und Fülle. Knüpfen Sie Kontakte und vernetzen Sie sich.“
-            „Deine Neugier führt zu spannenden Entdeckungen.“
+    "Air": {
+        "positive": [
+            "Brilliant ideas flow through you today. Share them!",
+            "Communication brings wonderful connections.",
+            "Your intellectual gifts shine. Express yourself freely.",
+            "Social opportunities abound. Network and connect.",
+            "Your curiosity leads to exciting discoveries.",
         ],
         "neutral": [
-            „Verarbeite deine Gedanken, bevor du sie teilst.“
-            „Geistige Aktivität mit Erdungspraktiken in Einklang bringen.“
-            „Höre heute genauso gut zu, wie du sprichst.“
-            „Ideen brauchen Taten, um Wirklichkeit zu werden.“
-            „Konzentriere deine zerstreuten Gedanken auf das Wesentliche.“
+            "Process your thoughts before sharing them.",
+            "Balance mental activity with grounding practices.",
+            "Listen as much as you speak today.",
+            "Ideas need action to become reality.",
+            "Focus your scattered thoughts on priorities.",
         ],
-        "herausfordernd": [
-            „Zu viel Nachdenken schafft Hindernisse. Vertraue deinem Bauchgefühl.“
-            „Erde dich, wenn du dich zerstreut fühlst.“
-            „Nicht jede Idee muss weiterverfolgt werden.“
-            „Entscheide dich für einen Weg anstatt für viele.“
-            „Gönnen Sie Ihrem unruhigen Geist Ruhe durch Meditation.“
+        "challenging": [
+            "Overthinking creates obstacles. Trust your gut.",
+            "Ground yourself if you feel scattered.",
+            "Not every idea needs to be pursued.",
+            "Commit to one path instead of many.",
+            "Rest your busy mind with meditation.",
         ]
     },
-    "Wasser": {
-        "positiv": [
-            „Deine Intuition ist heute besonders stark. Vertraue ihr.“
-            „Tiefe emotionale Bindungen bringen Freude und Heilung.“
-            „Kreative Inspiration fließt im Überfluss. Erschaffe!“
-            „Dein Mitgefühl berührt Herzen und heilt Wunden.“
-            „Träume enthalten wichtige Botschaften. Achte darauf.“
+    "Water": {
+        "positive": [
+            "Your intuition is especially strong today. Trust it.",
+            "Deep emotional connections bring joy and healing.",
+            "Creative inspiration flows abundantly. Create!",
+            "Your compassion touches hearts and heals wounds.",
+            "Dreams hold important messages. Pay attention.",
         ],
         "neutral": [
-            „Achte auf deine Gefühle, ohne dich von ihnen beherrschen zu lassen.“
-            „Setzen Sie gesunde Grenzen und bleiben Sie dabei fürsorglich.“
-            „Das richtige Verhältnis zwischen Geben und Selbstfürsorge finden.“
-            „Deine Sensibilität ist eine Gabe. Nutze sie weise.“
-            „Reflektiere deine emotionalen Muster.“
+            "Honor your feelings without being ruled by them.",
+            "Set healthy boundaries while remaining caring.",
+            "Balance giving to others with self-care.",
+            "Your sensitivity is a gift. Use it wisely.",
+            "Reflect on your emotional patterns.",
         ],
-        "herausfordernd": [
-            „Nimm die Gefühle anderer nicht als deine eigenen auf.“
-            "Schütze deine Energie vor Negativität."
-            „Stelle dich schwierigen Gefühlen, anstatt ihnen zu entfliehen.“
-            „Stimmungsschwankungen können dich herausfordern. Finde deine Mitte.“
-            „Nicht alles erfordert eine emotionale Reaktion.“
+        "challenging": [
+            "Don't absorb others' emotions as your own.",
+            "Protect your energy from negativity.",
+            "Face difficult feelings instead of escaping them.",
+            "Moodiness may challenge you. Find your center.",
+            "Not everything needs an emotional response.",
         ]
     }
 }
 
-# Glücksaktivitäten nach Sternzeichen
-GLÜCKSAKTIVITÄTEN = {
-    "Widder": ["Sport", "Neue Projekte starten", "Führungsrollen"],
-    "Stier": ["Gartenarbeit", "Kochen", "Finanzplanung"],
-    "Gemini": ["Schreiben", "Soziale Kontakte pflegen", "etwas Neues lernen"],
-    "Krebs": ["Aktivitäten zu Hause", "Familienzeit", "Kochen"],
-    "Leo": ["kreative Künste", "darstellende Künste", "Führung"],
-    "Jungfrau": ["organisieren", "Gesundheitsroutinen", "detaillierte Arbeit"],
-    "Waage": ["Kunstverständnis", "Partnerschaften", "Dekoration"],
-    "Scorpio": ["Forschung", "tiefgründige Gespräche", "Transformation"],
-    "Schütze": ["Reisen", "Studium", "Abenteuer in der Natur"],
-    "Steinbock": ["Karriereplanung", "Zielsetzung", "Klettern"],
-    "Aquarius": ["Technologie", "Gruppenaktivitäten", "Innovationen"],
-    "Fische": ["Meditation", "künstlerische Tätigkeiten", "anderen helfen"]
+# Lucky activities by zodiac
+LUCKY_ACTIVITIES = {
+    "Aries": ["sports", "starting new projects", "leadership roles"],
+    "Taurus": ["gardening", "cooking", "financial planning"],
+    "Gemini": ["writing", "socializing", "learning something new"],
+    "Cancer": ["home activities", "family time", "cooking"],
+    "Leo": ["creative arts", "performing", "leading others"],
+    "Virgo": ["organizing", "health routines", "detailed work"],
+    "Libra": ["art appreciation", "partnerships", "decorating"],
+    "Scorpio": ["research", "deep conversations", "transformation"],
+    "Sagittarius": ["travel", "studying", "outdoor adventures"],
+    "Capricorn": ["career planning", "setting goals", "climbing"],
+    "Aquarius": ["technology", "group activities", "innovations"],
+    "Pisces": ["meditation", "artistic pursuits", "helping others"],
 }
 
 def get_daily_horoscope(zodiac_name: str, target_date: date = None) -> dict:
-    "Erstelle ein tägliches Horoskop für dein Sternzeichen"
-    falls target_date None ist:
+    """Generate daily horoscope for a zodiac sign"""
+    if target_date is None:
         target_date = datetime.now(timezone.utc).date()
     
-    # Deterministischen Startwert aus Datum und Tierkreiszeichen erstellen
+    # Create deterministic seed from date and zodiac
     seed = int(target_date.toordinal() * hash(zodiac_name) % 10000)
     random.seed(seed)
     
-    # Sternzeichendaten abrufen
+    # Get zodiac data
     zodiac_data = next((z for z in ZODIAC_SIGNS if z["name"] == zodiac_name), ZODIAC_SIGNS[0])
     element = zodiac_data["element"]
-    Profil = ZODIAC_PROFILES.get(zodiac_name, {})
+    profile = ZODIAC_PROFILES.get(zodiac_name, {})
     
-    # Stimmung anhand der Datumsnumerologie bestimmen
+    # Determine mood based on date numerology
     day_num = sum(int(d) for d in str(target_date.day))
-    solange Tag_Nummer > 9:
+    while day_num > 9:
         day_num = sum(int(d) for d in str(day_num))
     
     if day_num in [1, 3, 5, 9]:
-        Stimmung = "positiv"
+        mood = "positive"
     elif day_num in [2, 6, 8]:
-        Stimmung = "neutral"
-    anders:
-        Stimmung = "herausfordernd"
+        mood = "neutral"
+    else:
+        mood = "challenging"
     
-    # Horoskopnachricht erhalten
+    # Get horoscope message
     templates = HOROSCOPE_TEMPLATES[element][mood]
-    Nachricht = zufällige Auswahl(Vorlagen)
+    message = random.choice(templates)
     
-    # Erhalte Glücksgegenstände für den Tag
-    Glückszahl = Zufallszahl.Zufallszahl(1, 99)
-    Farben = profile.get("lucky_colors", ["Gold"])
+    # Get lucky items for the day
+    lucky_number = random.randint(1, 99)
+    colors = profile.get("lucky_colors", ["Gold"])
     lucky_color = random.choice(colors)
-    Aktivitäten = GLÜCKSAKTIVITÄTEN.get(zodiac_name, ["Ruhe und Reflexion"])
+    activities = LUCKY_ACTIVITIES.get(zodiac_name, ["rest and reflection"])
     lucky_activity = random.choice(activities)
     
-    # Kompatibilität für den Tag berechnen
+    # Calculate compatibility for the day
     compatible_signs = profile.get("best_match", ["Leo", "Sagittarius"])
     
-    # Liebe, Karriere, Gesundheit (1-5 Sterne)
+    # Love, career, health scores (1-5 stars)
     love_score = random.randint(2, 5)
-    Karriere-Score = random.randint(2, 5)
+    career_score = random.randint(2, 5)
     health_score = random.randint(2, 5)
     
-    # Gesamtpunktzahl
-    Gesamtscore = round((Liebesscore + Karrierescore + Gesundheitsscore) / 3, 1)
+    # Overall score
+    overall_score = round((love_score + career_score + health_score) / 3, 1)
     
-    zurückkehren {
-        "Sternzeichen": Sternzeichenname,
+    return {
+        "zodiac": zodiac_name,
         "symbol": zodiac_data["symbol"],
-        "Element": Element,
-        "Datum": target_date.isoformat(),
-        "Stimmung": Stimmung,
-        "Nachricht": Nachricht,
+        "element": element,
+        "date": target_date.isoformat(),
+        "mood": mood,
+        "message": message,
         "lucky_number": lucky_number,
         "lucky_color": lucky_color,
         "lucky_activity": lucky_activity,
         "compatible_signs": compatible_signs[:2],
-        "Scores": {
-            "Liebe": Liebespunktzahl,
-            "Karriere": Karriere-Score,
-            "Gesundheit": Gesundheitsscore,
-            "Gesamt": Gesamtpunktzahl
+        "scores": {
+            "love": love_score,
+            "career": career_score,
+            "health": health_score,
+            "overall": overall_score
         }
     }
 
 @api_router.get("/horoscope/daily/{zodiac}")
 async def get_zodiac_daily_horoscope(zodiac: str):
-    "Erhalten Sie Ihr tägliches Horoskop für Ihr Sternzeichen"
+    """Get daily horoscope for a specific zodiac sign"""
     zodiac_name = zodiac.capitalize()
-    gültige_zeichen = [z["name"] für z in ZODIAC_SIGNS]
+    valid_signs = [z["name"] for z in ZODIAC_SIGNS]
     
-    Falls der Sternzeichenname nicht in gültigen Sternzeichen enthalten ist:
-        raise HTTPException(status_code=400, detail=f"Ungültiges Sternzeichen. Muss eines der folgenden sein: {valid_signs}")
+    if zodiac_name not in valid_signs:
+        raise HTTPException(status_code=400, detail=f"Invalid zodiac sign. Must be one of: {valid_signs}")
     
-    Horoskop = get_daily_horoscope(zodiac_name)
-    Rückkehrhoroskop
+    horoscope = get_daily_horoscope(zodiac_name)
+    return horoscope
 
 @api_router.get("/horoscope/all")
 async def get_all_daily_horoscopes():
-    "Erhalten Sie täglich Horoskope für alle Sternzeichen"
-    Horoskope = []
-    Für die Anmeldung bei ZODIAC_SIGNS:
-        Horoskop = get_daily_horoscope(sign["name"])
+    """Get daily horoscopes for all zodiac signs"""
+    horoscopes = []
+    for sign in ZODIAC_SIGNS:
+        horoscope = get_daily_horoscope(sign["name"])
         horoscopes.append(horoscope)
-    Horoskope zurück
+    return horoscopes
 
 # ===================== ADMIN - LEAD DASHBOARD =====================
 
-EIGENTÜMER-E-MAIL = "owner@getbabywish.com"
+OWNER_EMAIL = "owner@getbabywish.com"
 
 @api_router.get("/admin/lead-stats")
 async def get_lead_stats():
-    "Lead-Statistiken für das Dashboard abrufen"
-    # Alle Leads abrufen
+    """Get lead statistics for the dashboard"""
+    # Get all leads
     leads = await db.leads.find({}).to_list(1000)
     total_leads = len(leads)
     
-    # Alle Benutzer/Abonnements abrufen, um die Konversionen zu prüfen
+    # Get all users/subscriptions to check conversions
     subscriptions = await db.subscriptions.find({"status": "active"}).to_list(1000)
     subscriber_emails = set()
-    für Unterabonnements:
+    for sub in subscriptions:
         user = await db.users.find_one({"user_id": sub["user_id"]})
-        wenn Benutzer:
+        if user:
             subscriber_emails.add(user.get("email", "").lower())
     
-    # Anzahl der Konversionen
-    umgerechnet = 0
-    by_source = {"Namen": 0, "Sternzeichen": 0, "Glück": 0, "Sonstige": 0}
+    # Count conversions
+    converted = 0
+    by_source = {"names": 0, "zodiac": 0, "lucky": 0, "other": 0}
     
-    für Leads:
+    for lead in leads:
         email = lead.get("email", "").lower()
-        Wenn die E-Mail-Adresse in subscriber_emails enthalten ist:
-            umgerechnet += 1
+        if email in subscriber_emails:
+            converted += 1
             lead["converted"] = True
-        anders:
+        else:
             lead["converted"] = False
         
-        # Nach Quelle kategorisieren
+        # Categorize by source
         source = (lead.get("feature_interest", "") + " " + lead.get("source", "")).lower()
-        wenn „Name“ in der Quelle oder „όνομα“ in der Quelle:
+        if "name" in source or "όνομα" in source:
             by_source["names"] += 1
         elif "zodiac" in source or "ζώδι" in source:
             by_source["zodiac"] += 1
         elif "lucky" in source or "τυχερ" in source:
             by_source["lucky"] += 1
-        anders:
+        else:
             by_source["other"] += 1
     
-    # Umrechnungskurs berechnen
-    Konversionsrate = round((konvertiert / Gesamtzahl_Leads * 100), 1) wenn Gesamtzahl_Leads > 0 sonst 0
+    # Calculate conversion rate
+    conversion_rate = round((converted / total_leads * 100), 1) if total_leads > 0 else 0
     
-    # Umrechnungen dieser Woche (vereinfacht)
+    # This week conversions (simplified)
     from datetime import timedelta
     week_ago = datetime.now(timezone.utc) - timedelta(days=7)
-    converted_this_week = sum(1 for lead in leads if lead.get("converted") and
-                              lead.get("created_at") und
+    converted_this_week = sum(1 for lead in leads if lead.get("converted") and 
+                              lead.get("created_at") and 
                               (isinstance(lead["created_at"], datetime) and lead["created_at"] > week_ago))
     
-    zurückkehren {
+    return {
         "total_leads": total_leads,
-        "konvertiert": konvertiert,
-        "ausstehend": Gesamtleads - konvertiert,
-        "Konversionsrate": Konversionsrate,
+        "converted": converted,
+        "pending": total_leads - converted,
+        "conversion_rate": conversion_rate,
         "converted_this_week": converted_this_week,
         "by_source": by_source
     }
 
 @api_router.get("/admin/leads")
 async def get_all_leads():
-    "Alle Leads für die Dashboard-Tabelle abrufen"
+    """Get all leads for the dashboard table"""
     leads = await db.leads.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
     
-    # Abonnenten-E-Mails für den Konversionsstatus abrufen
+    # Get subscriber emails for conversion status
     subscriptions = await db.subscriptions.find({"status": "active"}).to_list(1000)
     subscriber_emails = set()
-    für Unterabonnements:
+    for sub in subscriptions:
         user = await db.users.find_one({"user_id": sub["user_id"]})
-        wenn Benutzer:
+        if user:
             subscriber_emails.add(user.get("email", "").lower())
     
-    # Mark konvertierte Leads
-    für Leads:
+    # Mark converted leads
+    for lead in leads:
         lead["converted"] = lead.get("email", "").lower() in subscriber_emails
-        # Konvertiere Datum/Uhrzeit bei Bedarf in einen String.
+        # Convert datetime to string if needed
         if isinstance(lead.get("created_at"), datetime):
             lead["created_at"] = lead["created_at"].isoformat()
     
     return {"leads": leads, "total": len(leads)}
 
 
-# ===================== ANALYSE-DASHBOARD =====================
+# ===================== ANALYTICS DASHBOARD =====================
 
 @api_router.get("/admin/analytics")
 async def get_analytics_dashboard():
-    "Erhalten Sie umfassende Analysen für das Admin-Dashboard"
-    jetzt = datetime.now(timezone.utc)
-    heute = jetzt.ersetzen(Stunde=0, Minute=0, Sekunde=0, Mikrosekunde=0)
-    Woche_vorher = heute - Zeitdifferenz(Tage=7)
-    Monat_vorher = heute - Zeitdifferenz(Tage=30)
+    """Get comprehensive analytics for the admin dashboard"""
+    now = datetime.now(timezone.utc)
+    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_ago = today - timedelta(days=7)
+    month_ago = today - timedelta(days=30)
     
-    # === BENUTZERSTATISTIKEN ===
+    # === USERS STATS ===
     total_users = await db.users.count_documents({})
     users_today = await db.users.count_documents({"created_at": {"$gte": today}})
     users_this_week = await db.users.count_documents({"created_at": {"$gte": week_ago}})
     users_this_month = await db.users.count_documents({"created_at": {"$gte": month_ago}})
     
-    # === ABONNEMENTSTATISTIKEN ===
+    # === SUBSCRIPTIONS STATS ===
     active_subscriptions = await db.subscriptions.count_documents({"status": "active"})
     total_subscriptions = await db.subscriptions.count_documents({})
     
-    # === ZAHLUNGSSTATISTIKEN ===
+    # === PAYMENTS STATS ===
     payments = await db.payment_transactions.find({"payment_status": "paid"}).to_list(10000)
-    Gesamterlös = Summe(p.get("Betrag", 0) für p in Zahlungen)
+    total_revenue = sum(p.get("amount", 0) for p in payments)
     
-    # Zahlungen pro Paket
-    Umsatz nach Paket = {"3_Monate": 0, "9_Monate": 0, "18_Monate": 0}
+    # Payments by package
+    revenue_by_package = {"3_months": 0, "9_months": 0, "18_months": 0}
     payments_by_package = {"3_months": 0, "9_months": 0, "18_months": 0}
     
-    für p in Zahlungen:
+    for p in payments:
         pkg_id = p.get("package_id", "")
         amount = p.get("amount", 0)
         if pkg_id in revenue_by_package:
-            Umsatz_nach_Paket[Paket-ID] += Betrag
+            revenue_by_package[pkg_id] += amount
             payments_by_package[pkg_id] += 1
     
-    # Aktuelle Zahlungen (letzte 30 Tage)
+    # Recent payments (last 30 days)
     recent_payments = await db.payment_transactions.find({
-        "payment_status": "bezahlt",
+        "payment_status": "paid",
         "created_at": {"$gte": month_ago}
     }, {"_id": 0}).sort("created_at", -1).to_list(100)
     
     revenue_this_month = sum(p.get("amount", 0) for p in recent_payments)
     
-    # Wöchentliche Umsatzaufschlüsselung (letzte 7 Tage)
-    tägliche_Einnahmen = []
+    # Weekly revenue breakdown (last 7 days)
+    daily_revenue = []
     for i in range(7):
-        Tagesstart = heute - Zeitdifferenz(Tage=i)
-        Tagesende = Tagesstart + Zeitdifferenz(Tage=1)
+        day_start = today - timedelta(days=i)
+        day_end = day_start + timedelta(days=1)
         day_payments = await db.payment_transactions.find({
-            "payment_status": "bezahlt",
-            "created_at": {"$gte": Tagesstart, "$lt": Tagesende}
+            "payment_status": "paid",
+            "created_at": {"$gte": day_start, "$lt": day_end}
         }).to_list(100)
         daily_revenue.append({
-            "Datum": day_start.strftime("%Y-%m-%d"),
-            "Tag": day_start.strftime("%a"),
-            "Einnahmen": sum(p.get("Betrag", 0) for p in day_payments),
+            "date": day_start.strftime("%Y-%m-%d"),
+            "day": day_start.strftime("%a"),
+            "revenue": sum(p.get("amount", 0) for p in day_payments),
             "count": len(day_payments)
         })
     daily_revenue.reverse()
     
-    # === VORHERSAGESTATISTIKEN ===
+    # === PREDICTIONS STATS ===
     total_predictions = await db.predictions.count_documents({})
     predictions_today = await db.predictions.count_documents({"created_at": {"$gte": today}})
     
-    # Geschlechterverteilung
-    male_predictions = await db.predictions.count_documents({"gender": {"$in": ["boy", "Boy", "male", "Male", "Aγόρι"]}})
+    # Gender distribution
+    male_predictions = await db.predictions.count_documents({"gender": {"$in": ["boy", "Boy", "male", "Male", "Αγόρι"]}})
     female_predictions = await db.predictions.count_documents({"gender": {"$in": ["girl", "Girl", "female", "Female", "Κορίτσι"]}})
     
-    # === LEADS-STATISTIKEN ===
+    # === LEADS STATS ===
     total_leads = await db.leads.count_documents({})
     leads_this_week = await db.leads.count_documents({"created_at": {"$gte": week_ago}})
     
-    # === AKTUELLE AKTIVITÄTEN ===
+    # === RECENT ACTIVITY ===
     recent_users = await db.users.find({}, {"_id": 0, "password_hash": 0}).sort("created_at", -1).to_list(5)
-    für Benutzer in recent_users:
+    for user in recent_users:
         if isinstance(user.get("created_at"), datetime):
             user["created_at"] = user["created_at"].isoformat()
     
-    # Formatieren Sie die letzten Zahlungen für die Anzeige
-    für p in recent_payments[:10]:
+    # Format recent payments for display
+    for p in recent_payments[:10]:
         if isinstance(p.get("created_at"), datetime):
             p["created_at"] = p["created_at"].isoformat()
     
-    zurückkehren {
-        "Benutzer": {
+    return {
+        "users": {
             "total": total_users,
-            "heute": Benutzer_heute,
+            "today": users_today,
             "this_week": users_this_week,
             "this_month": users_this_month
         },
-        "Abonnements": {
-            "aktiv": aktive_Abonnements,
-            "total": Gesamtabonnements,
-            "Konversionsrate": round((aktive_Abonnements / Gesamtzahl_Nutzer * 100), 1) wenn Gesamtzahl_Nutzer > 0 sonst 0
+        "subscriptions": {
+            "active": active_subscriptions,
+            "total": total_subscriptions,
+            "conversion_rate": round((active_subscriptions / total_users * 100), 1) if total_users > 0 else 0
         },
-        "Einnahmen": {
+        "revenue": {
             "total": round(total_revenue, 2),
             "this_month": round(revenue_this_month, 2),
             "by_package": {k: round(v, 2) for k, v in revenue_by_package.items()},
-            "täglich": Tagesumsatz
+            "daily": daily_revenue
         },
-        "Zahlungen": {
+        "payments": {
             "total_count": len(payments),
             "by_package": payments_by_package,
             "recent": recent_payments[:10]
         },
-        "Vorhersagen": {
+        "predictions": {
             "total": total_predictions,
-            "heute": Vorhersagen_heute,
-            "Geschlechterverteilung": {
-                "männlich": männliche_Vorhersagen,
-                "weiblich": weibliche_Vorhersagen
+            "today": predictions_today,
+            "gender_distribution": {
+                "male": male_predictions,
+                "female": female_predictions
             }
         },
         "leads": {
@@ -2706,53 +2707,53 @@ async def get_analytics_dashboard():
 
 
 
-# ===================== KUNDENSTIMMEN =====================
+# ===================== TESTIMONIALS =====================
 
 class TestimonialRequest(BaseModel):
-    Bewertung: int = Feld(..., ge=1, le=5)
+    rating: int = Field(..., ge=1, le=5)
     text: Optional[str] = None
-    prediction_correct: Optional[str] = None # 'richtig', 'falsch', 'ja', 'nein'
+    prediction_correct: Optional[str] = None  # 'correct', 'wrong', 'yes', 'no'
     predicted_gender: Optional[str] = None
 
-# Rückerstattungsanforderungsmodell und Endpunkt
+# Refund Request Model and Endpoint
 class RefundRequest(BaseModel):
-    E-Mail: str
-    Grund: str
+    email: str
+    reason: str
 
 @api_router.post("/refund-request")
 async def submit_refund_request(request: RefundRequest):
-    "Returnantrag einreichen"
-    Rückerstattung = {
+    """Submit a refund request"""
+    refund = {
         "refund_id": f"refund_{uuid.uuid4().hex[:12]}",
-        "E-Mail": request.email,
-        "Grund": Anfrage.Grund,
-        "Status": "Ausstehend", # ausstehend, genehmigt, abgelehnt
+        "email": request.email,
+        "reason": request.reason,
+        "status": "pending",  # pending, approved, rejected
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
-    # In Datenbank speichern
+    # Save to database
     await db.refund_requests.insert_one(refund)
     
-    # Benachrichtigungs-E-Mail an Administrator senden
-    versuchen:
+    # Send notification email to admin
+    try:
         html_content = f"""
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: linear-gradient(135deg, #ef4444 0%, #f97316 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
-                <h1 style="color: white; margin: 0;">💰 Neue Rückerstattungsanfrage</h1>
+                <h1 style="color: white; margin: 0;">💰 New Refund Request</h1>
             </div>
             
             <div style="background: #f9f9f9; padding: 30px; border: 1px solid #ddd;">
-                <p><strong>E-Mail:</strong> {request.email}</p>
-                <p><strong>Grund:</strong></p>
+                <p><strong>Email:</strong> {request.email}</p>
+                <p><strong>Reason:</strong></p>
                 <p style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #ef4444;">
                     {request.reason}
                 </p>
-                <p><strong>Rückerstattungs-ID:</strong> {refund['refund_id']}</p>
-                <p><strong>Datum:</strong> {refund['created_at']}</p>
+                <p><strong>Refund ID:</strong> {refund['refund_id']}</p>
+                <p><strong>Date:</strong> {refund['created_at']}</p>
             </div>
             
             <div style="text-align: center; padding: 20px; color: #666; font-size: 12px;">
-                Bitte prüfen Sie diese Anfrage und antworten Sie innerhalb von 48 Stunden.
+                Please review this request and respond within 48 hours.
             </div>
         </div>
         """
@@ -2763,59 +2764,59 @@ async def submit_refund_request(request: RefundRequest):
         resend.api_key = os.environ.get('RESEND_API_KEY')
         if resend.api_key:
             resend.Emails.send({
-                "von": sender_email,
-                "an": admin_email,
-                "Betreff": f"💰 Rückerstattungsantrag von {request.email}",
+                "from": sender_email,
+                "to": admin_email,
+                "subject": f"💰 Refund Request from {request.email}",
                 "html": html_content
             })
-    außer Ausnahme als e:
-        logger.error(f"Fehler beim Senden der Rückerstattungsbenachrichtigungs-E-Mail: {e}")
+    except Exception as e:
+        logger.error(f"Failed to send refund notification email: {e}")
     
-    return {"success": True, "refund_id": refund['refund_id'], "message": "Rückerstattungsanfrage erfolgreich übermittelt"}
+    return {"success": True, "refund_id": refund['refund_id'], "message": "Refund request submitted successfully"}
 
 
 
 @api_router.post("/testimonial")
 async def submit_testimonial(request: TestimonialRequest, user: dict = Depends(get_current_user)):
-    "Reichen Sie eine Kundenmeinung/Rezension ein"
-    Testimonial = {
+    """Submit a testimonial/review"""
+    testimonial = {
         "testimonial_id": f"test_{uuid.uuid4().hex[:12]}",
         "user_id": user["user_id"],
         "user_name": user.get("name", "Anonymous"),
-        "Bewertung": Anfrage.Bewertung,
+        "rating": request.rating,
         "text": request.text,
         "prediction_correct": request.prediction_correct,
         "predicted_gender": request.predicted_gender,
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "genehmigt": Falsch # Der Administrator muss dies genehmigen, bevor es öffentlich angezeigt wird
+        "approved": False  # Admin needs to approve before showing publicly
     }
     
     await db.testimonials.insert_one(testimonial)
     
-    # Benachrichtigungs-E-Mail senden
-    versuchen:
-        correct_text = "✅ Richtig!" if request.prediction_correct == 'correct' else "❌ Falsch" if request.prediction_correct == 'wrong' else "⏳ Noch nicht geboren"
+    # Send notification email
+    try:
+        correct_text = "✅ Correct!" if request.prediction_correct == 'correct' else "❌ Wrong" if request.prediction_correct == 'wrong' else "⏳ Not born yet"
         
         html_content = f"""
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
-                <h1 style="color: white; margin: 0;">⭐ Neue Kundenmeinung!</h1>
+                <h1 style="color: white; margin: 0;">⭐ New Testimonial!</h1>
             </div>
             
             <div style="background: #f9f9f9; padding: 30px; border: 1px solid #ddd;">
-                <h2 style="color: #333; margin-top: 0;">Bewertung: {"⭐" * request.rating}</h2>
+                <h2 style="color: #333; margin-top: 0;">Rating: {"⭐" * request.rating}</h2>
                 
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold;">Benutzer:</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold;">User:</td>
                         <td style="padding: 10px; border-bottom: 1px solid #eee;">{user.get("name", "Anonymous")}</td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold;">Vorhersageergebnis:</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold;">Prediction Result:</td>
                         <td style="padding: 10px; border-bottom: 1px solid #eee;">{correct_text}</td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold;">Nachricht:</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold;">Message:</td>
                         <td style="padding: 10px; border-bottom: 1px solid #eee;">{request.text or "No message"}</td>
                     </tr>
                 </table>
@@ -2824,213 +2825,213 @@ async def submit_testimonial(request: TestimonialRequest, user: dict = Depends(g
         """
         
         params = {
-            "von": SENDER_EMAIL,
+            "from": SENDER_EMAIL,
             "to": [NOTIFICATION_EMAIL],
-            "subject": f"⭐ Neue Bewertung: {'⭐' * request.rating} - {correct_text}",
+            "subject": f"⭐ New Testimonial: {'⭐' * request.rating} - {correct_text}",
             "html": html_content
         }
         
         await asyncio.to_thread(resend.Emails.send, params)
-    außer Ausnahme als e:
-        logging.error(f"Fehler beim Senden der Testimonial-Benachrichtigung: {e}")
+    except Exception as e:
+        logging.error(f"Failed to send testimonial notification: {e}")
     
-    return {"success": True, "message": "Vielen Dank für Ihr Feedback!"}
+    return {"success": True, "message": "Thank you for your feedback!"}
 
 @api_router.get("/testimonials")
 async def get_approved_testimonials():
-    "Genehmigte Kundenstimmen zur Anzeige einholen"
-    Testimonials = await db.testimonials.find(
-        {"genehmigt": Wahr},
+    """Get approved testimonials for display"""
+    testimonials = await db.testimonials.find(
+        {"approved": True},
         {"_id": 0, "user_id": 0}
     ).sort("created_at", -1).limit(20).to_list(length=20)
     
-    Kundenmeinungen zurück
+    return testimonials
 
-# ===================== INTERAKTIVES QUIZ - KI-PERSÖNLICHKEITSVORHERSAGE =====================
+# ===================== INTERACTIVE QUIZ - AI PERSONALITY PREDICTION =====================
 
 class QuizRequest(BaseModel):
-    Muttergeburtstag: str
-    Vatertagsgeburtstag: str
-    expectedBirthMonth: Optional[str] = None # Monat, in dem das Baby erwartet wird (1-12)
+    motherBirthday: str
+    fatherBirthday: str
+    expectedBirthMonth: Optional[str] = None  # Month baby is expected (1-12)
     expectedBirthYear: Optional[int] = None
-    bevorzugtes Geschlecht: str
+    preferredGender: str
     nameStyle: str
-    futureDream: Optional[str] = None # Was sich die Eltern für die Zukunft ihres Kindes wünschen
-    Ästhetik: str
-    babyZodiac: Optional[str] = None # Berechnet aus expectedBirthMonth
-    Persönlichkeit: Optional[List[str]] = [] # Legacy-Feld
-    Lieblings-Sternzeichen: Optional[str] = Keine # Legacy-Feld
-    Sprache: str = "en"
+    futureDream: Optional[str] = None  # What parents dream their child will become
+    aesthetic: str
+    babyZodiac: Optional[str] = None  # Calculated from expectedBirthMonth
+    personality: Optional[List[str]] = []  # Legacy field
+    favoriteZodiac: Optional[str] = None  # Legacy field
+    language: str = "en"
 
-# Tierkreiszeichen und Daten
+# Zodiac symbols and data
 ZODIAC_DATA = {
     'aries': {'symbol': '♈', 'element': 'fire', 'traits': ['dynamic', 'confident', 'passionate']},
-    'taurus': {'symbol': '♉', 'element': 'earth', 'traits': ['reliable', 'geduld', 'devoted']},
+    'taurus': {'symbol': '♉', 'element': 'earth', 'traits': ['reliable', 'patient', 'devoted']},
     'gemini': {'symbol': '♊', 'element': 'air', 'traits': ['curious', 'adaptable', 'witty']},
-    'Krebs': {'Symbol': '♋', 'Element': 'Wasser', 'Eigenschaften': ['fürsorglich', 'intuitiv', 'emotional']},
-    'leo': {'symbol': '♌', 'element': 'fire', 'traits': ['creative', 'generous', 'warmhearted']},
-    'virgo': {'symbol': '♍', 'element': 'earth', 'traits': ['analytical', 'practical', 'ticulous']},
+    'cancer': {'symbol': '♋', 'element': 'water', 'traits': ['nurturing', 'intuitive', 'emotional']},
+    'leo': {'symbol': '♌', 'element': 'fire', 'traits': ['creative', 'generous', 'warm-hearted']},
+    'virgo': {'symbol': '♍', 'element': 'earth', 'traits': ['analytical', 'practical', 'meticulous']},
     'libra': {'symbol': '♎', 'element': 'air', 'traits': ['diplomatic', 'harmonious', 'fair']},
-    'Skorpion': {'Symbol': '♏', 'Element': 'Wasser', 'Eigenschaften': ['leidenschaftlich', 'geheimnisvoll', 'entschlossen']},
-    'Schütze': {'Symbol': '♐', 'Element': 'Feuer', 'Eigenschaften': ['abenteuerlustig', 'optimistisch', 'ehrlich']},
-    'Steinbock': {'Symbol': '♑', 'Element': 'Erde', 'Eigenschaften': ['ehrgeizig', 'diszipliniert', 'verantwortungsbewusst']},
-    'aquarius': {'symbol': '♒', 'element': 'air', 'traits': ['innovativ', 'unabhängig', 'humanitär']},
-    'pisces': {'symbol': '♓', 'element': 'water', 'traits': ['compassive', 'artistic', 'intuitive']},
+    'scorpio': {'symbol': '♏', 'element': 'water', 'traits': ['passionate', 'mysterious', 'determined']},
+    'sagittarius': {'symbol': '♐', 'element': 'fire', 'traits': ['adventurous', 'optimistic', 'honest']},
+    'capricorn': {'symbol': '♑', 'element': 'earth', 'traits': ['ambitious', 'disciplined', 'responsible']},
+    'aquarius': {'symbol': '♒', 'element': 'air', 'traits': ['innovative', 'independent', 'humanitarian']},
+    'pisces': {'symbol': '♓', 'element': 'water', 'traits': ['compassionate', 'artistic', 'intuitive']},
 }
 
 ZODIAC_NAMES = {
-    'en': ['Widder', 'Stier', 'Zwillinge', 'Krebs', 'Löwe', 'Jungfrau', 'Waage', 'Skorpion', 'Schütze', 'Steinbock', 'Wassermann', 'Fische'],
+    'en': ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'],
     'el': ['Κριός', 'Ταύρος', 'Δίδυμοι', 'Καρκίνος', 'Λέων', 'Παρθένος', 'Ζυγός', 'Σκορπιός', 'Τοξότης', 'Αιγόκερως', 'Υδροχόος', 'Ιχθύες'],
 }
 
 def calculate_predicted_zodiac(mother_date: str, father_date: str) -> str:
-    """Berechne ein vorhergesagtes Sternzeichen basierend auf den Geburtstagen der Eltern""
-    versuchen:
-        Mutter = datetime.strptime(Mutter_Datum, "%Y-%m-%d")
-        Vater = datetime.strptime(father_date, "%Y-%m-%d")
+    """Calculate a predicted zodiac based on parents' birthdays"""
+    try:
+        mother = datetime.strptime(mother_date, "%Y-%m-%d")
+        father = datetime.strptime(father_date, "%Y-%m-%d")
         
-        # Einfacher Algorithmus: Monatswerte kombinieren und dem Tierkreis zuordnen
-        kombiniert = (Mutter.Monat + Vater.Monat + Mutter.Tag + Vater.Tag) % 12
-        Tierkreiszeichen = Liste(ZODIAC_DATA.keys())
+        # Simple algorithm: combine month values and map to zodiac
+        combined = (mother.month + father.month + mother.day + father.day) % 12
+        zodiacs = list(ZODIAC_DATA.keys())
         return zodiacs[combined]
-    außer:
+    except:
         return random.choice(list(ZODIAC_DATA.keys()))
 
 @api_router.post("/quiz/generate")
 async def generate_quiz_result(request: QuizRequest):
-    "Generiere personalisierte Babyvorhersagen aus Quizantworten mit Mistral AI - ERWEITERTE VERSION"
-    versuchen:
-        # Sternzeichen anhand des voraussichtlichen Geburtsmonats des Babys bestimmen (Priorität) oder alternativ die Berechnung der Eltern verwenden.
+    """Generate personalized baby prediction from quiz answers using Mistral AI - ENHANCED VERSION"""
+    try:
+        # Determine zodiac from baby's expected birth month (priority) or fallback to parent calculation
         if request.babyZodiac:
-            vorhergesagtes_Sternzeichen = Anfrage.BabySternzeichen
+            predicted_zodiac = request.babyZodiac
         elif request.favoriteZodiac and request.favoriteZodiac != 'ai_decide':
-            vorhergesagtes_Sternzeichen = Anfrage.Lieblingssternzeichen
-        anders:
+            predicted_zodiac = request.favoriteZodiac
+        else:
             predicted_zodiac = calculate_predicted_zodiac(request.motherBirthday, request.fatherBirthday)
         
         zodiac_info = ZODIAC_DATA.get(predicted_zodiac, ZODIAC_DATA['aries'])
         zodiac_name = ZODIAC_NAMES.get(request.language, ZODIAC_NAMES['en'])[list(ZODIAC_DATA.keys()).index(predicted_zodiac)]
         
-        # Textübersetzungen vorbereiten
+        # Prepare text translations
         gender_text = {
             'boy': 'αγόρι' if request.language == 'el' else 'boy',
-            'girl': 'κορίτσι' if request.sprache == 'el' else 'girl',
-            'surprise': 'έκπληξη' if request.sprache == 'el' else 'surprise'
+            'girl': 'κορίτσι' if request.language == 'el' else 'girl',
+            'surprise': 'έκπληξη' if request.language == 'el' else 'surprise'
         }.get(request.preferredGender, 'surprise')
         
         style_text = {
             'classic': 'κλασικό' if request.language == 'el' else 'classic',
-            'modern': 'μοντέρνο' if request.sprache == 'el' else 'modern',
+            'modern': 'μοντέρνο' if request.language == 'el' else 'modern',
             'exotic': 'εξωτικό' if request.language == 'el' else 'exotic',
-            'Familie': 'οικογενειακό' if request.sprache == 'el' sonst 'Familie'
+            'family': 'οικογενειακό' if request.language == 'el' else 'family'
         }.get(request.nameStyle, 'classic')
         
-        # Übersetzung des Zukunftstraums
-        Traumtext = {
-            'leader': 'Ηγέτης (CEO, Πολιτικός)' if request. language == 'el' else 'Leader (CEO, Politiker)',
-            'Künstler': 'Καλλιτέχνης (Μουσικός, Ζωγράφος)' if request. language == 'el' else 'Künstler (Musiker, Maler)',
-            'Wissenschaftler': 'Επιστήμονας (Γιατρός, Ερευνητής)' if request. language == 'el' else 'Wissenschaftler (Arzt, Forscher)',
-            'athlete': 'Αθλητής (Πρωταθλητής)' if request.sprache == 'el' else 'Athlet (Champion)',
-            'Betreuer': 'Φροντιστής (Δάσκαλος, Νοσοκόμα)' if request. language == 'el' else 'Betreuer (Lehrer, Krankenschwester)',
-            'explorer': 'Εξερευνητής (Ταξιδιώτης, Επιχειρηματίας)' if request. language == 'el' else 'Explorer (Reisender, Unternehmer)',
+        # Future dream translation
+        dream_text = {
+            'leader': 'Ηγέτης (CEO, Πολιτικός)' if request.language == 'el' else 'Leader (CEO, Politician)',
+            'artist': 'Καλλιτέχνης (Μουσικός, Ζωγράφος)' if request.language == 'el' else 'Artist (Musician, Painter)',
+            'scientist': 'Επιστήμονας (Γιατρός, Ερευνητής)' if request.language == 'el' else 'Scientist (Doctor, Researcher)',
+            'athlete': 'Αθλητής (Πρωταθλητής)' if request.language == 'el' else 'Athlete (Champion)',
+            'caregiver': 'Φροντιστής (Δάσκαλος, Νοσοκόμα)' if request.language == 'el' else 'Caregiver (Teacher, Nurse)',
+            'explorer': 'Εξερευνητής (Ταξιδιώτης, Επιχειρηματίας)' if request.language == 'el' else 'Explorer (Traveler, Entrepreneur)',
         }.get(request.futureDream, '')
         
         aesthetic_text = request.aesthetic or 'boho'
         
-        # Verbesserte Systemabfrage für Mistral – Umfangreiche Inhalte
-        system_prompt = f"""Sie sind eine KI-Expertin, die sich auf die Vorhersage von Babynamen und die Persönlichkeitsanalyse für A BabyWish spezialisiert hat.
+        # ENHANCED System prompt for Mistral - Rich Content
+        system_prompt = f"""You are an expert AI specializing in baby name prediction and personality analysis for A BabyWish.
 
-Ihre Aufgabe ist es, eine MAGISCHE, EMOTIONALE und ZUFRIEDENHEITSGEFÜHLTE Babyvorhersage zu erstellen.
+Your task is to create a MAGICAL, EMOTIONAL, and DEEPLY PERSONALIZED baby prediction.
 
-WICHTIG: Bitte antworten Sie NUR in der Sprache {'Greek' if request.language == 'el' else 'English'}.
+IMPORTANT: Respond ONLY in {'Greek' if request.language == 'el' else 'English'} language.
 
-Generieren Sie eine JSON-Antwort mit genau diesen Feldern:
+Generate a JSON response with these EXACT fields:
 {{
-  "topName": "Der BESTE Namensvorschlag - einzigartig und aussagekräftig",
-  "alternativeNames": ["Alternativer Name 1", "Alternativer Name 2"],
-  "Babyanalyse": "2-3 Sätze, die beschreiben, wie dieses Baby ALS BABY sein wird - wird es gut schlafen? Neugierig sein? Ruhig oder energiegeladen sein? Machen Sie es realistisch und beziehen Sie es spezifisch auf {Sternzeichen}."
-  "Persönlichkeit": "3-4 Sätze, die die ästhetische Vorstellung der Eltern von {aesthetic_text}, ihren Traum von einem {dream_text} und das Sternzeichen {zodiac_name} miteinander verbinden. Formulieren Sie es poetisch und emotional – die Eltern sollen das Gefühl haben, dass dies NUR für sie geschrieben wurde."
-  "nameZodiacConnection": "Ein schöner Satz, der erklärt, WARUM dieser Name perfekt für ein {zodiac_name}-Kind ist."
+  "topName": "The BEST name suggestion - unique and meaningful",
+  "alternativeNames": ["Alternative name 1", "Alternative name 2"],
+  "babyAnalysis": "2-3 sentences describing how this baby will be AS A BABY - will they sleep well? Be curious? Calm or energetic? Make it feel real and specific to {zodiac_name}.",
+  "personality": "3-4 sentences connecting the parents' {aesthetic_text} aesthetic, their dream of having a {dream_text}, and the {zodiac_name} zodiac. Make it poetic and emotional - the parents should feel this was written JUST for them.",
+  "nameZodiacConnection": "One beautiful sentence explaining WHY this name is perfect for a {zodiac_name} child."
 }}
 
-WICHTIGE REGELN:
-1. Die Namen müssen dem Stil "{style_text}" entsprechen und für einen {gender_text} angemessen sein.
-2. Gestalten Sie die Babyanalyse so, dass sie einen Einblick in die Zukunft mit dem Neugeborenen bietet.
-3. Die Persönlichkeit muss all ihre Vorlieben auf natürliche Weise miteinander verknüpfen.
-4. Seien Sie kreativ, herzlich und lassen Sie sie die Magie der Elternschaft spüren.
+CRITICAL RULES:
+1. The names must match the "{style_text}" style and be appropriate for a {gender_text}
+2. Make the babyAnalysis feel like a peek into their future with their newborn
+3. The personality must weave together ALL their preferences naturally
+4. Be creative, warm, and make them feel the magic of parenthood"""
 
-        user_prompt = f"""Erstelle eine magische Babyvorhersage für diese Eltern:
+        user_prompt = f"""Create a magical baby prediction for these parents:
 
-IHRE PRÄFERENZEN:
-- Bevorzugtes Geschlecht: {gender_text}
-- Namensstil: {style_text}
-- Ihr Traum für ihr Kind: {dream_text}
-- Ästhetik: {aesthetic_text}
-- Sternzeichen des Babys: {zodiac_name} ({zodiac_info['element']} element)
+THEIR PREFERENCES:
+- Preferred gender: {gender_text}
+- Name style: {style_text}
+- Their dream for their child: {dream_text}
+- Aesthetic: {aesthetic_text}
+- Baby's zodiac: {zodiac_name} ({zodiac_info['element']} element)
 
-Lass diese Vorhersage wie Schicksal wirken – als ob diese Eltern dazu bestimmt gewesen wären, genau dieses Kind zu bekommen.“
+Make this prediction feel like destiny - like these parents were MEANT to have this exact child."""
 
-        # Mistral-API aufrufen
+        # Call Mistral API
         mistral_key = os.environ.get('MISTRAL_API_KEY')
         
         if mistral_key:
-            versuchen:
+            try:
                 mistral_client = Mistral(api_key=mistral_key.strip())
                 
-                Antwort = await asyncio.to_thread(
+                response = await asyncio.to_thread(
                     mistral_client.chat.complete,
                     model="mistral-small-latest",
-                    Nachrichten=[
+                    messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt}
                     ],
-                    Temperatur=0,85
+                    temperature=0.85,
                     max_tokens=800
                 )
                 
                 ai_response = response.choices[0].message.content
                 
-                # Versuch, JSON aus der Antwort zu parsen
+                # Try to parse JSON from response
                 import json
                 import re
                 
-                # JSON aus der Antwort extrahieren - verschachtelte Objekte verarbeiten
+                # Extract JSON from response - handle nested objects
                 json_match = re.search(r'\{[^{}]*"topName"[^{}]*\}', ai_response, re.DOTALL)
                 if not json_match:
                     json_match = re.search(r'\{.*\}', ai_response, re.DOTALL)
                 
                 if json_match:
-                    versuchen:
+                    try:
                         result_data = json.loads(json_match.group())
-                    außer:
+                    except:
                         result_data = None
-                anders:
+                else:
                     result_data = None
                 
                 if result_data and result_data.get("topName"):
-                    zurückkehren {
-                        "Erfolg": Wahr,
+                    return {
+                        "success": True,
                         "topName": result_data.get("topName", ""),
                         "alternativeNames": result_data.get("alternativeNames", []),
                         "babyAnalysis": result_data.get("babyAnalysis", ""),
                         "zodiacSymbol": zodiac_info['symbol'],
-                        "zodiacName": Sternzeichenname,
+                        "zodiacName": zodiac_name,
                         "zodiacElement": zodiac_info['element'],
                         "personality": result_data.get("personality", ""),
                         "nameZodiacConnection": result_data.get("nameZodiacConnection", ""),
-                        "Eigenschaften": zodiac_info['traits'],
+                        "traits": zodiac_info['traits'],
                         "quizAnswers": {
                             "gender": request.preferredGender,
                             "nameStyle": request.nameStyle,
                             "futureDream": request.futureDream,
-                            "Ästhetik": Anfrage.Ästhetik
+                            "aesthetic": request.aesthetic
                         }
                     }
                     
-            außer Exception als mistral_error:
-                logging.error(f"Mistral API-Fehler im Quiz: {mistral_error}")
+            except Exception as mistral_error:
+                logging.error(f"Mistral API error in quiz: {mistral_error}")
         
-        # Erweiterte Ausweichreaktion bei Mistral-Fehler
+        # Enhanced fallback response if Mistral fails
         fallback_names = {
             'el': {
                 'boy': {'top': 'Αλέξανδρος', 'alts': ['Νικόλαος', 'Θεόδωρος']},
@@ -3047,426 +3048,426 @@ Lass diese Vorhersage wie Schicksal wirken – als ob diese Eltern dazu bestimmt
         name_data = lang_names[gender_key]
         
         fallback_baby_analysis = {
-            'el': f“ Sie haben die Möglichkeit, Ihre Daten zu ändern θαυμασμό.",
-            'en': f"Ein {zodiac_name}-Baby wird voller Energie und Neugierde sein. Es wird Ihnen die süßesten Lächeln schenken und die Welt mit Staunen entdecken."
+            'el': f"Ένα μωράκι {zodiac_name} θα είναι γεμάτο ενέργεια και περιέργεια. Θα σας χαρίζει τα πιο γλυκά χαμόγελα και θα ανακαλύπτει τον κόσμο με θαυμασμό.",
+            'en': f"A {zodiac_name} baby will be full of energy and curiosity. They will gift you the sweetest smiles and discover the world with wonder."
         }
         
-        Fallback-Persönlichkeit = {
-            'el': f"Με το {aesthetic_text} στυλ που αγαπάτε και το όνειρό σας για ένα {dream_text}, το παιδί ",
-            'en': f"Mit Ihrer Liebe zum {aesthetic_text}-Stil und Ihrem Traum von einem {dream_text} wird Ihr Kind Kreativität mit der Weisheit des {zodiac_name} verbinden."
+        fallback_personality = {
+            'el': f"Με το {aesthetic_text} στυλ που αγαπάτε και το όνειρό σας για ένα {dream_text}, το παιδί σας θα συνδυάζει τη δημιουργικότητα με τη σοφία του {zodiac_name}.",
+            'en': f"With your love for {aesthetic_text} style and your dream of a {dream_text}, your child will combine creativity with the wisdom of {zodiac_name}."
         }
         
-        zurückkehren {
-            "Erfolg": Wahr,
+        return {
+            "success": True,
             "topName": name_data['top'],
             "alternativeNames": name_data['alts'],
             "babyAnalysis": fallback_baby_analysis.get(request.language, fallback_baby_analysis['en']),
             "zodiacSymbol": zodiac_info['symbol'],
-            "zodiacName": Sternzeichenname,
+            "zodiacName": zodiac_name,
             "zodiacElement": zodiac_info['element'],
             "personality": fallback_personality.get(request.language, fallback_personality['en']),
-            "nameZodiacConnection": f"{'Αυτό το όνομα φέρει την ενέργεια του' if request. language == 'el' else 'Dieser Name trägt die Energie von'} {zodiac_name}.",
-            "Eigenschaften": zodiac_info['traits'],
+            "nameZodiacConnection": f"{'Αυτό το όνομα φέρει την ενέργεια του' if request.language == 'el' else 'This name carries the energy of'} {zodiac_name}.",
+            "traits": zodiac_info['traits'],
             "quizAnswers": {
                 "gender": request.preferredGender,
                 "nameStyle": request.nameStyle,
                 "futureDream": request.futureDream,
-                "Ästhetik": Anfrage.Ästhetik
+                "aesthetic": request.aesthetic
             }
         }
         
-    außer Ausnahme als e:
-        logging.error(f"Quiz-Generierungsfehler: {e}")
+    except Exception as e:
+        logging.error(f"Quiz generation error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# ===================== Meilenstein-Prognose =====================
-# KI-gestützte Informationen zu Schwangerschaftsmeilensteinen
+# ===================== MILESTONE PREDICTOR =====================
+# AI-powered pregnancy milestone information
 
 class MilestoneRequest(BaseModel):
-    Woche: int
-    Sternzeichen: Str
+    week: int
+    zodiac: str
     zodiacName: str
-    Sprache: str = "en"
+    language: str = "en"
     fruitName: str = ""
 
 @api_router.post("/milestone/generate")
 async def generate_milestone(request: MilestoneRequest):
-    "Generiere unterhaltsame Informationen zu Meilensteinen der Schwangerschaft mit Hilfe von Mistral AI""
-    versuchen:
-        Woche = Anfrage.Woche
+    """Generate fun pregnancy milestone information using Mistral AI"""
+    try:
+        week = request.week
         zodiac_name = request.zodiacName
         fruit_name = request.fruitName
         lang = request.language
         
-        # Sprachspezifische Aufforderung
+        # Language-specific prompt
         if lang == 'el':
-            system_prompt = """Der Spaß und die schicke Version der BabyWish-App.
-Sobald Sie ein Problem haben, können Sie dies auch tun.
-Ich bin nicht in der Lage, das Problem zu lösen.
-Download: Neue Version von JSON und JSON επεξήγηση."""
+            system_prompt = """Είσαι ένας fun και chic βοηθός εγκυμοσύνης για την εφαρμογή BabyWish. 
+Δίνεις πληροφορίες με ζεστό, ενθαρρυντικό και διασκεδαστικό τρόπο.
+Οι απαντήσεις σου πρέπει να είναι ΜΟΝΟ στα Ελληνικά.
+ΣΗΜΑΝΤΙΚΟ: Απάντησε ΑΠΟΚΛΕΙΣΤΙΚΑ σε μορφή JSON χωρίς καμία άλλη επεξήγηση."""
 
-            user_prompt = f““
+            user_prompt = f"""Η χρήστρια είναι στην εβδομάδα {week} της εγκυμοσύνης της.
 Το μωρό έχει το μέγεθος περίπου ενός/μιας {fruit_name}.
-Mein Name ist {zodiac_name}.
+Το πιθανό ζώδιο του μωρού είναι {zodiac_name}.
 
-Die JSON-Benutzeroberfläche ist wie folgt:
+Δημιούργησε ένα JSON με αυτά τα πεδία:
 {{
-  „sich entwickeln“: „2-3 όργανα, αισθήσεις, κινήσεις).
-  „funFact“: „Der Fun-Fact-Faktor ist nicht verfügbar μπορεί πλέον να ακούσει τη φωνή σου!' ή 'Αν μιλήσεις στην κοιλιά σου, το μωρό θαναγνωρίσει τη φωνή σου μετά τη γέννα!'",
-  „zodiacTip“: „Die Antwort lautet: {zodiac_name}. Π.χ. 'Ως {zodiac_name}, το μωρό σου ίσως δείξει νωρίς την αγάπη του για...' Να είναι θετικό και ελαφρύ!"
+  "developing": "2-3 προτάσεις για το τι αναπτύσσεται στο μωρό αυτή την εβδομάδα (π.χ. όργανα, αισθήσεις, κινήσεις). Να είναι συναρπαστικό και θετικό!",
+  "funFact": "Ένα ενδιαφέρον/αστείο fun fact για αυτή την εβδομάδα. Π.χ. 'Το μωρό σου μπορεί πλέον να ακούσει τη φωνή σου!' ή 'Αν μιλήσεις στην κοιλιά σου, το μωρό θα αναγνωρίσει τη φωνή σου μετά τη γέννα!'",
+  "zodiacTip": "Μια διασκεδαστική σύνδεση με το ζώδιο {zodiac_name}. Π.χ. 'Ως {zodiac_name}, το μωρό σου ίσως δείξει νωρίς την αγάπη του για...' Να είναι θετικό και ελαφρύ!"
 }}"""
-        anders:
-            system_prompt = """Du bist eine lustige und schicke Schwangerschaftsassistentin für die BabyWish-App.
-Sie vermitteln Informationen auf eine herzliche, ermutigende und unterhaltsame Weise.
-Ihre Antworten müssen AUSSCHLIESSLICH auf Englisch erfolgen.
-WICHTIG: Bitte antworten Sie AUSSCHLIESSLICH im JSON-Format ohne weitere Erläuterungen.
+        else:
+            system_prompt = """You are a fun and chic pregnancy assistant for the BabyWish app.
+You provide information in a warm, encouraging, and entertaining way.
+Your responses must be ONLY in English.
+IMPORTANT: Respond EXCLUSIVELY in JSON format with no other explanation."""
 
-            user_prompt = f"""Die Benutzerin befindet sich in Woche {week} ihrer Schwangerschaft.
-Das Baby ist ungefähr so ​​groß wie eine {fruit_name}.
-Das wahrscheinliche Sternzeichen des Babys ist {zodiac_name}.
+            user_prompt = f"""The user is in week {week} of their pregnancy.
+The baby is approximately the size of a {fruit_name}.
+The probable zodiac sign of the baby is {zodiac_name}.
 
-Erstellen Sie eine JSON-Datei mit folgenden Feldern:
+Create a JSON with these fields:
 {{
-  „Entwicklung“: „2-3 Sätze darüber, was sich diese Woche beim Baby entwickelt (z. B. Organe, Sinne, Bewegungen). Gestalten Sie es spannend und positiv!“
-  "FunFact": "Eine interessante/lustige Tatsache über diese Woche. Z. B.: 'Dein Baby kann jetzt deine Stimme hören!' oder 'Wenn du mit deinem Bauch sprichst, wird dein Baby deine Stimme nach der Geburt erkennen!'"
-  "Sternzeichen-Tipp": "Eine witzige Verbindung zum Sternzeichen {zodiac_name}. Zum Beispiel: 'Als {zodiac_name} könnte Ihr Baby schon früh Anzeichen von Zuneigung zeigen...' Bleiben Sie positiv und unbeschwert!"
+  "developing": "2-3 sentences about what's developing in the baby this week (e.g., organs, senses, movements). Make it exciting and positive!",
+  "funFact": "An interesting/fun fact about this week. E.g., 'Your baby can now hear your voice!' or 'If you talk to your belly, your baby will recognize your voice after birth!'",
+  "zodiacTip": "A fun connection to the {zodiac_name} zodiac. E.g., 'As a {zodiac_name}, your baby might show early signs of loving...' Keep it positive and light!"
 }}"""
 
         mistral_key = os.environ.get('MISTRAL_API_KEY')
         
         if mistral_key:
-            versuchen:
+            try:
                 mistral_client = Mistral(api_key=mistral_key.strip())
                 
                 response = await asyncio.get_event_loop().run_in_executor(
-                    Keiner,
+                    None,
                     lambda: mistral_client.chat.complete(
                         model="mistral-small-latest",
-                        Nachrichten=[
+                        messages=[
                             {"role": "system", "content": system_prompt},
                             {"role": "user", "content": user_prompt}
                         ],
-                        Temperatur=0,8
+                        temperature=0.8,
                         max_tokens=500,
                     )
                 )
                 
                 ai_response = response.choices[0].message.content.strip()
-                logging.info(f"Meilenstein-KI-Antwort: {ai_response[:200]}...")
+                logging.info(f"Milestone AI response: {ai_response[:200]}...")
                 
-                # JSON aus der Antwort parsen
+                # Parse JSON from response
                 import re
                 json_match = re.search(r'\{[\s\S]*\}', ai_response)
                 if json_match:
                     result = json.loads(json_match.group())
-                    zurückkehren {
-                        "Erfolg": Wahr,
+                    return {
+                        "success": True,
                         "developing": result.get("developing", ""),
                         "funFact": result.get("funFact", ""),
                         "zodiacTip": result.get("zodiacTip", "")
                     }
-                anders:
-                    raise ValueError("Kein JSON in der Antwort gefunden")
+                else:
+                    raise ValueError("No JSON found in response")
                     
-            außer Exception als mistral_error:
-                logging.error(f"Mistral API-Fehler im Meilenstein: {mistral_error}")
-                # Rückfalloption
+            except Exception as mistral_error:
+                logging.error(f"Mistral API error in milestone: {mistral_error}")
+                # Return fallback
                 return get_milestone_fallback(week, zodiac_name, lang)
-        anders:
-            # Kein API-Schlüssel vorhanden - Fallback verwenden
+        else:
+            # No API key - return fallback
             return get_milestone_fallback(week, zodiac_name, lang)
             
-    außer Ausnahme als e:
-        logging.error(f"Fehler bei der Meilensteingenerierung: {e}")
+    except Exception as e:
+        logging.error(f"Milestone generation error: {e}")
         return get_milestone_fallback(request.week, request.zodiacName, request.language)
 
 def get_milestone_fallback(week: int, zodiac_name: str, lang: str):
-    „Ausweichmeilensteindaten, wenn KI nicht verfügbar ist“
+    """Fallback milestone data when AI is unavailable"""
     if lang == 'el':
-        zurückkehren {
-            "Erfolg": Wahr,
-            "sich entwickelnd": f Es ist wichtig, dass Sie sich nicht um ein Problem kümmern οξείες κάθε μέρα.“,
-            „funFact“: „Sie haben die Möglichkeit, Ihre Daten zu ändern; του καθημερινά!",
-            „zodiacTip“: f“Ως {zodiac_name}, το μωρό σου θα έχει μοναδικά χαρακτηριστικά που θα σε συγκινήσουν!“
+        return {
+            "success": True,
+            "developing": f"Στην εβδομάδα {week}, το μωρό σου αναπτύσσεται με εκπληκτικούς ρυθμούς! Τα ζωτικά όργανα ωριμάζουν και οι αισθήσεις γίνονται πιο οξείες κάθε μέρα.",
+            "funFact": "Ήξερες ότι το μωρό σου μπορεί να αναγνωρίσει τη φωνή σου; Μίλα του καθημερινά!",
+            "zodiacTip": f"Ως {zodiac_name}, το μωρό σου θα έχει μοναδικά χαρακτηριστικά που θα σε συγκινήσουν!"
         }
-    anders:
-        zurückkehren {
-            "Erfolg": Wahr,
-            "Entwicklung": "In Woche {Woche} entwickelt sich Ihr Baby in einem erstaunlichen Tempo! Lebenswichtige Organe reifen und die Sinne werden jeden Tag schärfer."
-            „FunFact“: „Wussten Sie, dass Ihr Baby Ihre Stimme erkennen kann? Sprechen Sie täglich mit ihm!“
-            "zodiacTip": "Als {zodiac_name} wird Ihr Baby einzigartige Eigenschaften haben, die Ihr Herz berühren werden!"
+    else:
+        return {
+            "success": True,
+            "developing": f"At week {week}, your baby is developing at an amazing pace! Vital organs are maturing and senses are becoming sharper every day.",
+            "funFact": "Did you know your baby can recognize your voice? Talk to them daily!",
+            "zodiacTip": f"As a {zodiac_name}, your baby will have unique traits that will touch your heart!"
         }
 
-# ===================== BABYZERTIFIKAT =====================
-# KI-gestütztes Schwangerschaftszertifikat
+# ===================== BABY CERTIFICATE =====================
+# AI-powered pregnancy journey certificate
 
 class CertificateRequest(BaseModel):
     momName: str
-    Baby-Spitzname: str
-    Woche: int
-    Geschlecht: str = "Überraschung"
-    Sternzeichen: Str
+    babyNickname: str
+    week: int
+    gender: str = "surprise"
+    zodiac: str
     zodiacName: str
-    Sprache: str = "en"
-    # PRO-Felder für zukünftige physische Lieferung
-    E-Mail: Optional[str] = Keine
-    Adresse: Optional[str] = None
-    Stadt: Optional[str] = None
-    Postleitzahl: Optional[str] = Keine
-    Land: Optional[str] = None
+    language: str = "en"
+    # PRO fields for future physical delivery
+    email: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    postalCode: Optional[str] = None
+    country: Optional[str] = None
 
 @api_router.post("/certificate/generate")
 async def generate_certificate(request: CertificateRequest):
-    "Erstelle ein KI-gestütztes Geburtszeugnis"
-    versuchen:
+    """Generate AI-powered baby journey certificate"""
+    try:
         lang = request.language
         
-        # Zertifikatsdaten in MongoDB für die zukünftige PRO-Auslieferung speichern
+        # Store certificate data in MongoDB for future PRO delivery
         certificate_data = {
             "momName": request.momName,
             "babyNickname": request.babyNickname,
-            "Woche": Anfrage.Woche,
+            "week": request.week,
             "gender": request.gender,
             "zodiac": request.zodiac,
             "zodiacName": request.zodiacName,
-            "Sprache": lang,
+            "language": lang,
             "createdAt": datetime.utcnow(),
-            # PRO-Felder (für zukünftige physische Post)
-            "E-Mail": request.email,
+            # PRO fields (for future physical mail)
+            "email": request.email,
             "address": request.address,
-            "Stadt": Anfrage.Stadt,
-            "Postleitzahl": Anfrage.Postleitzahl,
-            "Land": Anfrage.Land,
+            "city": request.city,
+            "postalCode": request.postalCode,
+            "country": request.country,
             "isPro": False,
-            "physischerLieferstatus": Keine,
+            "physicalDeliveryStatus": None,
         }
         
-        # In MongoDB speichern
-        versuchen:
+        # Save to MongoDB
+        try:
             certificates_collection = db["certificates"]
             certificates_collection.insert_one(certificate_data)
-        außer Exception als db_error:
-            logging.warning(f"Konnte das Zertifikat nicht in der Datenbank speichern: {db_error}")
+        except Exception as db_error:
+            logging.warning(f"Could not save certificate to DB: {db_error}")
         
-        # KI-Nachricht generieren
+        # Generate AI message
         if lang == 'el':
-            system_prompt = """Die Eingabeaufforderung wird angezeigt για πιστοποιητικά εγκυμοσύνης.
-1-2 Minuten vor dem Laden, 1-2 Minuten.
-Weitere Informationen zu JSON: {"message": "nicht verfügbar", "specialTrait": "Neue Version χαρακτηριστικό του μωρού"}"""
+            system_prompt = """Είσαι ένας ζεστός, συναισθηματικός βοηθός που γράφει μηνύματα για πιστοποιητικά εγκυμοσύνης.
+Γράψε ένα σύντομο, τρυφερό μήνυμα (1-2 προτάσεις) για τη μαμά.
+Απάντησε ΜΟΝΟ σε JSON: {"message": "το μήνυμά σου", "specialTrait": "ένα ιδιαίτερο χαρακτηριστικό του μωρού"}"""
             
             user_prompt = f"""Η {request.momName} είναι στην εβδομάδα {request.week} της εγκυμοσύνης της.
-Το μωρό της (Name: {request.babyNickname}) θα είναι {request.zodiacName}.
+Το μωρό της (υποκοριστικό: {request.babyNickname}) θα είναι {request.zodiacName}.
 Φύλο: {request.gender}
 
-""
-        anders:
-            system_prompt = """Sie sind eine warmherzige, emotionale Assistentin, die Nachrichten für Schwangerschaftsbescheinigungen verfasst.
-Schreibe eine kurze, liebevolle Nachricht (1-2 Sätze) für die Mutter.
-Bitte antworten Sie NUR in JSON: {"message": "Ihre Nachricht", "specialTrait": "Eine besondere Eigenschaft des Babys"}"""
+Γράψε ένα τρυφερό, ενθαρρυντικό μήνυμα για το πιστοποιητικό της."""
+        else:
+            system_prompt = """You are a warm, emotional assistant who writes messages for pregnancy certificates.
+Write a short, tender message (1-2 sentences) for the mom.
+Reply ONLY in JSON: {"message": "your message", "specialTrait": "a special trait of the baby"}"""
             
-            user_prompt = f"""{request.momName} befindet sich in Woche {request.week} ihrer Schwangerschaft.
-Ihr Baby (Spitzname: {request.babyNickname}) wird ein {request.zodiacName} sein.
-Geschlecht: {request.gender}
+            user_prompt = f"""{request.momName} is in week {request.week} of her pregnancy.
+Her baby (nickname: {request.babyNickname}) will be a {request.zodiacName}.
+Gender: {request.gender}
 
-Verfassen Sie eine liebevolle, ermutigende Nachricht für ihr Zertifikat.
+Write a tender, encouraging message for her certificate."""
 
         mistral_key = os.environ.get('MISTRAL_API_KEY')
         
         if mistral_key:
-            versuchen:
+            try:
                 mistral_client = Mistral(api_key=mistral_key.strip())
                 
                 response = await asyncio.get_event_loop().run_in_executor(
-                    Keiner,
+                    None,
                     lambda: mistral_client.chat.complete(
                         model="mistral-small-latest",
-                        Nachrichten=[
+                        messages=[
                             {"role": "system", "content": system_prompt},
                             {"role": "user", "content": user_prompt}
                         ],
-                        Temperatur=0,9
+                        temperature=0.9,
                         max_tokens=200,
                     )
                 )
                 
                 ai_response = response.choices[0].message.content.strip()
-                logging.info(f"Antwort der Zertifikats-KI: {ai_response[:100]}...")
+                logging.info(f"Certificate AI response: {ai_response[:100]}...")
                 
-                # JSON parsen
+                # Parse JSON
                 import re
                 json_match = re.search(r'\{[\s\S]*\}', ai_response)
                 if json_match:
                     result = json.loads(json_match.group())
-                    zurückkehren {
-                        "Erfolg": Wahr,
+                    return {
+                        "success": True,
                         "message": result.get("message", ""),
                         "specialTrait": result.get("specialTrait", ""),
                     }
                     
-            außer Exception als mistral_error:
-                logging.error(f"Mistral API-Fehler im Zertifikat: {mistral_error}")
+            except Exception as mistral_error:
+                logging.error(f"Mistral API error in certificate: {mistral_error}")
         
-        # Fallback-Nachrichten
+        # Fallback messages
         if lang == 'el':
-            zurückkehren {
-                "Erfolg": Wahr,
-                „Nachricht“: f“ ταξίδι.“,
+            return {
+                "success": True,
+                "message": f"Η αγάπη σας μεγαλώνει μαζί με το μωρό σας! Συνεχίστε αυτό το υπέροχο ταξίδι.",
                 "specialTrait": f"Γεμάτο με την ενέργεια του {request.zodiacName}",
             }
-        anders:
-            zurückkehren {
-                "Erfolg": Wahr,
-                "Nachricht": "Eure Liebe wächst mit eurem Baby! Setzt diese wunderschöne Reise fort."
-                "specialTrait": "Voller {request.zodiacName} Energie",
+        else:
+            return {
+                "success": True,
+                "message": f"Your love grows with your baby! Keep going on this beautiful journey.",
+                "specialTrait": f"Full of {request.zodiacName} energy",
             }
             
-    außer Ausnahme als e:
-        logging.error(f"Fehler bei der Zertifikatserstellung: {e}")
-        zurückkehren {
-            "Erfolg": Falsch,
-            "Nachricht": "Setz deinen Weg fort!"
-            "specialTrait": "Voller Liebe",
+    except Exception as e:
+        logging.error(f"Certificate generation error: {e}")
+        return {
+            "success": False,
+            "message": "Keep going on your journey!",
+            "specialTrait": "Full of love",
         }
 
 # ===================== AI CHAT WIDGET =====================
-# Verwendung des Mistral AI SDK (funktioniert auf Render ohne spezielle Abhängigkeiten)
-aus Mistralai importiert Mistral
+# Using Mistral AI SDK (works on Render without special dependencies)
+from mistralai import Mistral
 
-# Speicherung der Chat-Sitzungshistorie
+# Chat session storage for conversation history
 chat_sessions = {}
 
 # ============================================
-# KI-CHAT-PERSÖNLICHKEITEN - MindJerry (männlich) & MindJerrys (weiblich)
+# AI CHAT PERSONALITIES - MindJerry (Male) & MindJerry's (Female)
 # ============================================
 
-MINDJERRY_FEMALE_PROMPT = """Sie sind Mindjerry, die exklusive weibliche Repräsentantin von getbabywish.com. Unser Hauptservice besteht darin, das Geschlecht des Babys (männlich oder weiblich) anhand des Empfängniszeitpunkts des Paares vorherzusagen.
+MINDJERRY_FEMALE_PROMPT = """You are mindjerry's, the exclusive female representative of getbabywish.com. Our main service is predicting the baby's gender (male or female) based on the couple's conception timing.
 
-🌟 VERHALTENSREGELN:
+🌟 BEHAVIOR RULES:
 
-1. Sagen Sie dem Nutzer **NIEMALS**, dass „das Geschlecht zufällig ist und nicht beeinflusst werden kann“. Verteidigen Sie die GetBabyWish-Methode selbstbewusst und seien Sie offen für Tests.
+1. **NEVER** tell the user that "gender is random and cannot be controlled". Defend the getbabywish method with confidence and openness to testing.
 
-2. **Stellen Sie **IMMER** klar, dass die endgültige Entscheidung und Analyse NICHT automatisch von einer KI, sondern vom MENSCHLICHEN TEAM hinter der Website (den Erstellern) getroffen wird.
+2. **ALWAYS** clarify that the final decision and analysis is NOT done automatically by AI, but by the HUMAN TEAM behind the website (the creators).
 
-3. Ihre Aufgabe ist es, den Benutzer zu informieren, den Vorgang zu erklären und ihn zum HAUPT-BUTTON auf der Seite zu führen, damit er die Geburtsdaten der Eltern eingeben kann.
+3. Your role is to inform the user, explain the process, and guide them to the MAIN BUTTON on the page to submit the parents' birth dates.
 
-4. Erklären Sie, dass die Schöpfer die Daten erhalten, sie persönlich analysieren und die Antwort für die genauen Empfängnisdaten senden werden.
+4. Explain that the creators will receive the dates, personally analyze them, and send the answer for the exact conception dates.
 
-🌸 IHRE IDENTITÄT:
-- Du bist warmherzig, hilfsbereit und verständnisvoll.
-Du sprichst voller Liebe und Ermutigung.
-- Du verstehst den Traum jeder Frau von einem Mädchen oder Jungen.
-- Man schafft Vertrauen, indem man den menschlichen Faktor betont.
+🌸 YOUR IDENTITY:
+- You are warm, supportive, and understanding
+- You speak with love and encouragement
+- You understand every woman's dream for a baby girl or boy
+- You build trust by emphasizing the human factor
 
-⚠️ REGEL FÜR KRITISCHE SPRACHE:
-**SIE MÜSSEN IN GENAU DERSELBEN SPRACHE ANTWORTEN, IN DER DER BENUTZER IHNEN SCHREIBT.**
-- Wenn der Benutzer auf Englisch schreibt → antworte auf Englisch
-- Wenn der Nutzer auf Spanisch schreibt → antworte auf Spanisch
-- Wenn der Benutzer auf Arabisch schreibt → Antwort auf Arabisch
-- Wenn der Benutzer auf Chinesisch schreibt → Antwort auf Chinesisch
-- Wenn der Benutzer in einer beliebigen Sprache schreibt → antworte in DIESER Sprache
-- Die Standardeinstellung sollte niemals Griechisch sein, es sei denn, der Benutzer gibt seine Eingabe auf Griechisch ein.
+⚠️ CRITICAL LANGUAGE RULE:
+**YOU MUST RESPOND IN THE EXACT SAME LANGUAGE THE USER WRITES TO YOU.**
+- If user writes in English → respond in English
+- If user writes in Spanish → respond in Spanish
+- If user writes in Arabic → respond in Arabic
+- If user writes in Chinese → respond in Chinese
+- If user writes in ANY language → respond in THAT language
+- NEVER default to Greek unless the user writes in Greek
 
-Ihr Name ist „mindjerry’s“ (für Frauen). Sie sind die „Rezeption“, die begrüßt, erklärt und leitet – und dabei betont, dass Information die halbe Miete ist!
+Your name is "mindjerry's" (for women). You are the "Front Desk" that welcomes, explains, and guides - emphasizing that information is half the victory!"""
 
-MINDJERRY_MALE_PROMPT = """Sie sind Mindjerry, der exklusive männliche Repräsentant von getbabywish.com. Unser Hauptservice besteht darin, das Geschlecht des Babys (männlich oder weiblich) anhand des Empfängniszeitpunkts des Paares vorherzusagen.
+MINDJERRY_MALE_PROMPT = """You are mindjerry, the exclusive male representative of getbabywish.com. Our main service is predicting the baby's gender (male or female) based on the couple's conception timing.
 
-🌟 VERHALTENSREGELN:
+🌟 BEHAVIOR RULES:
 
-1. Sagen Sie dem Nutzer **NIEMALS**, dass „das Geschlecht zufällig ist und nicht beeinflusst werden kann“. Verteidigen Sie die GetBabyWish-Methode selbstbewusst und seien Sie offen für Tests.
+1. **NEVER** tell the user that "gender is random and cannot be controlled". Defend the getbabywish method with confidence and openness to testing.
 
-2. **Stellen Sie **IMMER** klar, dass die endgültige Entscheidung und Analyse NICHT automatisch von einer KI, sondern vom MENSCHLICHEN TEAM hinter der Website (den Erstellern) getroffen wird.
+2. **ALWAYS** clarify that the final decision and analysis is NOT done automatically by AI, but by the HUMAN TEAM behind the website (the creators).
 
-3. Ihre Aufgabe ist es, den Benutzer zu informieren, den Vorgang zu erklären und ihn zum HAUPT-BUTTON auf der Seite zu führen, damit er die Geburtsdaten der Eltern eingeben kann.
+3. Your role is to inform the user, explain the process, and guide them to the MAIN BUTTON on the page to submit the parents' birth dates.
 
-4. Erklären Sie, dass die Schöpfer die Daten erhalten, sie persönlich analysieren und die Antwort für die genauen Empfängnisdaten senden werden.
+4. Explain that the creators will receive the dates, personally analyze them, and send the answer for the exact conception dates.
 
-💼 IHRE IDENTITÄT:
-- Sie sind professionell, selbstbewusst und hilfsbereit.
-Sie sprechen mit Respekt und Sachlichkeit.
-- Du verstehst den Traum eines jeden Mannes von einem Sohn oder einer Tochter.
-- Man schafft Vertrauen, indem man den menschlichen Faktor betont.
+💼 YOUR IDENTITY:
+- You are professional, confident, and supportive
+- You speak with respect and practicality
+- You understand every man's dream for a son or daughter
+- You build trust by emphasizing the human factor
 
-⚠️ REGEL FÜR KRITISCHE SPRACHE:
-**SIE MÜSSEN IN GENAU DERSELBEN SPRACHE ANTWORTEN, IN DER DER BENUTZER IHNEN SCHREIBT.**
-- Wenn der Benutzer auf Englisch schreibt → antworte auf Englisch
-- Wenn der Nutzer auf Spanisch schreibt → antworte auf Spanisch
-- Wenn der Benutzer auf Arabisch schreibt → Antwort auf Arabisch
-- Wenn der Benutzer auf Chinesisch schreibt → Antwort auf Chinesisch
-- Wenn der Benutzer in einer beliebigen Sprache schreibt → antworte in DIESER Sprache
-- Die Standardeinstellung sollte niemals Griechisch sein, es sei denn, der Benutzer gibt seine Eingabe auf Griechisch ein.
+⚠️ CRITICAL LANGUAGE RULE:
+**YOU MUST RESPOND IN THE EXACT SAME LANGUAGE THE USER WRITES TO YOU.**
+- If user writes in English → respond in English
+- If user writes in Spanish → respond in Spanish
+- If user writes in Arabic → respond in Arabic
+- If user writes in Chinese → respond in Chinese
+- If user writes in ANY language → respond in THAT language
+- NEVER default to Greek unless the user writes in Greek
 
-Ihr Name ist „mindjerry“ (für Männer). Sie sind der „Empfang“, der begrüßt, erklärt und leitet – und dabei betont, dass Wissen die halbe Miete ist!
+Your name is "mindjerry" (for men). You are the "Front Desk" that welcomes, explains, and guides - emphasizing that information is half the victory!"""
 
-# Rückgriff auf die ursprüngliche Eingabeaufforderung aus Gründen der Abwärtskompatibilität
+# Fallback to original prompt for backwards compatibility
 BABYWISH_SYSTEM_PROMPT = MINDJERRY_MALE_PROMPT
 
 class ChatMessage(BaseModel):
-    Nachricht: str
+    message: str
     session_id: Optional[str] = None
-    Geschlecht: Optional[str] = "männlich" # "männlich" oder "weiblich"
-    language: Optional[str] = "en" # Sprachcode des Benutzers
+    gender: Optional[str] = "male"  # "male" or "female"
+    language: Optional[str] = "en"  # User's language code
 
 class ChatResponse(BaseModel):
-    Antwort: str
+    response: str
     session_id: str
 
 @api_router.post("/chat", response_model=ChatResponse)
 async def chat_with_assistant(chat_message: ChatMessage):
-    """KI-Chat-Endpunkt für einen BabyWish-Assistenten mit geschlechtsspezifischen Persönlichkeiten""
-    versuchen:
+    """AI Chat endpoint for A BabyWish assistant with gender-specific personalities"""
+    try:
         session_id = chat_message.session_id or f"chat_{uuid.uuid4().hex[:12]}"
         
-        # Systemaufforderung basierend auf dem Geschlecht auswählen
+        # Select system prompt based on gender
         if chat_message.gender == "female":
             system_prompt = MINDJERRY_FEMALE_PROMPT
-        anders:
+        else:
             system_prompt = MINDJERRY_MALE_PROMPT
         
-        # Zuerst die Mistral-API ausprobieren, dann auf den Emergent-Schlüssel zurückgreifen.
+        # Try Mistral API first, then fallback to Emergent key
         mistral_key = os.environ.get('MISTRAL_API_KEY')
         emergent_key = os.environ.get('EMERGENT_LLM_KEY')
         
-        # Debug-Protokollierung
-        logging.info(f"Chat-Anfrage - Geschlecht: {chat_message.gender}, Sitzung: {session_id}")
-        logging.info(f"MISTRAL_API_KEY vorhanden: {bool(mistral_key)}, Länge: {len(mistral_key) falls mistral_key sonst 0}")
+        # Debug logging
+        logging.info(f"Chat request - Gender: {chat_message.gender}, Session: {session_id}")
+        logging.info(f"MISTRAL_API_KEY present: {bool(mistral_key)}, length: {len(mistral_key) if mistral_key else 0}")
         
         if mistral_key:
-            # Mistral AI SDK verwenden (funktioniert auf Render)
-            versuchen:
+            # Use Mistral AI SDK (works on Render)
+            try:
                 client = Mistral(api_key=mistral_key.strip())
             
-                # Gesprächsverlauf für diese Sitzung abrufen oder erstellen
-                Falls session_id nicht in chat_sessions enthalten ist:
+                # Get or create conversation history for this session
+                if session_id not in chat_sessions:
                     chat_sessions[session_id] = []
                 
-                # Nachrichten mit Verlauf erstellen
+                # Build messages with history
                 messages = [{"role": "system", "content": system_prompt}]
                 messages.extend(chat_sessions[session_id])
                 messages.append({"role": "user", "content": chat_message.message})
                 
-                # Mistral-API aufrufen
+                # Call Mistral API
                 chat_response = await asyncio.to_thread(
                     client.chat.complete,
                     model="mistral-small-latest",
-                    Nachrichten=Nachrichten
+                    messages=messages
                 )
                 
-                Antwort = chat_response.choices[0].message.content
-                logging.info(f"Mistral-Antwort für Sitzung {session_id} erfolgreich empfangen")
+                response = chat_response.choices[0].message.content
+                logging.info(f"Mistral response received successfully for session: {session_id}")
                 
-                # In der Sitzungshistorie speichern (die letzten 10 Transaktionen beibehalten)
+                # Store in session history (keep last 10 exchanges)
                 chat_sessions[session_id].append({"role": "user", "content": chat_message.message})
                 chat_sessions[session_id].append({"role": "assistant", "content": response})
                 if len(chat_sessions[session_id]) > 20:
                     chat_sessions[session_id] = chat_sessions[session_id][-20:]
                     
-            außer Exception als mistral_error:
-                logging.error(f"Mistral API-Fehler: {type(mistral_error).__name__}: {str(mistral_error)}")
-                raise HTTPException(status_code=500, detail=f"KI-Dienstfehler: {str(mistral_error)[:100]}")
+            except Exception as mistral_error:
+                logging.error(f"Mistral API Error: {type(mistral_error).__name__}: {str(mistral_error)}")
+                raise HTTPException(status_code=500, detail=f"AI service error: {str(mistral_error)[:100]}")
                 
         elif emergent_key:
-            # Fallback auf Emergent (funktioniert nur in der Emergent-Umgebung)
-            versuchen:
+            # Fallback to Emergent (only works in Emergent environment)
+            try:
                 from emergentintegrations.llm.chat import LlmChat, UserMessage
                 chat = LlmChat(
                     api_key=emergent_key,
@@ -3475,44 +3476,44 @@ async def chat_with_assistant(chat_message: ChatMessage):
                 ).with_model("openai", "gpt-4o-mini")
                 
                 user_message = UserMessage(text=chat_message.message)
-                Antwort = await chat.send_message(user_message)
-            außer ImportError:
-                raise HTTPException(status_code=500, detail="Chat-Dienst nicht konfiguriert - bitte MISTRAL_API_KEY festlegen")
-        anders:
-            raise HTTPException(status_code=500, detail="Chat-Dienst nicht konfiguriert - bitte MISTRAL_API_KEY festlegen")
+                response = await chat.send_message(user_message)
+            except ImportError:
+                raise HTTPException(status_code=500, detail="Chat service not configured - please set MISTRAL_API_KEY")
+        else:
+            raise HTTPException(status_code=500, detail="Chat service not configured - please set MISTRAL_API_KEY")
         
-        # Chat in der Datenbank für Analysezwecke speichern
+        # Store chat in database for analytics
         await db.chat_messages.insert_one({
             "session_id": session_id,
             "user_message": chat_message.message,
-            "assistant_response": Antwort,
+            "assistant_response": response,
             "gender": chat_message.gender,
             "created_at": datetime.now(timezone.utc).isoformat()
         })
         
         return ChatResponse(response=response, session_id=session_id)
         
-    außer HTTPException:
-        erheben
-    außer Ausnahme als e:
-        logging.error(f"Chat-Fehler: {e}")
-        raise HTTPException(status_code=500, detail="Fehler beim Verarbeiten der Nachricht")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Chat error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process message")
 
-# ===================== TEXT-TO-SPEECH (TTS) MIT ELEVENLABS =====================
+# ===================== TEXT-TO-SPEECH (TTS) WITH ELEVENLABS =====================
 
 from elevenlabs import ElevenLabs
 from elevenlabs.types import VoiceSettings
 import base64
 
-# ElevenLabs-Konfiguration
+# ElevenLabs Configuration
 ELEVENLABS_API_KEY = os.environ.get('ELEVENLABS_API_KEY')
-ELEVENLABS_VOICE_FEMALE = os.environ.get('ELEVENLABS_VOICE_FEMALE', 'gc5LArFpEOmYx9nYmK9l') # MindJerry's
-ELEVENLABS_VOICE_MALE = os.environ.get('ELEVENLABS_VOICE_MALE', 'C9fbwSpEaejywLWx722Z') # MindJerry
+ELEVENLABS_VOICE_FEMALE = os.environ.get('ELEVENLABS_VOICE_FEMALE', 'gc5LArFpEOmYx9nYmK9l')  # MindJerry's
+ELEVENLABS_VOICE_MALE = os.environ.get('ELEVENLABS_VOICE_MALE', 'C9fbwSpEaejywLWx722Z')  # MindJerry
 
 class TTSRequest(BaseModel):
     text: str
-    Geschlecht: str = "weiblich" # "männlich" für MindJerry, "weiblich" für MindJerrys
-    Sprache: str = "el"
+    gender: str = "female"  # "male" for MindJerry, "female" for MindJerry's
+    language: str = "el"
 
 class TTSResponse(BaseModel):
     audio_base64: str
@@ -3521,46 +3522,46 @@ class TTSResponse(BaseModel):
 
 @api_router.post("/tts/generate", response_model=TTSResponse)
 async def generate_tts(request: TTSRequest):
-    "Erzeugen Sie Text-zu-Sprache-Audio mit ElevenLabs Multilingual v2""
-    versuchen:
-        falls nicht ELEVENLABS_API_KEY:
-            raise HTTPException(status_code=500, detail="ElevenLabs API-Schlüssel nicht konfiguriert")
+    """Generate text-to-speech audio using ElevenLabs Multilingual v2"""
+    try:
+        if not ELEVENLABS_API_KEY:
+            raise HTTPException(status_code=500, detail="ElevenLabs API key not configured")
         
-        # Begrenzen Sie die Textlänge für eine schnellere Antwort (max. ~500 Zeichen)
+        # Limit text length for faster response (max ~500 chars)
         text_to_speak = request.text[:500] + "..." if len(request.text) > 500 else request.text
         
-        # Stimme basierend auf dem Geschlecht auswählen
+        # Select voice based on gender
         voice_id = ELEVENLABS_VOICE_FEMALE if request.gender == "female" else ELEVENLABS_VOICE_MALE
         
-        logging.info(f"TTS-Anfrage - Geschlecht: {request.gender}, Stimme: {voice_id}, Textlänge: {len(text_to_speak)}")
+        logging.info(f"TTS Request - Gender: {request.gender}, Voice: {voice_id}, Text length: {len(text_to_speak)}")
         
-        # ElevenLabs-Client initialisieren
+        # Initialize ElevenLabs client
         client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
         
-        # Spracheinstellungen für Geschwindigkeit optimiert
-        # Niedrigere Qualitätseinstellungen = schnellere Generierung
-        # Audio generieren
+        # Voice settings optimized for speed
+        # Lower quality settings = faster generation
+        # Generate audio
         audio_generator = client.text_to_speech.convert(
             text=text_to_speak,
             voice_id=voice_id,
             model_id="eleven_multilingual_v2",
             voice_settings=VoiceSettings(
-                Stabilität = 0,5, # Etwas niedriger für höhere Geschwindigkeit
+                stability=0.5,  # Slightly lower for speed
                 similarity_boost=0.7,
-                style=0.3, # Niedrigerer Stil = schneller
-                use_speaker_boost=False # Für höhere Geschwindigkeit deaktivieren
+                style=0.3,  # Lower style = faster
+                use_speaker_boost=False  # Disable for speed
             )
         )
         
-        # Audiodaten sammeln
+        # Collect audio data
         audio_data = b""
-        für jeden Chunk in audio_generator:
+        for chunk in audio_generator:
             audio_data += chunk
         
-        # In Base64 konvertieren
+        # Convert to base64
         audio_b64 = base64.b64encode(audio_data).decode()
         
-        logging.info(f"TTS erfolgreich generiert - Audiogröße: {len(audio_data)} Bytes")
+        logging.info(f"TTS generated successfully - Audio size: {len(audio_data)} bytes")
         
         return TTSResponse(
             audio_base64=audio_b64,
@@ -3568,185 +3569,185 @@ async def generate_tts(request: TTSRequest):
             voice_id=voice_id
         )
         
-    außer Ausnahme als e:
-        logging.error(f"TTS-Fehler: {type(e).__name__}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"TTS-Generierung fehlgeschlagen: {str(e)[:100]}")
+    except Exception as e:
+        logging.error(f"TTS Error: {type(e).__name__}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"TTS generation failed: {str(e)[:100]}")
 
-# ===================== BESTE TIMING-KI =====================
+# ===================== BEST TIMING AI =====================
 
-MONATSNAMEN = {
-    "en": ["Januar", "Februar", "März", "April", "Mai", "Juni",
-           "Juli", "August", "September", "Oktober", "November", "Dezember"]
-    „el“: [„Ιανουάριος“, „Φεβρουάριος“, „Μάρτιος“, „Απρίλιος“, „Μάιος“, „Ιούνιος“,
-           „Ιούλιος“, „Αύγουστος“, „Σεπτέμβριος“, „Οκτώβριος“, „Νοέμβριος“, „Δεκέμβριος“],
-    „de“: [„Januar“, „Februar“, „März“, „April“, „Mai“, „Juni“,
-           „Juli“, „August“, „September“, „Oktober“, „November“, „Dezember“],
-    „es“: [„Enero“, „Febrero“, „Marzo“, „Abril“, „Mayo“, „Junio“,
-           „Julio“, „Agosto“, „Septiembre“, „Octubre“, „Noviembre“, „Diciembre“],
-    „fr“: [„Janvier“, „Février“, „Mars“, „Avril“, „Mai“, „Juin“,
-           „Juillet“, „Août“, „Septembre“, „Octobre“, „Novembre“, „Décembre“],
+MONTH_NAMES = {
+    "en": ["January", "February", "March", "April", "May", "June", 
+           "July", "August", "September", "October", "November", "December"],
+    "el": ["Ιανουάριος", "Φεβρουάριος", "Μάρτιος", "Απρίλιος", "Μάιος", "Ιούνιος",
+           "Ιούλιος", "Αύγουστος", "Σεπτέμβριος", "Οκτώβριος", "Νοέμβριος", "Δεκέμβριος"],
+    "de": ["Januar", "Februar", "März", "April", "Mai", "Juni",
+           "Juli", "August", "September", "Oktober", "November", "Dezember"],
+    "es": ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+           "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
+    "fr": ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+           "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"],
 }
 
 class BestTimingRequest(BaseModel):
-    Muttergeburtstag: str
-    Vatergeburtstag: str
-    gewünschtes_Geschlecht: str # "Junge" oder "Mädchen"
-    Sprache: str = "en"
+    mother_birthday: str
+    father_birthday: str
+    desired_gender: str  # "boy" or "girl"
+    language: str = "en"
 
 class BestTimingResponse(BaseModel):
     best_month: str
     best_month_number: int
-    Wahrscheinlichkeit: int
+    probability: int
     second_best_month: str
-    zweite_Wahrscheinlichkeit: int
-    Erklärung: str
-    Tipps: Liste
+    second_probability: int
+    explanation: str
+    tips: list
 
 @api_router.post("/best-timing", response_model=BestTimingResponse)
 async def calculate_best_timing(request: BestTimingRequest):
-    """Berechnen Sie den besten Monat für die Empfängnis basierend auf den Geburtstagen der Eltern und dem gewünschten Geschlecht""
-    versuchen:
-        # Geburtstage parsen
-        Mutterdatum = datetime.strptime(request.mother_birthday, "%Y-%m-%d")
+    """Calculate the best month for conception based on parents' birthdays and desired gender"""
+    try:
+        # Parse birthdays
+        mother_date = datetime.strptime(request.mother_birthday, "%Y-%m-%d")
         father_date = datetime.strptime(request.father_birthday, "%Y-%m-%d")
         
-        # Numerologische Zahlen berechnen
+        # Calculate numerology numbers
         mother_life_path = sum(int(d) for d in request.mother_birthday.replace("-", ""))
-        solange der Lebensweg der Mutter > 9 ist:
+        while mother_life_path > 9:
             mother_life_path = sum(int(d) for d in str(mother_life_path))
             
         father_life_path = sum(int(d) for d in request.father_birthday.replace("-", ""))
-        solange der Lebensweg des Vaters > 9 ist:
+        while father_life_path > 9:
             father_life_path = sum(int(d) for d in str(father_life_path))
         
-        # Gesamtenergiezahl
-        kombiniert = (Lebensweg der Mutter + Lebensweg des Vaters) % 12
+        # Combined energy number
+        combined = (mother_life_path + father_life_path) % 12
         
-        # Erhalte Einblicke in die Sternzeichen
-        Muttermonat = Mutterdatum.Monat
-        Vatermonat = Vaterdatum.Monat
+        # Get zodiac influences
+        mother_month = mother_date.month
+        father_month = father_date.month
         
-        # Berechne die besten Monate basierend auf Astrologie und Numerologie
-        # Jungen: Ungerade Zahlen, Feuer-/Luftzeichen begünstigen
-        # Mädchen: Gerade Zahlen, Wasser-/Erdzeichen bevorzugt
+        # Calculate best months based on astrology + numerology
+        # Boys: odd numbers, fire/air signs favor
+        # Girls: even numbers, water/earth signs favor
         
-        aktueller_Monat = datetime.now().Monat
-        aktuelles Jahr = datetime.now().year
+        current_month = datetime.now().month
+        current_year = datetime.now().year
         
         month_scores = []
-        für Monat im Bereich(1, 13):
-            Punktzahl = 50 # Basispunktzahl
+        for month in range(1, 13):
+            score = 50  # Base score
             
-            # Numerologie-Einfluss
-            Monat_Nummer = (Lebensweg der Mutter + Lebensweg des Vaters + Monat) % 9
+            # Numerology influence
+            month_num = (mother_life_path + father_life_path + month) % 9
             
             if request.desired_gender == "boy":
-                # Jungen werden von ungeraden Monaten und Monaten mit dem Element Feuer begünstigt (1, 3, 5, 7, 9, 11)
-                Wenn Monat % 2 == 1:
-                    Punktzahl += 15
-                Wenn der Monat in [1, 5, 8, 12] liegt: # Feuer-/Yang-Monate
-                    Punktzahl += 10
+                # Boys favored by odd months and fire element months (1,3,5,7,9,11)
+                if month % 2 == 1:
+                    score += 15
+                if month in [1, 5, 8, 12]:  # Fire/Yang months
+                    score += 10
                 if month_num in [1, 3, 5, 7, 9]:
-                    Punktzahl += 10
-                # Einfluss des chinesischen Kalenders
+                    score += 10
+                # Chinese calendar influence
                 if (mother_date.year + month) % 2 == 1:
-                    Punktzahl += 8
-            anders:
-                # Mädchen werden von geraden Monaten und Monaten des Wasserelements bevorzugt
-                Wenn Monat % 2 == 0:
-                    Punktzahl += 15
-                Wenn der Monat in [2, 4, 6, 10] liegt: # Wasser-/Yin-Monate
-                    Punktzahl += 10
-                Wenn month_num in [2, 4, 6, 8] liegt:
-                    Punktzahl += 10
-                # Einfluss des chinesischen Kalenders
+                    score += 8
+            else:
+                # Girls favored by even months and water element months
+                if month % 2 == 0:
+                    score += 15
+                if month in [2, 4, 6, 10]:  # Water/Yin months
+                    score += 10
+                if month_num in [2, 4, 6, 8]:
+                    score += 10
+                # Chinese calendar influence
                 if (mother_date.year + month) % 2 == 0:
-                    Punktzahl += 8
+                    score += 8
             
-            # Bonus für Monate, die mit den Geburtsmonaten der Eltern übereinstimmen
-            Wenn Monat == Muttermonat oder Monat == Vatermonat:
-                Punktzahl += 5
+            # Bonus for months aligning with parents' birth months
+            if month == mother_month or month == father_month:
+                score += 5
             
-            # Saisonbereinigung
-            Wenn request.desired_gender == "boy" und month in [3, 4, 5, 9, 10, 11]: # Frühling/Herbst
-                Punktzahl += 5
-            elif request.desired_gender == "girl" and month in [6, 7, 8, 12, 1, 2]: # Sommer/Winter
-                Punktzahl += 5
+            # Seasonal adjustment
+            if request.desired_gender == "boy" and month in [3, 4, 5, 9, 10, 11]:  # Spring/Fall
+                score += 5
+            elif request.desired_gender == "girl" and month in [6, 7, 8, 12, 1, 2]:  # Summer/Winter
+                score += 5
             
-            # Füge eine deterministische Variation basierend auf der kombinierten Zahl hinzu
-            Punktzahl += (kombiniert * Monat) % 7
+            # Add some deterministic variation based on combined number
+            score += (combined * month) % 7
             
-            month_scores.append((month, min(score, 95))) # Obergrenze bei 95%
+            month_scores.append((month, min(score, 95)))  # Cap at 95%
         
-        # Nach Punktzahl sortieren
+        # Sort by score
         month_scores.sort(key=lambda x: x[1], reverse=True)
         
         best_month_num = month_scores[0][0]
-        beste_Wahrscheinlichkeit = Monatsergebnisse[0][1]
+        best_probability = month_scores[0][1]
         second_month_num = month_scores[1][0]
-        zweite_Wahrscheinlichkeit = Monatswerte[1][1]
+        second_probability = month_scores[1][1]
         
-        # Monatsnamen in der gewünschten Sprache abrufen
+        # Get month names in requested language
         lang = request.language if request.language in MONTH_NAMES else "en"
         best_month_name = MONTH_NAMES[lang][best_month_num - 1]
-        zweiter_Monatsname = MONATSNAMEN[lang][zweiter_Monatsnummer - 1]
+        second_month_name = MONTH_NAMES[lang][second_month_num - 1]
         
-        # Erklärung generieren
+        # Generate explanation
         gender_word = "αγόρι" if request.desired_gender == "boy" else "κορίτσι"
         if lang == "en":
             gender_word = "boy" if request.desired_gender == "boy" else "girl"
-            Erklärung = f"Basierend auf Ihrer kombinierten Numerologie ({mother_life_path}+{father_life_path}), astrologischen Konstellationen und Methoden des alten chinesischen Kalenders zeigt {best_month_name} die stärksten Energiemuster für die Empfängnis eines {gender_word}."
-            Tipps = [
-                f"Planung von Konzeptionsversuchen während des {best_month_name} für optimale Ergebnisse",
-                „Die erste Monatshälfte zeigt etwas stärkere Energie.“
-                „Bleiben Sie entspannt und positiv – Stress kann die Ergebnisse beeinträchtigen.“
-                „Falls {best_month_name} nicht funktioniert, versuchen Sie es mit {second_month_name} als zweiter Wahl.“
+            explanation = f"Based on your combined numerology ({mother_life_path}+{father_life_path}), astrological alignments, and ancient Chinese calendar methods, {best_month_name} shows the strongest energy patterns for conceiving a {gender_word}."
+            tips = [
+                f"Plan conception attempts during {best_month_name} for optimal results",
+                "The first half of the month shows slightly stronger energy",
+                "Stay relaxed and positive - stress can affect outcomes",
+                f"If {best_month_name} doesn't work, try {second_month_name} as your second choice"
             ]
-        anders:
-            Erklärung = f"Με βάση τη συνδυασμένη αριθμολογία σας ({mother_life_path}+{father_life_path}), τις αστρολογικές ευθυγραμμίσεις και τις ρχαίες κινεζικές μεθόδους, ο {best_month_name} δείχνει τα ισχυρότερα ενεργειακά μοτίβα για σύλληψη {gender_word}ού.“
-            Tipps = [
-                f“
-                „Το πρώτο μισό του μήνα δείχνει ελαφρώς ισχυρότερη ενέργεια“,
-                „Das Problem ist, dass es nicht funktioniert αποτελέσματα",
+        else:
+            explanation = f"Με βάση τη συνδυασμένη αριθμολογία σας ({mother_life_path}+{father_life_path}), τις αστρολογικές ευθυγραμμίσεις και τις αρχαίες κινεζικές μεθόδους, ο {best_month_name} δείχνει τα ισχυρότερα ενεργειακά μοτίβα για σύλληψη {gender_word}ού."
+            tips = [
+                f"Προγραμματίστε τις προσπάθειες σύλληψης κατά τη διάρκεια του {best_month_name}",
+                "Το πρώτο μισό του μήνα δείχνει ελαφρώς ισχυρότερη ενέργεια",
+                "Μείνετε χαλαροί και θετικοί - το άγχος μπορεί να επηρεάσει τα αποτελέσματα",
                 f"Αν ο {best_month_name} δεν λειτουργήσει, δοκιμάστε τον {second_month_name}"
             ]
         
-        # Zur Analyse in der Datenbank speichern.
+        # Store in database for analytics
         await db.timing_calculations.insert_one({
             "mother_birthday": request.mother_birthday,
             "father_birthday": request.father_birthday,
             "desired_gender": request.desired_gender,
             "best_month": best_month_num,
-            "Wahrscheinlichkeit": beste_Wahrscheinlichkeit,
+            "probability": best_probability,
             "created_at": datetime.now(timezone.utc).isoformat()
         })
         
         return BestTimingResponse(
             best_month=best_month_name,
             best_month_number=best_month_num,
-            Wahrscheinlichkeit=beste_Wahrscheinlichkeit,
+            probability=best_probability,
             second_best_month=second_month_name,
             second_probability=second_probability,
-            Erklärung = Erklärung
-            Tipps = Trinkgelder
+            explanation=explanation,
+            tips=tips
         )
         
-    außer Ausnahme als e:
-        logging.error(f"Fehler bei der Berechnung des besten Timings: {e}")
-        raise HTTPException(status_code=500, detail="Fehler bei der Berechnung des optimalen Zeitpunkts")
+    except Exception as e:
+        logging.error(f"Best timing calculation error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to calculate best timing")
 
-# Den Router in die Haupt-App einbinden
+# Include the router in the main app
 app.include_router(api_router)
 
 # ============================================
-# DATEIAUSSICHT-ENDPUNKT FÜR DIE BEREITSTELLUNG (V2)
+# FILE VIEW ENDPOINT FOR DEPLOYMENT (V2)
 # ============================================
 from fastapi.responses import PlainTextResponse
-Importzeit
+import time
 
 @app.get("/api/viewfile/{filename}")
 async def view_file_v2(filename: str):
-    """Frontend-Dateien als Klartext bereitstellen, um die Bereitstellung durch einfaches Kopieren und Einfügen zu ermöglichen""
+    """Serve frontend files as plain text for easy copy-paste deployment"""
     file_mappings = {
         "ChatWidget.txt": "/app/frontend/src/components/ChatWidget.jsx",
         "ChatWidget.jsx": "/app/frontend/src/components/ChatWidget.jsx",
@@ -3762,25 +3763,25 @@ async def view_file_v2(filename: str):
         "server.py": "/app/backend/server.py",
     }
     
-    Dateipfad = file_mappings.get(Dateiname)
-    Falls kein Dateipfad:
-        raise HTTPException(status_code=404, detail=f"Datei nicht gefunden: {filename}")
+    filepath = file_mappings.get(filename)
+    if not filepath:
+        raise HTTPException(status_code=404, detail=f"File not found: {filename}")
     
-    versuchen:
-        # Erzwinge Neulesen – kein Caching
+    try:
+        # Force fresh read - no caching
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
         return PlainTextResponse(content=content, media_type="text/plain; charset=utf-8")
-    außer FileNotFoundError:
-        raise HTTPException(status_code=404, detail=f"Datei auf dem Server nicht gefunden: {filename}")
-    außer Ausnahme als e:
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail=f"File not found on server: {filename}")
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Bilder aus dem öffentlichen Ordner bereitstellen
+# Serve images from public folder
 
 @app.get("/api/assets/{filename}")
 async def download_asset(filename: str):
-    """Stellen Sie Bilddateien zum Download bereit""
+    """Serve image files for download"""
     import os
     allowed_files = {
         "angel-female-transparent.png": "/app/frontend/public/angel-female-transparent.png",
@@ -3788,31 +3789,31 @@ async def download_asset(filename: str):
         "brain-pink.jpg": "/app/frontend/public/brain-pink.jpg",
         "brain-blue.jpg": "/app/frontend/public/brain-blue.jpg",
     }
-    Dateipfad = allowed_files.get(Dateiname)
+    filepath = allowed_files.get(filename)
     if not filepath or not os.path.exists(filepath):
-        raise HTTPException(status_code=404, detail=f"Datei nicht gefunden: {filename}")
+        raise HTTPException(status_code=404, detail=f"File not found: {filename}")
     return FileResponse(filepath, media_type="image/png", filename=filename)
 
 # ============================================
-# PRERENDER.IO MIDDLAWARE FÜR SEO
+# PRERENDER.IO MIDDLEWARE FOR SEO
 # ============================================
-Diese Middleware erkennt Suchmaschinen-Bots und dient dazu, …
-# Vorgerendertes HTML von prerender.io für bessere SEO-Indexierung
+# This middleware detects search engine bots and serves
+# pre-rendered HTML from prerender.io for better SEO indexing
 
 PRERENDER_TOKEN = os.environ.get('PRERENDER_TOKEN', '')
 PRERENDER_SERVICE_URL = "https://service.prerender.io"
 
-# Liste der zu erkennenden Bot-User-Agents
+# List of bot user agents to detect
 BOT_USER_AGENTS = [
     "googlebot", "google-inspectiontool", "adsbot-google",
-    „bingbot“, „msnbot“, „yandex“, „baiduspider“,
+    "bingbot", "msnbot", "yandex", "baiduspider",
     "duckduckbot", "slurp", "ia_archiver",
-    „twitterbot“, „facebookexternalhit“, „linkedinbot“,
-    "Slackbot", "Discordbot", "Embedly", "Pinterestbot"
-    "Telegrambot", "WhatsApp", "Applebot"
+    "twitterbot", "facebookexternalhit", "linkedinbot",
+    "slackbot", "discordbot", "embedly", "pinterestbot",
+    "telegrambot", "whatsapp", "applebot"
 ]
 
-# Pfade, die vom Vorrendern ausgeschlossen werden sollen (API-Routen, Assets usw.)
+# Paths to exclude from prerendering (API routes, assets, etc.)
 PRERENDER_EXCLUDE_PATHS = [
     "/api/", "/static/", "/assets/", "/_next/",
     ".js", ".css", ".xml", ".json", ".ico", ".png", ".jpg", ".jpeg", ".gif", ".svg",
@@ -3820,46 +3821,46 @@ PRERENDER_EXCLUDE_PATHS = [
 ]
 
 def is_bot(user_agent: str) -> bool:
-    """Prüfen Sie, ob die Anfrage von einem Suchmaschinen-Bot stammt"""
-    falls nicht user_agent:
+    """Check if the request is from a search engine bot"""
+    if not user_agent:
         return False
     ua = user_agent.lower()
     return any(bot in ua for bot in BOT_USER_AGENTS)
 
 def should_prerender(path: str) -> bool:
-    """Prüfen, ob der Pfad vorgerendert werden soll""
+    """Check if the path should be prerendered"""
     path_lower = path.lower()
     return not any(excluded in path_lower for excluded in PRERENDER_EXCLUDE_PATHS)
 
 @app.middleware("http")
 async def prerender_middleware(request: Request, call_next):
     """
-    Middleware zur Auslieferung vorgerenderter Seiten an Suchmaschinen-Bots.
-    Dies hilft bei der Suchmaschinenoptimierung (SEO) von Single-Page-Anwendungen (SPAs).
+    Middleware to serve pre-rendered pages to search engine bots.
+    This helps with SEO for Single Page Applications (SPAs).
     """
-    # Überspringen, falls kein Vorrender-Token konfiguriert ist
-    falls nicht PRERENDER_TOKEN:
+    # Skip if no prerender token configured
+    if not PRERENDER_TOKEN:
         return await call_next(request)
     
     user_agent = request.headers.get("user-agent", "")
-    Pfad = request.url.path
+    path = request.url.path
     
-    # Nur für Bots auf geeigneten Pfaden vorrendern
+    # Only prerender for bots on eligible paths
     if is_bot(user_agent) and should_prerender(path):
-        versuchen:
-            # Die vollständige URL zum Vorrendern erstellen
+        try:
+            # Construct the full URL to prerender
             full_url = str(request.url)
             
-            # Vorschau-URL durch Produktions-URL für das Vorrendern ersetzen
+            # Replace preview URL with production URL for prerendering
             if "preview.emergentagent.com" in full_url:
                 full_url = full_url.replace(
-                    request.url.netloc,
+                    request.url.netloc, 
                     "getbabywish.com"
                 ).replace("http://", "https://")
             
             prerender_url = f"{PRERENDER_SERVICE_URL}/{full_url}"
             
-            Überschriften = {
+            headers = {
                 "X-Prerender-Token": PRERENDER_TOKEN,
                 "User-Agent": user_agent,
             }
@@ -3868,18 +3869,18 @@ async def prerender_middleware(request: Request, call_next):
                 prerender_response = await client.get(prerender_url, headers=headers)
                 
                 if prerender_response.status_code == 200:
-                    logger.info(f"Prerender wurde für Bot {user_agent[:50]}... auf {path} bereitgestellt")
+                    logger.info(f"Prerender served for bot: {user_agent[:50]}... on {path}")
                     return Response(
                         content=prerender_response.content,
-                        Statuscode=200,
+                        status_code=200,
                         media_type="text/html; charset=utf-8",
                     )
-                anders:
-                    logger.warning(f"Prerendering fehlgeschlagen ({prerender_response.status_code}) für {path}")
-        außer Ausnahme als e:
-            logger.error(f"Vorrenderfehler: {str(e)}")
+                else:
+                    logger.warning(f"Prerender failed ({prerender_response.status_code}) for {path}")
+        except Exception as e:
+            logger.error(f"Prerender error: {str(e)}")
     
-    # Fortsetzung der normalen Anfragebearbeitung
+    # Continue with normal request handling
     return await call_next(request)
 
 app.add_middleware(
@@ -3890,7 +3891,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Protokollierung konfigurieren
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
