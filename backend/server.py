@@ -3891,6 +3891,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Middleware to add noindex for preview/non-production environments
+@app.middleware("http")
+async def add_noindex_for_preview(request: Request, call_next):
+    response = await call_next(request)
+    # Check if this is a preview environment (not production)
+    host = request.headers.get("host", "")
+    if "preview.emergentagent.com" in host or "localhost" in host:
+        response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
